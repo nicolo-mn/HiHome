@@ -18,6 +18,7 @@ Thumbs.db
 dist
 dist-ssr
 *.local
+tmp/
 
 # Environment variables
 .env
