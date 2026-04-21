@@ -6,8 +6,8 @@
     "prepare": "husky",
     "test": "pnpm -r run test",
     "test:coverage": "pnpm -r run test:coverage",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format": "prettier --write \"**/*.{ts,tsx,vue,js,cjs,mjs}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,vue,js,cjs,mjs}\""
   },
   "lint-staged": {
     "**/*.{ts,tsx,vue,js,cjs,mjs}": [
