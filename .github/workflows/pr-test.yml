@@ -1,0 +1,56 @@
+name: Pull Request Tests
+
+on:
+  pull_request:
+    branches: "main"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format-and-test:
+    name: Code Quality and Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Node.js Workspace Checks (Frontend & Backend)
+      - name: Security Audit
+        run: pnpm audit --audit-level high
+
+      - name: Format Check
+        run: pnpm run format:check
+        
+      - name: Run Tests
+        run: pnpm test
+
+      # Go Service Checks
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.4"
+
+      - name: Go Format Check
+        working-directory: ./ext-api-service
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then echo "Go code is not formatted"; exit 1; fi
+
+      - name: Go Test
+        working-directory: ./ext-api-service
+        run: go test -v ./...
