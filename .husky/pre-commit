@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+pnpm lint-staged
+
+# Enforce signed commits
+if [ "$(git config --get commit.gpgsign)" != "true" ]; then
+  echo "Error: automatic commit signing is required for this repository."
+  echo "Please enable commit signing by running: git config commit.gpgsign true"
+  exit 1
+fi

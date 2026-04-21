@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -e # exit on failure
+
+# Run tests
+echo "Running Backend and Frontend Tests..."
+pnpm test
+
+echo "Running Go Service Tests..."
+go test -C ext-api-service -v ./...
