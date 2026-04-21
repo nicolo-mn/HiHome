@@ -1,0 +1,15 @@
+FROM node:24-slim
+WORKDIR /app
+
+RUN corepack enable pnpm
+
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* vitest.config.ts ./
+COPY frontend/package.json ./frontend/
+
+RUN pnpm install --frozen-lockfile
+
+COPY frontend ./frontend
+
+EXPOSE 5173
+
+CMD ["pnpm", "--filter", "frontend", "run", "dev", "--", "--host"]
