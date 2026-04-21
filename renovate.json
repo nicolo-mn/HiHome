@@ -9,5 +9,7 @@
   "ignoreUnstable": true,
   "automergeSchedule": ["* 2-9 * * *"],
   "timezone": "CET",
-  "automerge": true
+  "automerge": true,
+  "prHourlyLimit": 20,
+  "rebaseWhen": "behind-base-branch"
 }
