@@ -7,9 +7,8 @@
   "labels": ["dependencies"],
   "semanticCommits": "enabled",
   "ignoreUnstable": true,
-  "automergeSchedule": ["* 2-9 * * *"],
-  "timezone": "CET",
   "automerge": true,
-  "prHourlyLimit": 20,
+  "platformAutomerge": true,
+  "prHourlyLimit": 0,
   "rebaseWhen": "behind-base-branch"
 }
