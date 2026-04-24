@@ -14,7 +14,9 @@ services:
     container_name: mevn_backend_dev
     environment:
       - PORT=3000
-      - MONGO_URI=mongodb://mongodb:27017/test-db
+      - MONGO_URI=mongodb://mongodb:27017/hihome
+      - JWT_SECRET=${JWT_SECRET:-hihome-secret-key}
+      - SENSOR_INTERVAL_MS=${SENSOR_INTERVAL_MS:-5000}
     ports:
       - "3000:3000"
     volumes:

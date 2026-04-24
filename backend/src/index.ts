@@ -1,49 +1,63 @@
 import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import http from "http";
+import dotenv from "dotenv";
+
+// User Context
+import { MongoUserRepository } from "./user-context/infrastructure/mongo-user-repository";
+import { LoginService } from "./user-context/application/login-service";
+import { createUserRoutes } from "./user-context/infrastructure/user-routes";
+import { seedUsers } from "./user-context/infrastructure/seed-users";
+
+// Core Context
+import { MongoComponentRepository } from "./core-context/infrastructure/mongo-component-repository";
+import { HomeService } from "./core-context/application/home-service";
+import { createHomeRoutes } from "./core-context/infrastructure/home-routes";
+import { setupSensorWebSocket } from "./core-context/infrastructure/sensor-websocket";
+import { seedComponents } from "./core-context/infrastructure/seed-components";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/test-db";
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/hihome";
 
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Hello from MEVN backend!" });
-});
+// --- Wire up User Context ---
+const userRepository = new MongoUserRepository();
+const loginService = new LoginService(userRepository);
+app.use("/api/users", createUserRoutes(loginService));
 
+// --- Wire up Core Context ---
+const componentRepository = new MongoComponentRepository();
+const homeService = new HomeService(componentRepository);
+app.use("/api/homes", createHomeRoutes(homeService));
+
+// Health check
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok", db: mongoose.connection.readyState });
 });
 
-app.get("/api/message", async (req: Request, res: Response) => {
-  try {
-    const extApiRes = await fetch("http://ext-api-service:8080/api/mock");
-    if (extApiRes.ok) {
-      const data = await extApiRes.json();
-      res.json({
-        text: `Success: Backend received "${data.message}" from external service.`,
-      });
-    } else {
-      res.json({
-        text:
-          "Error: Call to external service failed with status " +
-          extApiRes.status,
-      });
-    }
-  } catch {
-    res.json({ text: "Error: Could not reach external service." });
-  }
-});
+// Create HTTP server for both Express and WebSocket
+const server = http.createServer(app);
 
-// Database connection
+// Attach WebSocket for sensor streaming
+setupSensorWebSocket(server, homeService);
+
+// Database connection and server start
 mongoose
   .connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
+
+    // Seed data
+    await seedUsers();
+    await seedComponents();
+
+    server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);
     });
   })

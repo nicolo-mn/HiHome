@@ -7,6 +7,8 @@ import vueDevTools from "vite-plugin-vue-devtools";
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const backendUrl = env.VITE_BACKEND_URL || "http://localhost:3000";
+
   return {
     plugins: [vue(), vueDevTools()],
     resolve: {
@@ -17,7 +19,12 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         "/api": {
-          target: env.VITE_BACKEND_URL || "http://localhost:3000",
+          target: backendUrl,
+          changeOrigin: true,
+        },
+        "/ws": {
+          target: backendUrl,
+          ws: true,
           changeOrigin: true,
         },
       },
