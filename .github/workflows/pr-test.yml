@@ -55,3 +55,14 @@ jobs:
       - name: Go Test
         working-directory: ./ext-api-service
         run: go test -v ./...
+
+  success:
+    runs-on: ubuntu-24.04
+    needs:
+      - build
+      - format-and-test
+    # run unless jobs were cancelled 
+    if: always() && !contains(join(needs.*.result, ','), 'cancelled')
+    steps:
+      - name: Verify that there were no failures
+        run: ${{ !contains(join(needs.*.result, ','), 'failure') }}
