@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from "vitest";
 vi.mock("express", () => {
   const appMock = {
     get: vi.fn(),
+    post: vi.fn(),
     use: vi.fn(),
     listen: vi.fn(),
   };
@@ -21,7 +22,7 @@ vi.mock("mongoose", () => {
   return {
     default: {
       connect: vi.fn().mockResolvedValue(true),
-      connection: { readyState: 1 },
+      connection: { readyState: 1, getClient: vi.fn().mockReturnValue({}) },
     },
   };
 });
