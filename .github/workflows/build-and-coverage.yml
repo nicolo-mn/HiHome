@@ -9,6 +9,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    uses: ./.github/workflows/reusable-build.yml
+
   test-and-coverage:
     name: Run Tests and Upload Coverage Reports
     runs-on: ubuntu-latest

@@ -1,0 +1,25 @@
+name: Reusable Build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: Build and Verify
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-2025, macos-15, ubuntu-24.04 ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Setup Docker
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Production Docker Compose Services
+        run: docker compose -f docker-compose.yml build
+
+      - name: Build Development Docker Compose Services
+        run: docker compose -f docker-compose.dev.yml build

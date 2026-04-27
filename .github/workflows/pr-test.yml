@@ -9,6 +9,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    uses: ./.github/workflows/reusable-build.yml
+
   format-and-test:
     name: Code Quality and Tests
     runs-on: ubuntu-latest
