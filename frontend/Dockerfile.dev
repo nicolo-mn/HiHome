@@ -12,4 +12,4 @@ COPY frontend ./frontend
 
 EXPOSE 5173
 
-CMD ["pnpm", "--filter", "frontend", "run", "dev", "--", "--host"]
+CMD ["pnpm", "--filter", "frontend", "run", "dev", "--host"]
