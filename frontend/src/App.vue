@@ -1,22 +1,37 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-const backendMessage = ref<string>(
-  "Click the button to fetch data from the backend!",
-);
-const isLoading = ref<boolean>(false);
+const username = ref("");
+const houseId = ref("");
+const statusMessage = ref("");
+const isLoading = ref(false);
 
-const handleFetch = async () => {
+const handleLogin = async () => {
   isLoading.value = true;
+  statusMessage.value = "";
+
   try {
-    // The request goes to exactly '/api/message'
-    // Vite intercepts this and forwards it to http://localhost:3000/api/message
-    // (thanks to the proxy configured in vite.config.ts)
-    const res = await fetch("/api/message");
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        houseId: houseId.value,
+        username: username.value,
+      }),
+    });
+
     const data = await res.json();
-    backendMessage.value = data.text;
-  } catch {
-    backendMessage.value = "Error connecting to backend API.";
+
+    if (res.ok) {
+      statusMessage.value = "Login successful!";
+      // TODO: save token and redirect to dashboard
+    } else {
+      statusMessage.value = `Error: ${data.message || "Invalid credentials"}`;
+    }
+  } catch (error) {
+    statusMessage.value = `${error || "An unexpected error occurred"}.`;
   } finally {
     isLoading.value = false;
   }
@@ -24,80 +39,99 @@ const handleFetch = async () => {
 </script>
 
 <template>
-  <div class="container">
-    <div class="logos">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </div>
+  <div
+    class="min-h-screen flex items-center justify-center bg-gray-900 border-box text-white selection:bg-indigo-500 selection:text-white"
+  >
+    <div
+      class="w-full max-w-md p-8 m-4 rounded-xl shadow-2xl bg-gray-800 border border-gray-700"
+    >
+      <div class="text-center mb-8">
+        <h1
+          class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500"
+        >
+          HiHome
+        </h1>
+        <p class="text-gray-400 mt-2 text-sm">Welcome back! Please sign in.</p>
+      </div>
 
-    <h1>MEVN Template</h1>
+      <form @submit.prevent="handleLogin" class="space-y-6">
+        <div>
+          <label
+            for="houseId"
+            class="block text-sm font-medium text-gray-300 mb-1"
+            >House ID</label
+          >
+          <div class="relative">
+            <input
+              id="houseId"
+              v-model="houseId"
+              type="text"
+              required
+              class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder-gray-400"
+              placeholder="e.g. house1"
+            />
+          </div>
+        </div>
 
-    <div class="card">
-      <button @click="handleFetch" :disabled="isLoading">
-        {{ isLoading ? "Loading..." : "Fetch from Backend" }}
-      </button>
+        <div>
+          <label
+            for="username"
+            class="block text-sm font-medium text-gray-300 mb-1"
+            >Username</label
+          >
+          <div class="relative">
+            <input
+              id="username"
+              v-model="username"
+              type="text"
+              required
+              class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder-gray-400"
+              placeholder="e.g. mockuser"
+            />
+          </div>
+        </div>
 
-      <p class="message-box">
-        Server Response: <strong>{{ backendMessage }}</strong>
-      </p>
+        <button
+          type="submit"
+          :disabled="isLoading"
+          class="w-full py-3 px-4 flex justify-center rounded-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <svg
+            v-if="isLoading"
+            class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          {{ isLoading ? "Signing in..." : "Sign in" }}
+        </button>
+      </form>
+
+      <div
+        v-if="statusMessage"
+        class="mt-6 p-4 rounded-lg text-sm text-center font-medium"
+        :class="
+          statusMessage.includes('✅')
+            ? 'bg-green-900/50 text-green-400 border border-green-800'
+            : 'bg-red-900/50 text-red-400 border border-red-800'
+        "
+      >
+        {{ statusMessage }}
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.container {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-.logos {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-.logo {
-  height: 6em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-.card {
-  padding: 2em;
-  background-color: #1a1a1a;
-  border-radius: 8px;
-  margin-top: 2rem;
-}
-button {
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #646cff;
-  color: white;
-  cursor: pointer;
-  transition:
-    border-color 0.25s,
-    background-color 0.25s;
-}
-button:hover {
-  background-color: #535bf2;
-}
-button:disabled {
-  background-color: #555;
-  cursor: not-allowed;
-}
-.message-box {
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #2a2a2a;
-  border-left: 4px solid #42b883;
-  text-align: left;
-}
-</style>
