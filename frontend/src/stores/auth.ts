@@ -8,11 +8,19 @@ export const useAuthStore = defineStore("auth", () => {
 
   const isAuthenticated = computed(() => !!token.value);
 
-  async function login(inputHouseId: string, inputUsername: string) {
+  async function login(
+    inputHouseId: string,
+    inputUsername: string,
+    inputPassword: string,
+  ) {
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ houseId: inputHouseId, username: inputUsername }),
+      body: JSON.stringify({
+        houseId: inputHouseId,
+        username: inputUsername,
+        password: inputPassword,
+      }),
     });
 
     if (!res.ok) {
