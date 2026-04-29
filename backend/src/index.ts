@@ -1,6 +1,10 @@
+import "dotenv/config";
 import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import { UserContextFactory } from "./user-context/userContextFactory";
+import { UserController } from "./user-context/infrastructure/userController";
+import { authMiddleware } from "./authMiddleware";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,13 +13,19 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/test-db";
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Hello from MEVN backend!" });
-});
+const authContext = UserContextFactory.create();
+const authController = new UserController(authContext.authPort);
+
+app.post("/api/login", (req, res) => authController.login(req, res));
 
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok", db: mongoose.connection.readyState });
+});
+
+app.use(authMiddleware);
+
+app.get("/", (req: Request, res: Response) => {
+  res.json({ message: "Protected: Hello from MEVN backend!" });
 });
 
 app.get("/api/message", async (req: Request, res: Response) => {
@@ -38,15 +48,19 @@ app.get("/api/message", async (req: Request, res: Response) => {
   }
 });
 
-// Database connection
-mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
+export async function bootstrap() {
+  try {
+    await mongoose.connect(MONGO_URI);
     app.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);
     });
-  })
-  .catch((err) => {
-    console.error("Failed to connect to MongoDB", err);
-  });
+  } catch (error) {
+    console.error("Error starting the server: ", error);
+  }
+}
+
+if (process.env.NODE_ENV !== "test") {
+  bootstrap();
+}
+
+export default app;
