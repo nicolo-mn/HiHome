@@ -1,10 +1,22 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
+function decodeJwt(jwt: string | null): Record<string, string> | null {
+  if (!jwt) return null;
+  try {
+    return JSON.parse(atob(jwt.split(".")[1] ?? ""));
+  } catch {
+    return null;
+  }
+}
+
 export const useAuthStore = defineStore("auth", () => {
-  const token = ref<string | null>(localStorage.getItem("jwt"));
-  const username = ref<string | null>(null);
-  const houseId = ref<string | null>(null);
+  const storedToken = localStorage.getItem("jwt");
+  const decoded = decodeJwt(storedToken);
+
+  const token = ref<string | null>(storedToken);
+  const username = ref<string | null>(decoded?.username ?? null);
+  const houseId = ref<string | null>(decoded?.houseId ?? null);
 
   const isAuthenticated = computed(() => !!token.value);
 
