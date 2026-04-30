@@ -6,7 +6,7 @@ export class Light implements Component {
     public id: string,
     public name: string,
     public roomId: string,
-    public state: { isOn: boolean } = { isOn: false },
+    public isOn: boolean = false,
   ) {}
 
   accept<T>(visitor: ComponentVisitor<T>): T {
@@ -14,10 +14,10 @@ export class Light implements Component {
   }
 
   turnOn() {
-    this.state.isOn = true;
+    this.isOn = true;
   }
 
   turnOff() {
-    this.state.isOn = false;
+    this.isOn = false;
   }
 }

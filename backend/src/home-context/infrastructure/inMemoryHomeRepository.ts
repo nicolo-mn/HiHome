@@ -32,7 +32,7 @@ export class InMemoryHomeRepository implements HomeRepository {
           new Light("light-1", "Main Light", "room-1"),
         ]),
         new Room("room-2", "Bedroom", [
-          new Light("light-2", "Bed Light", "room-2", { isOn: true }),
+          new Light("light-2", "Bed Light", "room-2", true),
         ]),
       ],
       [

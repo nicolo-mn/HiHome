@@ -5,6 +5,6 @@ export class ComponentStateSerializer implements ComponentVisitor<
   Record<string, unknown>
 > {
   visitLight(light: Light): Record<string, unknown> {
-    return { isOn: light.state.isOn };
+    return { isOn: light.isOn };
   }
 }

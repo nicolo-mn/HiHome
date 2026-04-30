@@ -104,10 +104,7 @@ describe("Home Context Integration Tests", () => {
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body.length).toBeGreaterThan(0);
-      // Removed .type check since the domain refactor removed the arbitrary type property
-      // check that we actually got back light components
-      expect(res.body[0]).toHaveProperty("state");
-      expect(res.body[0].state).toHaveProperty("isOn");
+      expect(res.body[0]).toHaveProperty("isOn");
     });
   });
 
