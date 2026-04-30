@@ -14,7 +14,12 @@ export class Thermometer implements Sensor {
   sendUpdate(): void {
     const temp = this.dataPort.getTemperature();
     this.updatePort.sendUpdate(
-      new SensorUpdate(this.id, { temperature: temp }, "Celsius"),
+      new SensorUpdate(
+        this.id,
+        "thermometer",
+        { temperature: temp },
+        "Celsius",
+      ),
     );
   }
 }

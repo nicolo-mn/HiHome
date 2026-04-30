@@ -1,25 +1,23 @@
 import "dotenv/config";
 import express, { Request, Response } from "express";
 import http from "http";
-import { WebSocketServer, WebSocket } from "ws";
+import { Server as SocketIOServer } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
 import { UserContextFactory } from "./user-context/userContextFactory";
 import { UserController } from "./user-context/infrastructure/userController";
 import { authMiddleware } from "./authMiddleware";
-import {
-  InMemoryHomeRepository,
-  globalWsPort,
-} from "./home-context/infrastructure/inMemoryHomeRepository";
+import { InMemoryHomeRepository } from "./home-context/infrastructure/inMemoryHomeRepository";
+import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/socketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/homeService";
 import { HomeController } from "./home-context/infrastructure/homeController";
-import { SensorUpdate } from "./home-context/domain";
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+const io = new SocketIOServer(server, { cors: { origin: "*" } });
 
-const homeRepo = new InMemoryHomeRepository();
+const sensorUpdatePort = new SocketIOSensorUpdatePort(io, "1");
+const homeRepo = new InMemoryHomeRepository(sensorUpdatePort);
 const homeService = new HomeService(homeRepo);
 const homeController = new HomeController(homeService);
 
@@ -38,13 +36,9 @@ app.post("/api/login", (req, res) => authController.login(req, res));
 app.get("/home-:id/components/types", (req, res) =>
   homeController.getComponentTypes(req, res),
 );
-app.get("/home-:id/components/:type", (req, res, next) => {
-  if (req.params.type === "light" || req.params.type === "thermometer") {
-    homeController.getComponentsByType(req, res);
-  } else {
-    next();
-  }
-});
+app.get("/home-:id/components/types/:type", (req, res) =>
+  homeController.getComponentsByType(req, res),
+);
 app.get("/home-:id/components", (req, res) =>
   homeController.getComponents(req, res),
 );
@@ -54,53 +48,55 @@ app.post("/home-:id/components", (req, res) =>
 app.get("/home-:id/components/:componentId", (req, res) =>
   homeController.getComponent(req, res),
 );
-app.post("/home-:id/components/:componentId/:action", (req, res, next) => {
+app.post("/home-:id/components/:componentId/:action", (req, res) => {
   homeController.executeAction(req, res);
 });
 app.get("/home-:id/sensors/types", (req, res) =>
   homeController.getSensorTypes(req, res),
 );
 
-// --- WebSocket for sensor updates ---
-wss.on("connection", (ws: WebSocket, req) => {
-  const url = req.url || "";
-  const match = url.match(/\/home-(.+)/);
-  if (match) {
-    const homeId = match[1];
+// --- Socket.IO for sensor updates ---
+const activeHomes = new Map<
+  string,
+  { count: number; interval: NodeJS.Timeout }
+>();
 
-    const onSensorData = (update: SensorUpdate) => {
-      ws.send(
-        JSON.stringify({
-          event: "sensorUpdate",
-          type: "thermometer",
-          ...update,
-        }),
-      );
-    };
-    globalWsPort.listeners.push(onSensorData);
+io.on("connection", (socket) => {
+  const homeId = socket.handshake.query.homeId as string;
+  if (!homeId) {
+    socket.disconnect();
+    return;
+  }
 
+  socket.join(`home-${homeId}`);
+
+  const entry = activeHomes.get(homeId);
+  if (entry) {
+    entry.count++;
+  } else {
     const interval = setInterval(async () => {
       try {
         const home = await homeRepo.getHome(homeId);
         if (home) {
-          home.getAllSensors().forEach((sensor) => {
-            sensor.sendUpdate();
-          });
+          home.getAllSensors().forEach((sensor) => sensor.sendUpdate());
         }
       } catch (e) {
         console.error(e);
       }
     }, 2000);
-
-    ws.on("close", () => {
-      clearInterval(interval);
-      globalWsPort.listeners = globalWsPort.listeners.filter(
-        (l) => l !== onSensorData,
-      );
-    });
-  } else {
-    ws.close();
+    activeHomes.set(homeId, { count: 1, interval });
   }
+
+  socket.on("disconnect", () => {
+    const e = activeHomes.get(homeId);
+    if (e) {
+      e.count--;
+      if (e.count <= 0) {
+        clearInterval(e.interval);
+        activeHomes.delete(homeId);
+      }
+    }
+  });
 });
 
 app.get("/api/health", (req: Request, res: Response) => {
@@ -149,4 +145,4 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 export default app;
-export { server };
+export { server, io };

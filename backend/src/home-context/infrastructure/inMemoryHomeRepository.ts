@@ -1,13 +1,10 @@
 import {
   Home,
-  Component,
-  Sensor,
   Light,
   Thermometer,
   Room,
   SensorDataPort,
   SensorUpdatePort,
-  SensorUpdate,
 } from "../domain";
 import { HomeRepository } from "../domain/homeRepository";
 
@@ -19,24 +16,14 @@ export class MockSensorDataPort implements SensorDataPort {
   }
 }
 
-export class MockSensorUpdatePort implements SensorUpdatePort {
-  public listeners: ((update: SensorUpdate) => void)[] = [];
-  sendUpdate(update: SensorUpdate): void {
-    this.listeners.forEach((l) => l(update));
-  }
-}
-
-export const globalWsPort = new MockSensorUpdatePort();
-
 export class InMemoryHomeRepository implements HomeRepository {
   private homes: Map<string, Home> = new Map();
 
-  constructor() {
+  constructor(private sensorUpdatePort: SensorUpdatePort) {
     this.seedDb();
   }
 
   private seedDb() {
-    // Generate mock home as requested
     const mockHome = new Home(
       "1",
       { latitude: 45.4642, longitude: 9.19 },
@@ -53,7 +40,7 @@ export class InMemoryHomeRepository implements HomeRepository {
           "sensor-1",
           "Indoor Thermometer",
           new MockSensorDataPort(),
-          globalWsPort,
+          this.sensorUpdatePort,
         ),
       ],
     );

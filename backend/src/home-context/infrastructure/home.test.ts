@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
-import { WebSocket } from "ws";
-import { default as app, server } from "../../index";
+import { io as ioClient, Socket } from "socket.io-client";
+import { default as app, server, io } from "../../index";
 
 describe("Home Context Integration Tests", () => {
   let token: string;
@@ -24,7 +24,7 @@ describe("Home Context Integration Tests", () => {
   });
 
   afterAll(() => {
-    server.close();
+    io.close();
   });
 
   describe("REST Endpoints", () => {
@@ -99,7 +99,7 @@ describe("Home Context Integration Tests", () => {
 
     it("should get components by type", async () => {
       const res = await request(app)
-        .get("/home-1/components/light")
+        .get("/home-1/components/types/light")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
@@ -111,37 +111,34 @@ describe("Home Context Integration Tests", () => {
     });
   });
 
-  describe("Websocket Sensor Updates", () => {
-    it("should receive sensor updates via websocket", async () => {
+  describe("Socket.IO Sensor Updates", () => {
+    it("should receive sensor updates via socket.io", async () => {
       return new Promise<void>((resolve, reject) => {
-        const ws = new WebSocket(`ws://localhost:${port}/home-1`);
-        ws.on("open", () => {
-          // Connected successfully
+        const socket: Socket = ioClient(`http://localhost:${port}`, {
+          query: { homeId: "1" },
         });
 
-        ws.on("message", (data) => {
+        socket.on("sensorUpdate", (data) => {
           try {
-            const message = JSON.parse(data.toString());
-            expect(message.event).toBe("sensorUpdate");
-            expect(message.sensorId).toBeDefined();
-            expect(message.type).toBe("thermometer");
-            expect(message.value).toBeDefined();
-            expect(typeof message.value.temperature).toBe("number");
-            ws.close();
+            expect(data.sensorId).toBeDefined();
+            expect(data.type).toBe("thermometer");
+            expect(data.value).toBeDefined();
+            expect(typeof data.value.temperature).toBe("number");
+            socket.close();
             resolve();
           } catch (e) {
             reject(e);
           }
         });
 
-        ws.on("error", (e) => {
+        socket.on("connect_error", (e) => {
           reject(e);
         });
 
         // Timeout fallback
         setTimeout(() => {
-          ws.close();
-          reject(new Error("Websocket test timeout"));
+          socket.close();
+          reject(new Error("Socket.io test timeout"));
         }, 5000);
       });
     });

@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { HomeService } from "../application/homeService";
-import { Light } from "../domain";
+import { ComponentStateSerializer } from "./componentStateSerializer";
 
 export class HomeController {
+  private stateSerializer = new ComponentStateSerializer();
+
   constructor(private homeService: HomeService) {}
 
   async getComponents(req: Request, res: Response) {
@@ -60,16 +62,7 @@ export class HomeController {
       if (!component)
         return res.status(404).json({ error: "Component not found" });
 
-      if (component instanceof Light) {
-        res.json(component.state);
-        return;
-      }
-
-      res
-        .status(400)
-        .json({
-          error: "Component state retrieval not supported for this type",
-        });
+      res.json(component.accept(this.stateSerializer));
     } catch (e: any) {
       res.status(404).json({ error: e.message });
     }
