@@ -3,7 +3,7 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import { createRouter, createMemoryHistory } from "vue-router";
 import LoginView from "./LoginView.vue";
-import HomeView from "./DashBoardView.vue";
+import DashboardView from "./DashboardView.vue";
 import { useAuthStore } from "../stores/auth";
 
 function makeLocalStorageMock() {
@@ -27,7 +27,7 @@ function createTestRouter() {
     history: createMemoryHistory(),
     routes: [
       { path: "/login", name: "login", component: LoginView },
-      { path: "/", name: "home", component: HomeView },
+      { path: "/", name: "home", component: DashboardView },
     ],
   });
 }
