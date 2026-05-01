@@ -3,7 +3,7 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { setActivePinia, createPinia } from "pinia";
 import { createRouter, createMemoryHistory } from "vue-router";
 import LoginView from "./LoginView.vue";
-import HomeView from "./HomeView.vue";
+import HomeView from "./DashBoardView.vue";
 import { useAuthStore } from "../stores/auth";
 
 function makeLocalStorageMock() {

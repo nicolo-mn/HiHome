@@ -19,7 +19,7 @@ async function handleLogin() {
   isLoading.value = true;
   try {
     await authStore.login(houseId.value, username.value, password.value);
-    router.push({ name: "home" });
+    router.push({ name: "dashboard" });
   } catch {
     error.value = "Invalid credentials. Please try again.";
   } finally {
@@ -29,18 +29,22 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-blue-100 flex flex-col">
-    <div class="bg-gray-900 text-white px-4 py-2 text-sm">Login</div>
+  <div class="min-h-screen bg-base flex flex-col">
+    <div
+      class="bg-surface border-b border-border text-primary px-4 py-2 text-sm font-semibold"
+    >
+      HiHome
+    </div>
 
     <div class="flex-1 flex flex-col items-center justify-center px-8">
-      <h1 class="text-5xl font-light text-blue-400 mb-10">Login</h1>
+      <h1 class="text-5xl font-light text-primary mb-10">Login</h1>
 
       <form
         @submit.prevent="handleLogin"
         class="w-full max-w-xs flex flex-col gap-5"
       >
         <BaseInput
-          label="House- id"
+          label="House ID"
           v-model="houseId"
           placeholder="house-id..."
         />
@@ -56,11 +60,7 @@ async function handleLogin() {
           type="password"
         />
 
-        <div class="flex justify-end">
-          <a href="#" class="text-sm text-blue-400 hover:underline">sign-up</a>
-        </div>
-
-        <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
+        <p v-if="error" class="text-red-400 text-sm text-center">{{ error }}</p>
 
         <div class="mt-20">
           <BaseButton label="Confirm User" :loading="isLoading" />
