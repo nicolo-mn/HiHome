@@ -1,111 +1,111 @@
 package domain
 
-type WeatherCondition int
+type WeatherDescription int
 
 const (
-	ConditionClearSky WeatherCondition = iota
-	ConditionMainlyClear
-	ConditionPartlyCloudy
-	ConditionOvercast
-	ConditionFog
-	ConditionDepositingRimeFog
-	ConditionLightDrizzle
-	ConditionModerateDrizzle
-	ConditionDenseDrizzle
-	ConditionLightFreezingDrizzle
-	ConditionDenseFreezingDrizzle
-	ConditionSlightRain
-	ConditionModerateRain
-	ConditionHeavyRain
-	ConditionLightFreezingRain
-	ConditionHeavyFreezingRain
-	ConditionSlightSnowFall
-	ConditionModerateSnowFall
-	ConditionHeavySnowFall
-	ConditionSnowGrains
-	ConditionSlightRainShowers
-	ConditionModerateRainShowers
-	ConditionViolentRainShowers
-	ConditionSlightSnowShowers
-	ConditionHeavySnowShowers
-	ConditionThunderstorm
-	ConditionThunderstormSlightHail
-	ConditionThunderstormHeavyHail
-	ConditionUnknown
+	ClearSky WeatherDescription = iota
+	MainlyClear
+	PartlyCloudy
+	Overcast
+	Fog
+	DepositingRimeFog
+	LightDrizzle
+	ModerateDrizzle
+	DenseDrizzle
+	LightFreezingDrizzle
+	DenseFreezingDrizzle
+	SlightRain
+	ModerateRain
+	HeavyRain
+	LightFreezingRain
+	HeavyFreezingRain
+	SlightSnowFall
+	ModerateSnowFall
+	HeavySnowFall
+	SnowGrains
+	SlightRainShowers
+	ModerateRainShowers
+	ViolentRainShowers
+	SlightSnowShowers
+	HeavySnowShowers
+	Thunderstorm
+	ThunderstormSlightHail
+	ThunderstormHeavyHail
+	Unknown
 )
 
-var weatherCodeToCondition = map[int]WeatherCondition{
-	0:  ConditionClearSky,
-	1:  ConditionMainlyClear,
-	2:  ConditionPartlyCloudy,
-	3:  ConditionOvercast,
-	45: ConditionFog,
-	48: ConditionDepositingRimeFog,
-	51: ConditionLightDrizzle,
-	53: ConditionModerateDrizzle,
-	55: ConditionDenseDrizzle,
-	56: ConditionLightFreezingDrizzle,
-	57: ConditionDenseFreezingDrizzle,
-	61: ConditionSlightRain,
-	63: ConditionModerateRain,
-	65: ConditionHeavyRain,
-	66: ConditionLightFreezingRain,
-	67: ConditionHeavyFreezingRain,
-	71: ConditionSlightSnowFall,
-	73: ConditionModerateSnowFall,
-	75: ConditionHeavySnowFall,
-	77: ConditionSnowGrains,
-	80: ConditionSlightRainShowers,
-	81: ConditionModerateRainShowers,
-	82: ConditionViolentRainShowers,
-	85: ConditionSlightSnowShowers,
-	86: ConditionHeavySnowShowers,
-	95: ConditionThunderstorm,
-	96: ConditionThunderstormSlightHail,
-	99: ConditionThunderstormHeavyHail,
+var weatherCodeToWeatherDescription = map[int]WeatherDescription{
+	0:  ClearSky,
+	1:  MainlyClear,
+	2:  PartlyCloudy,
+	3:  Overcast,
+	45: Fog,
+	48: DepositingRimeFog,
+	51: LightDrizzle,
+	53: ModerateDrizzle,
+	55: DenseDrizzle,
+	56: LightFreezingDrizzle,
+	57: DenseFreezingDrizzle,
+	61: SlightRain,
+	63: ModerateRain,
+	65: HeavyRain,
+	66: LightFreezingRain,
+	67: HeavyFreezingRain,
+	71: SlightSnowFall,
+	73: ModerateSnowFall,
+	75: HeavySnowFall,
+	77: SnowGrains,
+	80: SlightRainShowers,
+	81: ModerateRainShowers,
+	82: ViolentRainShowers,
+	85: SlightSnowShowers,
+	86: HeavySnowShowers,
+	95: Thunderstorm,
+	96: ThunderstormSlightHail,
+	99: ThunderstormHeavyHail,
 }
 
-func ConditionFromWMOCode(code int) WeatherCondition {
-	if condition, ok := weatherCodeToCondition[code]; ok {
-		return condition
+func FromWMOCode(code int) WeatherDescription {
+	if weatherDescription, ok := weatherCodeToWeatherDescription[code]; ok {
+		return weatherDescription
 	}
-	return ConditionUnknown
+	return Unknown
 }
 
-var conditionToString = map[WeatherCondition]string{
-	ConditionClearSky:               "Clear sky",
-	ConditionMainlyClear:            "Mainly clear",
-	ConditionPartlyCloudy:           "Partly cloudy",
-	ConditionOvercast:               "Overcast",
-	ConditionFog:                    "Fog",
-	ConditionDepositingRimeFog:      "Depositing rime fog",
-	ConditionLightDrizzle:           "Light drizzle",
-	ConditionModerateDrizzle:        "Moderate drizzle",
-	ConditionDenseDrizzle:           "Dense drizzle",
-	ConditionLightFreezingDrizzle:   "Light freezing drizzle",
-	ConditionDenseFreezingDrizzle:   "Dense freezing drizzle",
-	ConditionSlightRain:             "Slight rain",
-	ConditionModerateRain:           "Moderate rain",
-	ConditionHeavyRain:              "Heavy rain",
-	ConditionLightFreezingRain:      "Light freezing rain",
-	ConditionHeavyFreezingRain:      "Heavy freezing rain",
-	ConditionSlightSnowFall:         "Slight snow fall",
-	ConditionModerateSnowFall:       "Moderate snow fall",
-	ConditionHeavySnowFall:          "Heavy snow fall",
-	ConditionSnowGrains:             "Snow grains",
-	ConditionSlightRainShowers:      "Slight rain showers",
-	ConditionModerateRainShowers:    "Moderate rain showers",
-	ConditionViolentRainShowers:     "Violent rain showers",
-	ConditionSlightSnowShowers:      "Slight snow showers",
-	ConditionHeavySnowShowers:       "Heavy snow showers",
-	ConditionThunderstorm:           "Thunderstorm",
-	ConditionThunderstormSlightHail: "Thunderstorm with slight hail",
-	ConditionThunderstormHeavyHail:  "Thunderstorm with heavy hail",
-	ConditionUnknown:                "Unknown",
+var weatherDescriptionToString = map[WeatherDescription]string{
+	ClearSky:               "Clear sky",
+	MainlyClear:            "Mainly clear",
+	PartlyCloudy:           "Partly cloudy",
+	Overcast:               "Overcast",
+	Fog:                    "Fog",
+	DepositingRimeFog:      "Depositing rime fog",
+	LightDrizzle:           "Light drizzle",
+	ModerateDrizzle:        "Moderate drizzle",
+	DenseDrizzle:           "Dense drizzle",
+	LightFreezingDrizzle:   "Light freezing drizzle",
+	DenseFreezingDrizzle:   "Dense freezing drizzle",
+	SlightRain:             "Slight rain",
+	ModerateRain:           "Moderate rain",
+	HeavyRain:              "Heavy rain",
+	LightFreezingRain:      "Light freezing rain",
+	HeavyFreezingRain:      "Heavy freezing rain",
+	SlightSnowFall:         "Slight snow fall",
+	ModerateSnowFall:       "Moderate snow fall",
+	HeavySnowFall:          "Heavy snow fall",
+	SnowGrains:             "Snow grains",
+	SlightRainShowers:      "Slight rain showers",
+	ModerateRainShowers:    "Moderate rain showers",
+	ViolentRainShowers:     "Violent rain showers",
+	SlightSnowShowers:      "Slight snow showers",
+	HeavySnowShowers:       "Heavy snow showers",
+	Thunderstorm:           "Thunderstorm",
+	ThunderstormSlightHail: "Thunderstorm with slight hail",
+	ThunderstormHeavyHail:  "Thunderstorm with heavy hail",
+	Unknown:                "Unknown",
 }
 
-func (c WeatherCondition) String() string {
-	if str, ok := conditionToString[c]; ok {
+func (c WeatherDescription) String() string {
+	if str, ok := weatherDescriptionToString[c]; ok {
 		return str
 	}
 	return "Unknown"

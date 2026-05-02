@@ -12,13 +12,13 @@ import (
 )
 
 type environmentResponse struct {
-	Temperature   float64 `json:"temperature"`
-	Condition     string  `json:"condition"`
-	WindSpeed     float64 `json:"windSpeed"`
-	WindDirection float64 `json:"windDirection"`
-	Precipitation float64 `json:"precipitation"`
-	EuropeanAQI   int     `json:"europeanAqi"`
-	Image         string  `json:"image"`
+	Temperature        float64 `json:"temperature"`
+	WeatherDescription string  `json:"weatherDescription"`
+	WindSpeed          float64 `json:"windSpeed"`
+	WindDirection      float64 `json:"windDirection"`
+	Precipitation      float64 `json:"precipitation"`
+	EuropeanAQI        int     `json:"europeanAqi"`
+	Image              string  `json:"image"`
 }
 
 type EnvironmentController struct {
@@ -49,7 +49,7 @@ func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	icon := conditionToIcon[info.Condition()]
+	icon := weatherDescriptionToIcon[info.WeatherDescription()]
 	imagePath := h.imageDir + "/" + icon.filename()
 	var imageBase64 string
 	if data, err := os.ReadFile(imagePath); err == nil {
@@ -59,13 +59,13 @@ func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 
 	resp := environmentResponse{
-		Temperature:   info.Temperature(),
-		Condition:     info.Condition().String(),
-		WindSpeed:     info.WindSpeed(),
-		WindDirection: info.WindDirection(),
-		Precipitation: info.Precipitation(),
-		EuropeanAQI:   info.EuropeanAQI(),
-		Image:         imageBase64,
+		Temperature:        info.Temperature(),
+		WeatherDescription: info.WeatherDescription().String(),
+		WindSpeed:          info.WindSpeed(),
+		WindDirection:      info.WindDirection(),
+		Precipitation:      info.Precipitation(),
+		EuropeanAQI:        info.EuropeanAQI(),
+		Image:              imageBase64,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
