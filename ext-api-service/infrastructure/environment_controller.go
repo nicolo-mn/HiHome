@@ -73,18 +73,18 @@ func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request
 }
 
 func parseCoordinates(r *http.Request) (float64, float64, error) {
-	latStr := r.URL.Query().Get("lat")
-	lonStr := r.URL.Query().Get("lon")
+	latStr := r.URL.Query().Get("latitude")
+	lonStr := r.URL.Query().Get("longitude")
 	if latStr == "" || lonStr == "" {
-		return 0, 0, fmt.Errorf("lat and lon query parameters are required")
+		return 0, 0, fmt.Errorf("latitude and longitude query parameters are required")
 	}
 	lat, err := strconv.ParseFloat(latStr, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("invalid lat value: %s", latStr)
+		return 0, 0, fmt.Errorf("invalid latitude value: %s", latStr)
 	}
 	lon, err := strconv.ParseFloat(lonStr, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("invalid lon value: %s", lonStr)
+		return 0, 0, fmt.Errorf("invalid longitude value: %s", lonStr)
 	}
 	return lat, lon, nil
 }
