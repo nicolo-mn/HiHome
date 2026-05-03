@@ -1,0 +1,24 @@
+# Needs to be an action as it consist as a set of
+# steps that are reused across jobs
+name: 'Setup HiHome Environment'
+description: 'Sets up Node.js, pnpm, and Go'
+runs:
+  using: 'composite' # to run multiple steps
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v6
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: "24"
+        cache: "pnpm"
+    - name: Install Dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+    - name: Setup Backend Environment
+      shell: bash
+      run: cp backend/.env.test backend/.env
+    - name: Setup Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: "1.26.2"

@@ -1,4 +1,4 @@
-name: Reusable Build
+name: Build # factor out build to be reused in multiple workflows
 
 on:
   workflow_call:
