@@ -10,46 +10,28 @@ concurrency:
 
 jobs:
   build:
-    uses: ./.github/workflows/reusable-build.yml
+    uses: ./.github/workflows/build.yml
 
   format-and-test:
     name: Code Quality and Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup HiHome Environment
+        uses: ./.github/actions/setup-environment
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          cache: "pnpm"
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      # Node.js Workspace Checks (Frontend & Backend)
+      # Workspace Security Checks (Frontend & Backend)
       - name: Security Audit
         run: pnpm audit --audit-level high
 
       - name: Format Check
         run: pnpm run format:check
-        
-      - name: Setup Backend Environment
-        run: cp backend/.env.test backend/.env
 
       - name: Run Tests
         run: pnpm test
-
-      # Go Service Checks
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "1.26.2"
 
       - name: Go Format Check
         working-directory: ./ext-api-service
