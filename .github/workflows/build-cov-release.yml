@@ -1,0 +1,116 @@
+name: Build, upload coverage reports and release
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  test-and-coverage:
+    name: Run Tests and Upload Coverage Reports
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup HiHome Environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Workspace Tests with Coverage
+        run: pnpm run test:coverage
+
+      - name: Upload Backend Coverage
+        uses: codecov/codecov-action@v6
+        with:
+          directory: ./backend/coverage/
+          flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload Frontend Coverage
+        uses: codecov/codecov-action@v6
+        with:
+          directory: ./frontend/coverage/
+          flags: frontend
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Go Test with Coverage
+        working-directory: ./ext-api-service
+        run: go test -v -coverprofile=coverage.out ./...
+
+      - name: Upload Go Coverage
+        uses: codecov/codecov-action@v6
+        with:
+          file: ./ext-api-service/coverage.out
+          flags: ext-api-service
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  release:
+    name: Semantic Release
+    needs: [build, test-and-coverage]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-docker:
+    name: Push Docker images to GitHub Packages
+    needs: release
+    if: needs.release.outputs.new_release_published == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/hihome-frontend:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ github.repository }}/hihome-frontend:latest
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/hihome-backend:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ github.repository }}/hihome-backend:latest
+
+      - name: Build and push ext-api-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ext-api-service
+          push: true
+          tags: ghcr.io/${{ github.repository }}/hihome-ext-api-service:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ github.repository }}/hihome-ext-api-service:latest
