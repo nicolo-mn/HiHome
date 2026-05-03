@@ -30,7 +30,7 @@ describe("Home Context Integration Tests", () => {
   describe("REST Endpoints", () => {
     it("should get component types", async () => {
       const res = await request(app)
-        .get("/home-1/components/types")
+        .get("/home/1/components/types")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(res.body).toContain("light");
@@ -38,7 +38,7 @@ describe("Home Context Integration Tests", () => {
 
     it("should list components for home-1", async () => {
       const res = await request(app)
-        .get("/home-1/components")
+        .get("/home/1/components")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
@@ -47,7 +47,7 @@ describe("Home Context Integration Tests", () => {
 
     it("should add a new component", async () => {
       const res = await request(app)
-        .post("/home-1/components")
+        .post("/home/1/components")
         .set("Authorization", `Bearer ${token}`)
         .send({
           id: "light-3",
@@ -62,36 +62,36 @@ describe("Home Context Integration Tests", () => {
     it("should turn on a light", async () => {
       // First ensure off
       let stateRes = await request(app)
-        .get("/home-1/components/light-1")
+        .get("/home/1/components/light-1")
         .set("Authorization", `Bearer ${token}`);
       expect(stateRes.body.isOn).toBe(false);
 
       const turnOnRes = await request(app)
-        .post("/home-1/components/light-1/turnOn")
+        .post("/home/1/components/light-1/turnOn")
         .set("Authorization", `Bearer ${token}`);
       expect(turnOnRes.status).toBe(200);
 
       stateRes = await request(app)
-        .get("/home-1/components/light-1")
+        .get("/home/1/components/light-1")
         .set("Authorization", `Bearer ${token}`);
       expect(stateRes.body.isOn).toBe(true);
     });
 
     it("should turn off a light", async () => {
       const turnOffRes = await request(app)
-        .post("/home-1/components/light-1/turnOff")
+        .post("/home/1/components/light-1/turnOff")
         .set("Authorization", `Bearer ${token}`);
       expect(turnOffRes.status).toBe(200);
 
       const stateRes = await request(app)
-        .get("/home-1/components/light-1")
+        .get("/home/1/components/light-1")
         .set("Authorization", `Bearer ${token}`);
       expect(stateRes.body.isOn).toBe(false);
     });
 
     it("should list sensor types", async () => {
       const res = await request(app)
-        .get("/home-1/sensors/types")
+        .get("/home/1/sensors/types")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(res.body).toContain("thermometer");
@@ -99,7 +99,7 @@ describe("Home Context Integration Tests", () => {
 
     it("should get components by type", async () => {
       const res = await request(app)
-        .get("/home-1/components/types/light")
+        .get("/home/1/components/types/light")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);

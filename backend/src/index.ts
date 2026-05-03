@@ -33,25 +33,25 @@ const authController = new UserController(authContext.authPort);
 app.post("/api/login", (req, res) => authController.login(req, res));
 
 // --- Home Context routes ---
-app.get("/home-:id/components/types", (req, res) =>
+app.get("/home/:id/components/types", (req, res) =>
   homeController.getComponentTypes(req, res),
 );
-app.get("/home-:id/components/types/:type", (req, res) =>
+app.get("/home/:id/components/types/:type", (req, res) =>
   homeController.getComponentsByType(req, res),
 );
-app.get("/home-:id/components", (req, res) =>
+app.get("/home/:id/components", (req, res) =>
   homeController.getComponents(req, res),
 );
-app.post("/home-:id/components", (req, res) =>
+app.post("/home/:id/components", (req, res) =>
   homeController.addComponent(req, res),
 );
-app.get("/home-:id/components/:componentId", (req, res) =>
+app.get("/home/:id/components/:componentId", (req, res) =>
   homeController.getComponent(req, res),
 );
-app.post("/home-:id/components/:componentId/:action", (req, res) => {
+app.post("/home/:id/components/:componentId/:action", (req, res) => {
   homeController.executeAction(req, res);
 });
-app.get("/home-:id/sensors/types", (req, res) =>
+app.get("/home/:id/sensors/types", (req, res) =>
   homeController.getSensorTypes(req, res),
 );
 

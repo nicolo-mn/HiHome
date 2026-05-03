@@ -9,7 +9,7 @@ describe("Backend Routes (Integration with Supertest)", () => {
     // Generate token via login
     const loginRes = await request(app).post("/api/login").send({
       username: "mockuser",
-      houseId: "house1",
+      houseId: "1",
       password: "mockpassword",
     });
     token = loginRes.body.token;
