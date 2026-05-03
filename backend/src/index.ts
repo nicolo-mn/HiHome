@@ -11,6 +11,7 @@ import { InMemoryHomeRepository } from "./home-context/infrastructure/inMemoryHo
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/socketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/homeService";
 import { HomeController } from "./home-context/infrastructure/homeController";
+import { NotificationContextFactory } from "./notification-context/notificationContextFactory";
 
 const app = express();
 const server = http.createServer(app);
@@ -19,7 +20,11 @@ const io = new SocketIOServer(server, { cors: { origin: "*" } });
 const sensorUpdatePort = new SocketIOSensorUpdatePort(io, "1");
 const homeRepo = new InMemoryHomeRepository(sensorUpdatePort);
 const homeService = new HomeService(homeRepo);
-const homeController = new HomeController(homeService);
+const notificationContext = NotificationContextFactory.create(io);
+const homeController = new HomeController(
+  homeService,
+  notificationContext.notificationPort,
+);
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/test-db";
@@ -31,6 +36,8 @@ const authContext = UserContextFactory.create();
 const authController = new UserController(authContext.authPort);
 
 app.post("/api/login", (req, res) => authController.login(req, res));
+
+app.use("/home", authMiddleware);
 
 // --- Home Context routes ---
 app.get("/home/:id/components/types", (req, res) =>

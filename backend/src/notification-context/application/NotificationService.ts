@@ -58,7 +58,6 @@ export class NotificationService implements NotificationInboundPort {
     event: ComponentActionEvent,
   ): Promise<void> {
     if (event.actor.role === "Admin") return;
-
     const componentLabel = event.componentName || event.componentId;
     const notification = new Notification(
       randomUUID(),

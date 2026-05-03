@@ -1,11 +1,23 @@
 import { Request, Response } from "express";
 import { HomeService } from "../application/homeService";
 import { ComponentStateSerializer } from "./componentStateSerializer";
+import { NotificationInboundPort } from "../../notification-context/application/NotificationInboundPort";
+
+// Extends Express Request to include user information from auth middleware
+type AuthenticatedRequest = Request & {
+  user?: {
+    username?: string;
+    role?: string;
+  };
+};
 
 export class HomeController {
   private stateSerializer = new ComponentStateSerializer();
 
-  constructor(private homeService: HomeService) {}
+  constructor(
+    private homeService: HomeService,
+    private notificationPort?: NotificationInboundPort,
+  ) {}
 
   async getComponents(req: Request, res: Response) {
     try {
@@ -75,6 +87,29 @@ export class HomeController {
         req.params.componentId as string,
         req.params.action as string,
       );
+
+      const user = (req as AuthenticatedRequest).user;
+
+      // Generate an event for the notification system
+      if (user?.username && user.role && this.notificationPort) {
+        try {
+          await this.notificationPort.notifyComponentAction(
+            req.params.id as string,
+            {
+              componentId: component.id,
+              componentName: component.name,
+              action: req.params.action as string,
+              actor: {
+                username: user.username,
+                role: user.role,
+              },
+            },
+          );
+        } catch (error) {
+          console.error("Notification delivery failed", error);
+        }
+      }
+
       res.json(component);
     } catch (e: any) {
       res.status(400).json({ error: e.message });
