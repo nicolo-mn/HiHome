@@ -3,21 +3,24 @@ import { createPinia } from "pinia";
 import "./style.css";
 import App from "./App.vue";
 import router from "./router";
+import { setUnauthorizedHandler } from "./api";
+import { useAuthStore } from "./stores/auth";
 
-const originalFetch = window.fetch.bind(window);
-window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  const token = localStorage.getItem("jwt");
-  if (token) {
-    if (input instanceof Request) {
-      input.headers.set("Authorization", `Bearer ${token}`);
-    } else {
-      init = {
-        ...init,
-        headers: { ...init?.headers, Authorization: `Bearer ${token}` },
-      };
-    }
-  }
-  return originalFetch(input, init);
-};
+const app = createApp(App);
+const pinia = createPinia();
+app.use(pinia).use(router);
 
-createApp(App).use(createPinia()).use(router).mount("#app");
+const authStore = useAuthStore(pinia);
+
+setUnauthorizedHandler(() => {
+  if (!authStore.token) return;
+  authStore.logout();
+  const current = router.currentRoute.value;
+  if (current.name === "login") return;
+  router.push({
+    name: "login",
+    query: { redirect: current.fullPath },
+  });
+});
+
+app.mount("#app");

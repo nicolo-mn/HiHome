@@ -1,57 +1,79 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { authApi } from "../api";
 
-function decodeJwt(jwt: string | null): Record<string, string> | null {
+interface JwtPayload {
+  username?: string;
+  houseId?: string;
+  exp?: number;
+}
+
+function decodeJwt(jwt: string | null): JwtPayload | null {
   if (!jwt) return null;
   try {
-    return JSON.parse(atob(jwt.split(".")[1] ?? ""));
+    const parsed = JSON.parse(atob(jwt.split(".")[1] ?? ""));
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as JwtPayload)
+      : null;
   } catch {
     return null;
   }
 }
 
+function isExpired(payload: JwtPayload | null): boolean {
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 <= Date.now();
+}
+
 export const useAuthStore = defineStore("auth", () => {
   const storedToken = localStorage.getItem("jwt");
-  const decoded = decodeJwt(storedToken);
+  const validAtBoot = !!storedToken && !isExpired(decodeJwt(storedToken));
 
-  const token = ref<string | null>(storedToken);
-  const username = ref<string | null>(decoded?.username ?? null);
-  const houseId = ref<string | null>(decoded?.houseId ?? null);
+  if (storedToken && !validAtBoot) {
+    localStorage.removeItem("jwt");
+  }
 
-  const isAuthenticated = computed(() => !!token.value);
+  const token = ref<string | null>(validAtBoot ? storedToken : null);
+
+  const payload = computed(() => decodeJwt(token.value));
+  const username = computed(() => payload.value?.username ?? null);
+  const houseId = computed(() => payload.value?.houseId ?? null);
+  const expiresAt = computed(() =>
+    payload.value?.exp ? payload.value.exp * 1000 : null,
+  );
+
+  const isAuthenticated = computed(() => {
+    if (!token.value) return false;
+    if (expiresAt.value && expiresAt.value <= Date.now()) return false;
+    return true;
+  });
 
   async function login(
     inputHouseId: string,
     inputUsername: string,
     inputPassword: string,
   ) {
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        houseId: inputHouseId,
-        username: inputUsername,
-        password: inputPassword,
-      }),
+    const { token: newToken } = await authApi.login({
+      houseId: inputHouseId,
+      username: inputUsername,
+      password: inputPassword,
     });
-
-    if (!res.ok) {
-      throw new Error("Invalid credentials");
-    }
-
-    const data: { token: string } = await res.json();
-    token.value = data.token;
-    username.value = inputUsername;
-    houseId.value = inputHouseId;
-    localStorage.setItem("jwt", data.token);
+    token.value = newToken;
+    localStorage.setItem("jwt", newToken);
   }
 
   function logout() {
     token.value = null;
-    username.value = null;
-    houseId.value = null;
     localStorage.removeItem("jwt");
   }
 
-  return { token, username, houseId, isAuthenticated, login, logout };
+  return {
+    token,
+    username,
+    houseId,
+    expiresAt,
+    isAuthenticated,
+    login,
+    logout,
+  };
 });

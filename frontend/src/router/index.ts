@@ -1,11 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "../views/LoginView.vue";
 import AppLayout from "../components/AppLayout.vue";
-import DashboardView from "../views/DashboardView.vue";
-import ComponentsView from "../views/ComponentsView.vue";
-import RulesView from "../views/RulesView.vue";
-import NotificationsView from "../views/NotificationsView.vue";
-import SettingsView from "../views/SettingsView.vue";
+import { useAuthStore } from "../stores/auth";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,29 +16,46 @@ const router = createRouter({
       component: AppLayout,
       meta: { requiresAuth: true },
       children: [
-        { path: "/", component: DashboardView },
-        { path: "/dashboard", name: "dashboard", component: DashboardView },
-        { path: "/components", name: "components", component: ComponentsView },
-        { path: "/rules", name: "rules", component: RulesView },
+        { path: "/", redirect: { name: "dashboard" } },
+        {
+          path: "/dashboard",
+          name: "dashboard",
+          component: () => import("../views/DashboardView.vue"),
+        },
+        {
+          path: "/components",
+          name: "components",
+          component: () => import("../views/ComponentsView.vue"),
+        },
+        {
+          path: "/rules",
+          name: "rules",
+          component: () => import("../views/RulesView.vue"),
+        },
         {
           path: "/notifications",
           name: "notifications",
-          component: NotificationsView,
+          component: () => import("../views/NotificationsView.vue"),
         },
-        { path: "/settings", name: "settings", component: SettingsView },
+        {
+          path: "/settings",
+          name: "settings",
+          component: () => import("../views/SettingsView.vue"),
+        },
       ],
     },
   ],
 });
 
 router.beforeEach((to) => {
-  const isAuthenticated = !!localStorage.getItem("jwt");
+  const auth = useAuthStore();
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    return { name: "login" };
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    if (auth.token) auth.logout();
+    return { name: "login", query: { redirect: to.fullPath } };
   }
 
-  if (to.name === "login" && isAuthenticated) {
+  if (to.name === "login" && auth.isAuthenticated) {
     return { name: "dashboard" };
   }
 });
