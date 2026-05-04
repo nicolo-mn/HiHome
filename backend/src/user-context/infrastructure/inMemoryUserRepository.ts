@@ -8,7 +8,7 @@ export class InMemoryUserRepository implements UserRepository {
       id: "1",
       username: "mockuser",
       password: "mockpassword",
-      houseId: "house1",
+      houseId: "1",
       role: "StandardUser",
     },
   ];
@@ -19,10 +19,6 @@ export class InMemoryUserRepository implements UserRepository {
   ): Promise<User | null> {
     console.log(
       `Searching for user with username: ${username} and houseId: ${houseId}`,
-    );
-    console.log(`Current users in repository: ${JSON.stringify(this.users)}`);
-    console.log(
-      `Equals ${this.users[0].username === username} and ${this.users[0].houseId === houseId}`,
     );
     return (
       this.users.find(

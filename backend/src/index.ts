@@ -11,49 +11,47 @@ import { InMemoryHomeRepository } from "./home-context/infrastructure/inMemoryHo
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/socketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/homeService";
 import { HomeController } from "./home-context/infrastructure/homeController";
+import { NotificationContextFactory } from "./notification-context/notificationContextFactory";
+import { HomeRouter } from "./home-context/infrastructure/home-router";
 
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { cors: { origin: "*" } });
 
-const sensorUpdatePort = new SocketIOSensorUpdatePort(io, "1");
+const notificationContext = NotificationContextFactory.create(io);
+
+// --- Home Context Setup ---
+const sensorUpdatePort = new SocketIOSensorUpdatePort(
+  io,
+  "1",
+  notificationContext.notificationPort,
+);
 const homeRepo = new InMemoryHomeRepository(sensorUpdatePort);
 const homeService = new HomeService(homeRepo);
-const homeController = new HomeController(homeService);
+export const homeController = new HomeController(
+  homeService,
+  notificationContext.notificationPort,
+);
+const homeRouter = new HomeRouter(homeController);
+
+// --- User context setup ---
+const authContext = UserContextFactory.create();
+const authController = new UserController(authContext.authPort);
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/test-db";
 
+// --- Routes and Middlewares setup ---
 app.use(cors());
 app.use(express.json());
 
-const authContext = UserContextFactory.create();
-const authController = new UserController(authContext.authPort);
-
 app.post("/api/login", (req, res) => authController.login(req, res));
-
-// --- Home Context routes ---
-app.get("/home-:id/components/types", (req, res) =>
-  homeController.getComponentTypes(req, res),
-);
-app.get("/home-:id/components/types/:type", (req, res) =>
-  homeController.getComponentsByType(req, res),
-);
-app.get("/home-:id/components", (req, res) =>
-  homeController.getComponents(req, res),
-);
-app.post("/home-:id/components", (req, res) =>
-  homeController.addComponent(req, res),
-);
-app.get("/home-:id/components/:componentId", (req, res) =>
-  homeController.getComponent(req, res),
-);
-app.post("/home-:id/components/:componentId/:action", (req, res) => {
-  homeController.executeAction(req, res);
+app.get("/api/health", (req: Request, res: Response) => {
+  res.json({ status: "ok", db: mongoose.connection.readyState });
 });
-app.get("/home-:id/sensors/types", (req, res) =>
-  homeController.getSensorTypes(req, res),
-);
+
+app.use(authMiddleware);
+app.use("/api/home", homeRouter.router);
 
 // --- Socket.IO for sensor updates ---
 const activeHomes = new Map<
@@ -98,12 +96,6 @@ io.on("connection", (socket) => {
     }
   });
 });
-
-app.get("/api/health", (req: Request, res: Response) => {
-  res.json({ status: "ok", db: mongoose.connection.readyState });
-});
-
-app.use(authMiddleware);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Protected: Hello from MEVN backend!" });
