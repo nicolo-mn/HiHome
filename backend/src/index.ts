@@ -4,7 +4,7 @@ import http from "http";
 import { Server as SocketIOServer } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
-import { UserContextFactory } from "./user-context/userContextFactory";
+import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import { authMiddleware } from "./AuthMiddleware";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
