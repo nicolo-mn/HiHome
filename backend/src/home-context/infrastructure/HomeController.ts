@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { HomeService } from "../application/homeService";
-import { ComponentStateSerializer } from "./componentStateSerializer";
+import { HomeService } from "../application/HomeService";
+import { ComponentStateSerializer } from "./ComponentStateSerializer";
 import { NotificationInboundPort } from "../../notification-context/application/NotificationInboundPort";
 
 // Extends Express Request to include user information from auth middleware

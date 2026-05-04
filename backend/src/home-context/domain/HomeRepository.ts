@@ -1,4 +1,4 @@
-import { Home, Room, Light, Thermometer } from "./";
+import { Home, Room, Light, Thermometer } from ".";
 
 export interface HomeRepository {
   getHome(id: string): Promise<Home | null>;

@@ -1,4 +1,4 @@
-import { HomeRepository } from "../domain/homeRepository";
+import { HomeRepository } from "../domain/HomeRepository";
 import { Component, Sensor, Light } from "../domain";
 
 export class HomeService {

@@ -1,4 +1,4 @@
-import { User } from "./entities";
+import { User } from "./Entities";
 
 export interface UserRepository {
   findByUsernameAndHouseId(

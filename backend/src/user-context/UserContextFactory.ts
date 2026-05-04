@@ -1,7 +1,7 @@
-import { AuthInboundPort } from "./application/authInboundPort";
-import { AuthFacade } from "./application/authFacade";
-import { AuthService } from "./application/authService";
-import { InMemoryUserRepository } from "./infrastructure/inMemoryUserRepository";
+import { AuthInboundPort } from "./application/AuthInboundPort";
+import { AuthFacade } from "./application/AuthFacade";
+import { AuthService } from "./application/AuthService";
+import { InMemoryUserRepository } from "./infrastructure/InMemoryUserRepository";
 
 export interface UserContext {
   authPort: AuthInboundPort;
