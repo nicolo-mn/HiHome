@@ -11,7 +11,7 @@ defineProps<{
   <button
     :type="type ?? 'button'"
     :disabled="disabled || loading"
-    class="w-full py-3 rounded-xl bg-elevated border border-border text-primary font-medium hover:bg-base transition disabled:opacity-50 disabled:cursor-not-allowed"
+    class="w-full py-3 rounded-xl bg-elevated border border-border text-primary font-medium hover:brightness-125 transition disabled:opacity-50 disabled:cursor-not-allowed"
   >
     {{ loading ? "Loading..." : label }}
   </button>

@@ -63,7 +63,7 @@ async function handleLogin() {
         <p v-if="error" class="text-red-400 text-sm text-center">{{ error }}</p>
 
         <div class="mt-20">
-          <BaseButton label="Confirm User" :loading="isLoading" />
+          <BaseButton type="submit" label="Confirm User" :loading="isLoading" />
         </div>
       </form>
     </div>
