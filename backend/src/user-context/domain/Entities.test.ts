@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { StandardUser, Admin } from "./entities";
+import { StandardUser, Admin } from "./Entities";
 
 describe("User Entities", () => {
   describe("StandardUser", () => {

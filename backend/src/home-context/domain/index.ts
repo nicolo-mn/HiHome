@@ -9,4 +9,4 @@ export * from "./SensorUpdate";
 export * from "./SensorUpdatePort";
 export * from "./Thermometer";
 export * from "./Home";
-export * from "./homeRepository";
+export * from "./HomeRepository";

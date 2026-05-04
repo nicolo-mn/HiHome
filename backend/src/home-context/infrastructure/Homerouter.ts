@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { HomeController } from "./homeController";
+import { HomeController } from "./HomeController";
 
 export class HomeRouter {
   public router = Router();

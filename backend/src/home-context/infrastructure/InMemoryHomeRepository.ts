@@ -6,7 +6,7 @@ import {
   SensorDataPort,
   SensorUpdatePort,
 } from "../domain";
-import { HomeRepository } from "../domain/homeRepository";
+import { HomeRepository } from "../domain/HomeRepository";
 
 export class MockSensorDataPort implements SensorDataPort {
   private temp = 22.5;
