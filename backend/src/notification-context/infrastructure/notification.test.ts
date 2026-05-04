@@ -40,7 +40,7 @@ describe("Notification Context Integration Tests", () => {
 
       socket.once("connect", () => {
         request(app)
-          .post("/home/1/components/light-1/turnOn")
+          .post("/api/home/1/components/light-1/turnOn")
           .set("Authorization", `Bearer ${token}`)
           .then((res) => {
             if (res.status !== 200) {
