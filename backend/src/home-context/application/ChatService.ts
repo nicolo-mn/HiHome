@@ -3,7 +3,7 @@ import type { Coordinates } from "../domain";
 
 type ChatRole = "system" | "user" | "assistant";
 
-type ChatMessage = {
+export type ChatMessage = {
   role: ChatRole;
   content: string;
 };
@@ -26,8 +26,6 @@ type ChatServiceOptions = {
 };
 
 export class ChatService {
-  private history = new Map<string, ChatMessage[]>();
-
   constructor(
     private homeService: HomeService,
     private options: ChatServiceOptions,
@@ -37,6 +35,7 @@ export class ChatService {
     houseId: string,
     username: string,
     userMessage: string,
+    history: ChatMessage[],
   ): Promise<string> {
     if (!userMessage.trim()) {
       throw new Error("Message is required");
@@ -49,8 +48,7 @@ export class ChatService {
     const forecastText = await this.getForecastText(houseId);
     const systemPrompt = this.buildSystemPrompt(forecastText);
 
-    const key = this.historyKey(houseId, username);
-    const existing = this.history.get(key) ?? [];
+    const existing = this.normalizeHistory(history);
     const messages: ChatMessage[] = [
       { role: "system", content: systemPrompt },
       ...existing,
@@ -58,20 +56,8 @@ export class ChatService {
     ];
 
     const reply = await this.callDeepSeek(messages);
-    //const reply = "Sorry, the chat service is currently unavailable.";
-
-    const updated: ChatMessage[] = [
-      ...existing,
-      { role: "user", content: userMessage },
-    ];
-    updated.push({ role: "assistant", content: reply });
-    this.history.set(key, this.trimHistory(updated));
 
     return reply;
-  }
-
-  private historyKey(houseId: string, username: string) {
-    return `${houseId}:${username}`;
   }
 
   private trimHistory(history: ChatMessage[]): ChatMessage[] {
@@ -79,6 +65,13 @@ export class ChatService {
       return history;
     }
     return history.slice(history.length - this.options.maxHistory);
+  }
+
+  private normalizeHistory(history: ChatMessage[]): ChatMessage[] {
+    const filtered = history.filter(
+      (message) => message.role === "user" || message.role === "assistant",
+    );
+    return this.trimHistory(filtered);
   }
 
   private buildSystemPrompt(forecastText: string) {

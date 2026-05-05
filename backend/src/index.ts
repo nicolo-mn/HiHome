@@ -114,6 +114,44 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+  socket.on(
+    "chat:send",
+    async (
+      payload: {
+        message?: string;
+        username?: string;
+        history?: Array<{ role: "user" | "assistant"; content: string }>;
+      },
+      callback?: (response: { reply?: string; error?: string }) => void,
+    ) => {
+      const respond = (response: { reply?: string; error?: string }) => {
+        if (typeof callback === "function") {
+          callback(response);
+        }
+      };
+
+      if (!payload?.message || !payload.username) {
+        respond({ error: "Message and username are required" });
+        return;
+      }
+
+      try {
+        const safeHistory = Array.isArray(payload.history)
+          ? payload.history
+          : [];
+        const reply = await chatService.chat(
+          homeId,
+          payload.username,
+          payload.message,
+          safeHistory,
+        );
+        respond({ reply });
+      } catch (error: any) {
+        respond({ error: error.message ?? "Chat failed" });
+      }
+    },
+  );
 });
 
 app.get("/", (req: Request, res: Response) => {

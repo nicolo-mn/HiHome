@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ChatService } from "../application/ChatService";
+import { ChatService, type ChatMessage } from "../application/ChatService";
 
 type AuthedUser = {
   houseId: string;
@@ -10,7 +10,10 @@ export class ChatController {
   constructor(private chatService: ChatService) {}
 
   async chat(req: Request, res: Response) {
-    const { message } = req.body as { message?: string };
+    const { message, history } = req.body as {
+      message?: string;
+      history?: ChatMessage[];
+    };
     const user = (req as any).user as AuthedUser | undefined;
 
     if (!user?.houseId || !user.username) {
@@ -24,10 +27,12 @@ export class ChatController {
     }
 
     try {
+      const safeHistory = Array.isArray(history) ? history : [];
       const reply = await this.chatService.chat(
         user.houseId,
         user.username,
         message,
+        safeHistory,
       );
       res.json({ reply });
     } catch (error: any) {
