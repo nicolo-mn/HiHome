@@ -8,22 +8,21 @@ export class InMemoryUserRepository implements UserRepository {
       id: "1",
       username: "mockuser",
       password: "mockpassword",
-      houseId: "1",
+      homeId: "1",
       role: "StandardUser",
     },
   ];
 
-  async findByUsernameAndHouseId(
-    houseId: string,
+  async findByUsernameAndHomeId(
+    homeId: string,
     username: string,
   ): Promise<User | null> {
     console.log(
-      `Searching for user with username: ${username} and houseId: ${houseId}`,
+      `Searching for user with username: ${username} and homeId: ${homeId}`,
     );
     return (
-      this.users.find(
-        (u) => u.username === username && u.houseId === houseId,
-      ) || null
+      this.users.find((u) => u.username === username && u.homeId === homeId) ||
+      null
     );
   }
 }
