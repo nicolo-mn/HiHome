@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import BaseInput from "../components/BaseInput.vue";
 import BaseButton from "../components/BaseButton.vue";
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const houseId = ref("");
@@ -19,7 +20,10 @@ async function handleLogin() {
   isLoading.value = true;
   try {
     await authStore.login(houseId.value, username.value, password.value);
-    router.push({ name: "dashboard" });
+    const redirect = route.query.redirect;
+    router.push(
+      typeof redirect === "string" ? redirect : { name: "dashboard" },
+    );
   } catch {
     error.value = "Invalid credentials. Please try again.";
   } finally {
