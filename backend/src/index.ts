@@ -9,18 +9,18 @@ import { UserController } from "./user-context/infrastructure/UserController";
 import {
   authMiddleware,
   homeIdMiddleware,
-} from "./middlewares/RoutesMiddlewares";
+} from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
-import { HomeRouter } from "./home-context/infrastructure/Homerouter";
+import { HomeRouter } from "./home-context/infrastructure/HomeRouter";
 import { verifyAuthToken } from "./utils/JwtUtils";
 import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
-} from "./middlewares/WebSocketsMiddlewares";
+} from "./home-context/infrastructure/middlewares/WebSocketsMiddlewares";
 
 const app = express();
 const server = http.createServer(app);

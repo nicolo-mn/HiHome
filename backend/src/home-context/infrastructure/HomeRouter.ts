@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { HomeController } from "./HomeController";
-import { homeIdMiddleware } from "../../middlewares/RoutesMiddlewares";
+import { homeIdMiddleware } from "./middlewares/RoutesMiddlewares";
 
 export class HomeRouter {
   public router = Router();

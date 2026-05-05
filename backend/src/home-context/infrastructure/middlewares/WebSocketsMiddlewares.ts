@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-import { verifyAuthToken } from "../utils/JwtUtils";
+import { verifyAuthToken } from "../../../utils/JwtUtils";
 
 export const wsAuthMiddleware = (
   socket: Socket,
