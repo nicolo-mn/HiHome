@@ -1,5 +1,5 @@
 import { HomeRepository } from "../domain/HomeRepository";
-import { Component, Sensor, Light } from "../domain";
+import { Component, Sensor, Light, Coordinates } from "../domain";
 
 export class HomeService {
   constructor(private homeRepo: HomeRepository) {}
@@ -85,5 +85,12 @@ export class HomeService {
     const home = await this.homeRepo.getHome(homeId);
     if (!home) throw new Error("Home not found");
     return home.getAllSensors();
+  }
+
+  async getHomeCoordinates(homeId: string): Promise<Coordinates> {
+    console.log(`Fetching coordinates for home ${homeId}`);
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error("Home not found");
+    return home.coordinates;
   }
 }
