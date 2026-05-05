@@ -1,7 +1,7 @@
 services:
   mongodb:
     image: mongo:latest
-    container_name: mongodb_dev
+    container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
@@ -11,7 +11,7 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile.dev
-    container_name: mevn_backend_dev
+    container_name: mevn_backend
     environment:
       - PORT=3000
       - MONGO_URI=mongodb://mongodb:27017/test-db
@@ -27,7 +27,7 @@ services:
     build:
       context: ./ext-api-service
       dockerfile: Dockerfile.dev
-    container_name: ext_api_service_dev
+    container_name: ext_api_service
     ports:
       - "8081:8080"
     volumes:
@@ -37,7 +37,7 @@ services:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile.dev
-    container_name: mevn_frontend_dev
+    container_name: mevn_frontend
     ports:
       - "8080:5173"
     environment:
