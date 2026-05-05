@@ -1,22 +1,18 @@
 import "dotenv/config";
 import express, { Request, Response } from "express";
 import http from "http";
-import { Socket, Server as SocketIOServer } from "socket.io";
+import { Server as SocketIOServer } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
 import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
-import {
-  authMiddleware,
-  homeIdMiddleware,
-} from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
+import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
 import { HomeRouter } from "./home-context/infrastructure/HomeRouter";
-import { verifyAuthToken } from "./utils/JwtUtils";
 import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
