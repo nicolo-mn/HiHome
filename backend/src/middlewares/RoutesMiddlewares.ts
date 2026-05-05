@@ -24,19 +24,19 @@ export const authMiddleware = (
   }
 };
 
-export const houseIdMiddleware = (
+export const homeIdMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const houseId = req.params.id;
-  if (!houseId) {
-    res.status(400).json({ error: "Bad Request: Missing houseId parameter" });
+  const homeId = req.params.id;
+  if (!homeId) {
+    res.status(400).json({ error: "Bad Request: Missing homeId parameter" });
     return;
   }
 
   const user = (req as any).user;
-  if (!user || user.houseId !== houseId) {
+  if (!user || user.homeId !== homeId) {
     res
       .status(403)
       .json({ error: "Forbidden: Access to this house is denied" });

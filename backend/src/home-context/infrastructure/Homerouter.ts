@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { HomeController } from "./HomeController";
-import { houseIdMiddleware } from "../../middlewares/RoutesMiddlewares";
+import { homeIdMiddleware } from "../../middlewares/RoutesMiddlewares";
 
 export class HomeRouter {
   public router = Router();
@@ -10,7 +10,7 @@ export class HomeRouter {
   }
 
   registerRoutes() {
-    this.router.use("/:id", houseIdMiddleware);
+    this.router.use("/:id", homeIdMiddleware);
     this.router.get("/:id/components/types", (req, res) =>
       this.homeController.getComponentTypes(req, res),
     );

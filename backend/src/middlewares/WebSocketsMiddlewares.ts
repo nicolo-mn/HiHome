@@ -25,18 +25,18 @@ export const wsAuthMiddleware = (
   }
 };
 
-export const wsHouseIdMiddleware = (
+export const wsHomeIdMiddleware = (
   socket: Socket,
   next: (err?: Error) => void,
 ) => {
-  const houseId = socket.handshake.query.houseId as string;
+  const homeId = socket.handshake.query.homeId as string;
 
-  if (!houseId) {
-    return next(new Error("Bad Request: Missing houseId parameter"));
+  if (!homeId) {
+    return next(new Error("Bad Request: Missing homeId parameter"));
   }
 
   const user = (socket as any).user;
-  if (!user || user.houseId !== houseId) {
+  if (!user || user.homeId !== homeId) {
     return next(new Error("Forbidden: Access to this house is denied"));
   }
 

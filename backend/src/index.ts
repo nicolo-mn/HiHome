@@ -8,7 +8,7 @@ import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import {
   authMiddleware,
-  houseIdMiddleware,
+  homeIdMiddleware,
 } from "./middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
@@ -19,7 +19,7 @@ import { HomeRouter } from "./home-context/infrastructure/Homerouter";
 import { verifyAuthToken } from "./utils/JwtUtils";
 import {
   wsAuthMiddleware,
-  wsHouseIdMiddleware,
+  wsHomeIdMiddleware,
 } from "./middlewares/WebSocketsMiddlewares";
 
 const app = express();
@@ -68,10 +68,10 @@ const activeHomes = new Map<
 >();
 
 io.use(wsAuthMiddleware);
-io.use(wsHouseIdMiddleware);
+io.use(wsHomeIdMiddleware);
 
 io.on("connection", (socket) => {
-  const homeId = socket.handshake.query.houseId as string;
+  const homeId = socket.handshake.query.homeId as string;
   if (!homeId) {
     socket.disconnect();
     return;

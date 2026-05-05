@@ -10,7 +10,7 @@ describe("Home Context Integration Tests", () => {
   beforeAll(async () => {
     const loginRes = await request(app).post("/api/login").send({
       username: "mockuser",
-      houseId: "1",
+      homeId: "1",
       password: "mockpassword",
     });
     token = loginRes.body.token;
@@ -113,7 +113,7 @@ describe("Home Context Integration Tests", () => {
       return new Promise<void>((resolve, reject) => {
         const socket: Socket = ioClient(`http://localhost:${port}`, {
           auth: { token: `Bearer ${token}` },
-          query: { homeId: "1", houseId: "1" },
+          query: { homeId: "1" },
         });
 
         socket.on("sensorUpdate", (data) => {

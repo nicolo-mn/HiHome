@@ -15,7 +15,7 @@ describe("AuthService", () => {
     );
 
     const mockUserRepository: UserRepository = {
-      findByUsernameAndHouseId: vi.fn().mockResolvedValue(mockUser),
+      findByUsernameAndHomeId: vi.fn().mockResolvedValue(mockUser),
     };
 
     const authService = new AuthService(mockUserRepository);
@@ -24,20 +24,18 @@ describe("AuthService", () => {
 
     expect(typeof result).toBe("string");
     const decoded = jwt.decode(result) as any;
-    expect(decoded.houseId).toBe("house1");
+    expect(decoded.homeId).toBe("house1");
     expect(decoded.username).toBe("johndoe");
-    expect(mockUserRepository.findByUsernameAndHouseId).toHaveBeenCalledWith(
+    expect(mockUserRepository.findByUsernameAndHomeId).toHaveBeenCalledWith(
       "house1",
       "johndoe",
     );
-    expect(mockUserRepository.findByUsernameAndHouseId).toHaveBeenCalledTimes(
-      1,
-    );
+    expect(mockUserRepository.findByUsernameAndHomeId).toHaveBeenCalledTimes(1);
   });
 
   it("should throw an error if the user is not found", async () => {
     const mockUserRepository: UserRepository = {
-      findByUsernameAndHouseId: vi.fn().mockResolvedValue(null),
+      findByUsernameAndHomeId: vi.fn().mockResolvedValue(null),
     };
 
     const authService = new AuthService(mockUserRepository);
@@ -45,7 +43,7 @@ describe("AuthService", () => {
     await expect(
       authService.login("house1", "unknown_user", "password123"),
     ).rejects.toThrow("User not found");
-    expect(mockUserRepository.findByUsernameAndHouseId).toHaveBeenCalledWith(
+    expect(mockUserRepository.findByUsernameAndHomeId).toHaveBeenCalledWith(
       "house1",
       "unknown_user",
     );

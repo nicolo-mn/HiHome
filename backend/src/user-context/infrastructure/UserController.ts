@@ -5,9 +5,9 @@ export class UserController {
   constructor(private service: AuthInboundPort) {}
 
   async login(req: Request, res: Response): Promise<void> {
-    const { houseId, username } = req.body;
+    const { homeId, username } = req.body;
     try {
-      const result = await this.service.login(houseId, username, "");
+      const result = await this.service.login(homeId, username, "");
       res.json({ token: result });
     } catch (error) {
       res.status(401).json({ error: "Invalid credentials" });

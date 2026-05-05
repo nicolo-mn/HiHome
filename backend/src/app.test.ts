@@ -9,7 +9,7 @@ describe("Backend Routes (Integration with Supertest)", () => {
     // Generate token via login
     const loginRes = await request(app).post("/api/login").send({
       username: "mockuser",
-      houseId: "1",
+      homeId: "1",
       password: "mockpassword",
     });
     token = loginRes.body.token;
@@ -42,7 +42,7 @@ describe("Backend Routes (Integration with Supertest)", () => {
 
   it("POST /api/login should return 400 when missing required fields", async () => {
     const response = await request(app).post("/api/login").send({
-      houseId: "house1",
+      homeId: "house1",
     });
 
     expect(response.status).toBeGreaterThanOrEqual(400);
