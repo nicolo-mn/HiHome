@@ -6,12 +6,12 @@ export class AuthService implements AuthInboundPort {
   constructor(private userRepository: UserRepository) {}
 
   async login(
-    houseId: string,
+    homeId: string,
     username: string,
     password: string,
   ): Promise<string> {
-    const user = await this.userRepository.findByUsernameAndHouseId(
-      houseId,
+    const user = await this.userRepository.findByUsernameAndHomeId(
+      homeId,
       username,
     );
     if (!user) {
@@ -26,7 +26,7 @@ export class AuthService implements AuthInboundPort {
     }
 
     const payload = {
-      houseId: user.houseId,
+      homeId: user.homeId,
       username: user.username,
       role: user.role,
     };
