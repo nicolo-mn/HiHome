@@ -112,7 +112,8 @@ describe("Home Context Integration Tests", () => {
     it("should receive sensor updates via socket.io", async () => {
       return new Promise<void>((resolve, reject) => {
         const socket: Socket = ioClient(`http://localhost:${port}`, {
-          query: { homeId: "1" },
+          auth: { token: `Bearer ${token}` },
+          query: { homeId: "1", houseId: "1" },
         });
 
         socket.on("sensorUpdate", (data) => {

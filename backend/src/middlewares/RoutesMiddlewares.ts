@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { verifyAuthToken } from "../utils/JwtUtils";
 
 export const authMiddleware = (
   req: Request,
@@ -13,14 +13,35 @@ export const authMiddleware = (
   }
 
   const token = authHeader.split(" ")[1];
-  const secret = process.env.JWT_SECRET as string;
 
   try {
-    const decoded = jwt.verify(token, secret);
+    const decoded = verifyAuthToken(token);
     // Attach decoded user info to request object
     (req as any).user = decoded;
     next();
   } catch (error) {
     res.status(401).json({ error: "Unauthorized: Invalid token" });
   }
+};
+
+export const houseIdMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const houseId = req.params.id;
+  if (!houseId) {
+    res.status(400).json({ error: "Bad Request: Missing houseId parameter" });
+    return;
+  }
+
+  const user = (req as any).user;
+  if (!user || user.houseId !== houseId) {
+    res
+      .status(403)
+      .json({ error: "Forbidden: Access to this house is denied" });
+    return;
+  }
+
+  next();
 };

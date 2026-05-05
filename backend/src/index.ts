@@ -1,18 +1,26 @@
 import "dotenv/config";
 import express, { Request, Response } from "express";
 import http from "http";
-import { Server as SocketIOServer } from "socket.io";
+import { Socket, Server as SocketIOServer } from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
 import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
-import { authMiddleware } from "./AuthMiddleware";
+import {
+  authMiddleware,
+  houseIdMiddleware,
+} from "./middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
 import { HomeRouter } from "./home-context/infrastructure/Homerouter";
+import { verifyAuthToken } from "./utils/JwtUtils";
+import {
+  wsAuthMiddleware,
+  wsHouseIdMiddleware,
+} from "./middlewares/WebSocketsMiddlewares";
 
 const app = express();
 const server = http.createServer(app);
@@ -59,8 +67,11 @@ const activeHomes = new Map<
   { count: number; interval: NodeJS.Timeout }
 >();
 
+io.use(wsAuthMiddleware);
+io.use(wsHouseIdMiddleware);
+
 io.on("connection", (socket) => {
-  const homeId = socket.handshake.query.homeId as string;
+  const homeId = socket.handshake.query.houseId as string;
   if (!homeId) {
     socket.disconnect();
     return;

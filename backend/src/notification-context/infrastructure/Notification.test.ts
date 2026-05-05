@@ -29,8 +29,8 @@ describe("Notification Context Integration Tests", () => {
   it("should receive an action notification when an action is triggered", async () => {
     return new Promise<void>((resolve, reject) => {
       const socket: Socket = ioClient(`http://localhost:${port}`, {
-        auth: { token },
-        query: { homeId: "1" },
+        auth: { token: `Bearer ${token}` },
+        query: { homeId: "1", houseId: "1" },
       });
 
       const timeout = setTimeout(() => {
