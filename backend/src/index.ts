@@ -13,6 +13,8 @@ import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
 import { HomeRouter } from "./home-context/infrastructure/Homerouter";
+import { ChatService } from "./home-context/application/ChatService";
+import { ChatController } from "./home-context/infrastructure/ChatController";
 
 const app = express();
 const server = http.createServer(app);
@@ -37,6 +39,23 @@ const homeRouter = new HomeRouter(homeController);
 // --- User context setup ---
 const authContext = UserContextFactory.create();
 const authController = new UserController(authContext.authPort);
+
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "";
+const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
+const DEEPSEEK_API_BASE_URL =
+  process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com";
+const EXT_API_BASE_URL =
+  process.env.EXT_API_BASE_URL || "http://ext_api_service:8080";
+const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 20);
+
+const chatService = new ChatService(homeService, {
+  apiKey: DEEPSEEK_API_KEY,
+  model: DEEPSEEK_MODEL,
+  apiBaseUrl: DEEPSEEK_API_BASE_URL,
+  extApiBaseUrl: EXT_API_BASE_URL,
+  maxHistory: CHAT_MAX_HISTORY,
+});
+const chatController = new ChatController(chatService);
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/test-db";
@@ -99,6 +118,10 @@ io.on("connection", (socket) => {
 
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Protected: Hello from MEVN backend!" });
+});
+
+app.post("/api/chat", (req: Request, res: Response) => {
+  chatController.chat(req, res);
 });
 
 app.get("/api/message", async (req: Request, res: Response) => {
