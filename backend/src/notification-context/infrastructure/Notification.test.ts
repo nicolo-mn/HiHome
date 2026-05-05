@@ -9,7 +9,7 @@ describe("Notification Context Integration Tests", () => {
   beforeAll(async () => {
     const loginRes = await request(app).post("/api/login").send({
       username: "mockuser",
-      houseId: "1",
+      homeId: "1",
       password: "mockpassword",
     });
     token = loginRes.body.token;
@@ -29,7 +29,7 @@ describe("Notification Context Integration Tests", () => {
   it("should receive an action notification when an action is triggered", async () => {
     return new Promise<void>((resolve, reject) => {
       const socket: Socket = ioClient(`http://localhost:${port}`, {
-        auth: { token },
+        auth: { token: `Bearer ${token}` },
         query: { homeId: "1" },
       });
 

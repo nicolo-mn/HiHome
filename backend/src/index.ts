@@ -6,15 +6,19 @@ import mongoose from "mongoose";
 import cors from "cors";
 import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
-import { authMiddleware } from "./AuthMiddleware";
+import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
-import { HomeRouter } from "./home-context/infrastructure/Homerouter";
 import { ChatService } from "./home-context/application/ChatService";
 import { ChatController } from "./home-context/infrastructure/ChatController";
+import { HomeRouter } from "./home-context/infrastructure/HomeRouter";
+import {
+  wsAuthMiddleware,
+  wsHomeIdMiddleware,
+} from "./home-context/infrastructure/middlewares/WebSocketMiddlewares";
 
 const app = express();
 const server = http.createServer(app);
@@ -77,6 +81,9 @@ const activeHomes = new Map<
   string,
   { count: number; interval: NodeJS.Timeout }
 >();
+
+io.use(wsAuthMiddleware);
+io.use(wsHomeIdMiddleware);
 
 io.on("connection", (socket) => {
   const homeId = socket.handshake.query.homeId as string;

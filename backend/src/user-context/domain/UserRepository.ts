@@ -1,8 +1,8 @@
 import { User } from "./Entities";
 
 export interface UserRepository {
-  findByUsernameAndHouseId(
-    houseId: string,
+  findByUsernameAndHomeId(
+    homeId: string,
     username: string,
   ): Promise<User | null>;
 }
