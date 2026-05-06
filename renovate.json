@@ -8,7 +8,6 @@
   "semanticCommits": "enabled",
   "ignoreUnstable": true,
   "automerge": true,
-  "platformAutomerge": true,
   "automergeSchedule": ["* 2-7 * * *"],
   "timezone": "CET",
   "prHourlyLimit": 0,
