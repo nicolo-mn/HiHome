@@ -1,7 +1,7 @@
 import { apiFetch } from "./client";
 
 export interface LoginRequest {
-  houseId: string;
+  homeId: string;
   username: string;
   password: string;
 }

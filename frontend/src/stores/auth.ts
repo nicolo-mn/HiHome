@@ -54,7 +54,7 @@ export const useAuthStore = defineStore("auth", () => {
     inputPassword: string,
   ) {
     const { token: newToken } = await authApi.login({
-      houseId: inputHouseId,
+      homeId: inputHouseId,
       username: inputUsername,
       password: inputPassword,
     });
