@@ -64,7 +64,7 @@ async function handleLogin() {
           type="password"
         />
 
-        <p v-if="error" class="text-red-400 text-sm text-center">{{ error }}</p>
+        <p v-if="error" class="text-danger text-sm text-center">{{ error }}</p>
 
         <div class="mt-20">
           <BaseButton type="submit" label="Confirm User" :loading="isLoading" />
