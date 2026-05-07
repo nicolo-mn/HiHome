@@ -10,6 +10,7 @@ import { authMiddleware } from "./home-context/infrastructure/middlewares/Routes
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
+import { createDefaultCapabilityRegistry } from "./home-context/application/DefaultCapabilityRegistry";
 import { HomeController } from "./home-context/infrastructure/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
 import { ChatService } from "./home-context/application/ChatService";
@@ -19,6 +20,11 @@ import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
 } from "./home-context/infrastructure/middlewares/WebSocketMiddlewares";
+import { RuleService } from "./rule-context/application/RuleService";
+import { HomeServiceAdapter } from "./rule-context/infrastructure/HomeServiceAdapter";
+import { InMemoryRuleRepository } from "./rule-context/infrastructure/InMemoryRuleRepository";
+import { RuleController } from "./rule-context/infrastructure/RuleController";
+import { RuleRouter } from "./rule-context/infrastructure/RuleRouter";
 
 const app = express();
 const server = http.createServer(app);
@@ -33,12 +39,20 @@ const sensorUpdatePort = new SocketIOSensorUpdatePort(
   notificationContext.notificationPort,
 );
 const homeRepo = new InMemoryHomeRepository(sensorUpdatePort);
-const homeService = new HomeService(homeRepo);
+const capabilityRegistry = createDefaultCapabilityRegistry();
+const homeService = new HomeService(homeRepo, capabilityRegistry);
 export const homeController = new HomeController(
   homeService,
   notificationContext.notificationPort,
 );
 const homeRouter = new HomeRouter(homeController);
+
+// --- Rule Context Setup ---
+const ruleRepo = new InMemoryRuleRepository();
+const homeServiceAdapter = new HomeServiceAdapter(homeService);
+const ruleService = new RuleService(ruleRepo, homeServiceAdapter);
+export const ruleController = new RuleController(ruleService);
+const ruleRouter = new RuleRouter(ruleController);
 
 // --- User context setup ---
 const authContext = UserContextFactory.create();
@@ -75,7 +89,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 
 app.use(authMiddleware);
 app.use("/api/home", homeRouter.router);
-
+app.use("/api/home", ruleRouter.router);
 // --- Socket.IO for sensor updates ---
 const activeHomes = new Map<
   string,

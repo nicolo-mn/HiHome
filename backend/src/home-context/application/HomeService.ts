@@ -1,8 +1,18 @@
 import { HomeRepository } from "../domain/HomeRepository";
-import { Component, Sensor, Light, Coordinates } from "../domain";
+import { Component, Sensor, Light, Coordinates, Thermometer } from "../domain";
+import {
+  ActionCommand,
+  CapabilityCatalog,
+  CapabilityRegistry,
+  ComponentDescriptor,
+  ObservableDescriptor,
+} from "./CapabilityRegistry";
 
 export class HomeService {
-  constructor(private homeRepo: HomeRepository) {}
+  constructor(
+    private homeRepo: HomeRepository,
+    private capabilityRegistry: CapabilityRegistry,
+  ) {}
 
   async getComponents(homeId: string): Promise<Component[]> {
     const home = await this.homeRepo.getHome(homeId);
@@ -87,10 +97,63 @@ export class HomeService {
     return home.getAllSensors();
   }
 
+  async getCapabilityCatalog(homeId: string): Promise<CapabilityCatalog> {
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error("Home not found");
+
+    const components = this.buildComponentCatalog(home.getAllComponents());
+    const observables = this.buildObservableCatalog();
+
+    return { components, observables };
+  }
+
   async getHomeCoordinates(homeId: string): Promise<Coordinates> {
     console.log(`Fetching coordinates for home ${homeId}`);
     const home = await this.homeRepo.getHome(homeId);
     if (!home) throw new Error("Home not found");
     return home.coordinates;
+  }
+
+  private buildComponentCatalog(
+    components: Component[],
+  ): ComponentDescriptor[] {
+    return components.map((component) => ({
+      componentId: component.id,
+      label: component.name,
+      capabilities: this.capabilityRegistry.getComponentCapabilities(component),
+    }));
+  }
+
+  private buildObservableCatalog(): ObservableDescriptor[] {
+    return [
+      {
+        observableId: "internal-thermometer",
+        capabilityId: "temperature",
+        label: "Internal Thermometer",
+        unit: "C",
+        operators: ["gt", "lt", "gte", "lte", "eq"],
+      },
+      {
+        observableId: "external-thermometer",
+        capabilityId: "temperature",
+        label: "External Thermometer",
+        unit: "C",
+        operators: ["gt", "lt", "gte", "lte", "eq"],
+      },
+      {
+        observableId: "weather",
+        capabilityId: "weather",
+        label: "Weather",
+        operators: ["is"],
+        enumValues: ["sunny", "cloudy", "rainy", "snowy"], // TODO: choose which ones to put
+      },
+      {
+        observableId: "air-quality",
+        capabilityId: "air-quality",
+        label: "Air Quality",
+        unit: "AQI",
+        operators: ["gt", "lt", "gte", "lte", "eq"],
+      },
+    ];
   }
 }
