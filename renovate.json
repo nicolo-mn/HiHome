@@ -8,7 +8,7 @@
   "semanticCommits": "enabled",
   "ignoreUnstable": true,
   "automerge": true,
-  "automergeSchedule": ["* 2-7 * * *"],
+  "schedule": ["* 2-7 * * *"],
   "timezone": "CET",
   "prHourlyLimit": 0,
   "rebaseWhen": "behind-base-branch"
