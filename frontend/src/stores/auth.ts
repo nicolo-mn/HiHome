@@ -4,7 +4,7 @@ import { authApi } from "../api";
 
 interface JwtPayload {
   username?: string;
-  houseId?: string;
+  homeId?: string;
   exp?: number;
 }
 
@@ -37,7 +37,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const payload = computed(() => decodeJwt(token.value));
   const username = computed(() => payload.value?.username ?? null);
-  const houseId = computed(() => payload.value?.houseId ?? null);
+  const houseId = computed(() => payload.value?.homeId ?? null);
   const expiresAt = computed(() =>
     payload.value?.exp ? payload.value.exp * 1000 : null,
   );
