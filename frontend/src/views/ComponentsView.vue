@@ -14,7 +14,7 @@ import AddComponentCard from "../components/cards/AddComponentCard.vue";
 import BaseButton from "../components/BaseButton.vue";
 
 const authStore = useAuthStore();
-const homeId = computed(() => authStore.houseId);
+const homeId = computed(() => authStore.homeId);
 
 const components = ref<HomeComponent[]>([]);
 const isLoading = ref(false);
