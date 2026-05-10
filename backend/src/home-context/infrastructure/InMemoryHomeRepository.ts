@@ -5,6 +5,7 @@ import {
   Room,
   SensorDataPort,
   SensorUpdatePort,
+  Component,
 } from "../domain";
 import { HomeRepository } from "../domain/HomeRepository";
 
@@ -50,6 +51,17 @@ export class InMemoryHomeRepository implements HomeRepository {
 
   async getHome(id: string): Promise<Home | null> {
     return this.homes.get(id) || null;
+  }
+
+  async getComponentById(id: string): Promise<Component | null> {
+    // Convert map values to an array and search through them
+    for (const home of this.homes.values()) {
+      const component = home.getAllComponents().find((c) => c.id === id);
+      if (component) {
+        return component;
+      }
+    }
+    return null;
   }
 
   async saveHome(home: Home): Promise<void> {

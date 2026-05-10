@@ -1,7 +1,7 @@
 import { Coordinates } from "./Coordinates";
 import { Room } from "./Room";
 import { Sensor } from "./Sensor";
-import { Component } from "./Component";
+import { Component, ComponentTypes } from "./Component";
 
 export class Home {
   constructor(
@@ -15,8 +15,17 @@ export class Home {
     return this.rooms.flatMap((room) => room.components);
   }
 
-  getComponentById(id: string): Component | undefined {
-    return this.getAllComponents().find((c) => c.id === id);
+  getComponentById(componentId: string): Component | undefined {
+    return this.getAllComponents().find((c) => c.id === componentId);
+  }
+
+  getComponentByIdAndType(
+    componentId: string,
+    type: ComponentTypes,
+  ): Component | undefined {
+    return this.getAllComponents().find(
+      (c) => c.id === componentId && c.getType() === type,
+    );
   }
 
   getAllSensors(): Sensor[] {

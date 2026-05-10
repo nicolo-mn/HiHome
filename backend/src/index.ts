@@ -10,15 +10,22 @@ import { authMiddleware } from "./home-context/infrastructure/middlewares/Routes
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
-import { HomeController } from "./home-context/infrastructure/HomeController";
+import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
 import { ChatService } from "./home-context/application/ChatService";
-import { ChatController } from "./home-context/infrastructure/ChatController";
-import { HomeRouter } from "./home-context/infrastructure/HomeRouter";
+import { ChatController } from "./home-context/infrastructure/controllers/ChatController";
+import { HomeRouter } from "./home-context/infrastructure/routes/HomeRouter";
 import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
 } from "./home-context/infrastructure/middlewares/WebSocketMiddlewares";
+import { RuleService } from "./rule-context/application/RuleService";
+import { InMemoryRuleRepository } from "./rule-context/infrastructure/InMemoryRuleRepository";
+import { RuleController } from "./rule-context/infrastructure/controllers/RuleController";
+import { RuleRouter } from "./rule-context/infrastructure/routes/RuleRouter";
+import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
+import { EventEmitter } from "events";
+import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
 
 const app = express();
 const server = http.createServer(app);
@@ -39,6 +46,15 @@ export const homeController = new HomeController(
   notificationContext.notificationPort,
 );
 const homeRouter = new HomeRouter(homeController);
+
+// --- Rule Context Setup ---
+const ruleRepo = new InMemoryRuleRepository();
+const actionExecutor = new ActionExecutionAdapter(homeService);
+const ruleService = new RuleService(ruleRepo, actionExecutor);
+export const ruleController = new RuleController(ruleService);
+const ruleRouter = new RuleRouter(ruleController);
+const eventEmitter = new EventEmitter();
+const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
 
 // --- User context setup ---
 const authContext = UserContextFactory.create();
@@ -75,7 +91,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 
 app.use(authMiddleware);
 app.use("/api/home", homeRouter.router);
-
+app.use("/api/home", ruleRouter.router);
 // --- Socket.IO for sensor updates ---
 const activeHomes = new Map<
   string,

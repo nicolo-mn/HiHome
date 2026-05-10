@@ -1,7 +1,6 @@
 export * from "./Component";
 export * from "./ComponentVisitor";
 export * from "./Coordinates";
-export * from "./Light";
 export * from "./Room";
 export * from "./Sensor";
 export * from "./SensorDataPort";
