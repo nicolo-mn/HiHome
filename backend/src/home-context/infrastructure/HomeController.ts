@@ -24,7 +24,7 @@ export class HomeController {
       const components = await this.homeService.getComponents(
         req.params.id as string,
       );
-      res.json(components);
+      res.json(components.map((c) => c.accept(this.stateSerializer)));
     } catch (e: any) {
       res.status(404).json({ error: e.message });
     }
@@ -38,7 +38,7 @@ export class HomeController {
         roomId,
         componentData,
       );
-      res.status(201).json(component);
+      res.status(201).json(component.accept(this.stateSerializer));
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
@@ -59,7 +59,7 @@ export class HomeController {
         req.params.id as string,
         req.params.type as string,
       );
-      res.json(components);
+      res.json(components.map((c) => c.accept(this.stateSerializer)));
     } catch (e: any) {
       res.status(404).json({ error: e.message });
     }
@@ -110,7 +110,7 @@ export class HomeController {
         }
       }
 
-      res.json(component);
+      res.json(component.accept(this.stateSerializer));
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
