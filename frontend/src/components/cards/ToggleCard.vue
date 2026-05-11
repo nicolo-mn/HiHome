@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import BaseCard from "./BaseCard.vue";
-import BaseToggle from "../BaseToggle.vue";
-import type { ToggleableComponent } from "../../api/home";
+import BaseToggle from "@/components/BaseToggle.vue";
+import type { ToggleableComponent } from "@/api/components";
 
 const props = defineProps<{
   component: ToggleableComponent;

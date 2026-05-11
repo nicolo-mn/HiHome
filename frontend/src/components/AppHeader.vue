@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useAuthStore } from "../stores/auth";
-import bellIcon from "../assets/icons/bell.svg?raw";
-import settingsIcon from "../assets/icons/settings.svg?raw";
+import { useAuthStore } from "@/stores/auth";
+import bellIcon from "@/assets/icons/bell.svg?raw";
+import settingsIcon from "@/assets/icons/settings.svg?raw";
 
 const authStore = useAuthStore();
 </script>

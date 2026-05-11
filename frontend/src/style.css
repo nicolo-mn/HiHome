@@ -13,6 +13,7 @@
   --primary: #7dd3fc;
   --body: #e0f2fe;
   --muted: #64748b;
+  --danger: #f87171;
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-synthesis: none;
@@ -29,6 +30,7 @@
   --color-primary: var(--primary);
   --color-body: var(--body);
   --color-muted: var(--muted);
+  --color-danger: var(--danger);
 }
 
 body {

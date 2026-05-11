@@ -1,22 +1,13 @@
 <script setup lang="ts">
 import ToggleCard from "./ToggleCard.vue";
 import StepperCard from "./StepperCard.vue";
-import lightIcon from "../../assets/icons/light.svg?raw";
-import windowIcon from "../../assets/icons/window.svg?raw";
-import thermometerIcon from "../../assets/icons/thermometer.svg?raw";
+import { componentTypeIcon } from "@/assets/icons";
 import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
   ToggleableType,
-} from "../../api/home";
-
-// Icon registry — add an entry here for each new component type.
-const icons: Record<string, string> = {
-  light: lightIcon,
-  window: windowIcon,
-  thermostat: thermometerIcon,
-};
+} from "@/api/components";
 
 const toggleableTypes = new Set<ToggleableType>(["light", "window"]);
 
@@ -30,7 +21,7 @@ const emit = defineEmits<{
   (e: "step", component: ThermostatComponent, direction: "up" | "down"): void;
 }>();
 
-const icon = icons[props.component.type] ?? "";
+const icon = componentTypeIcon[props.component.type] ?? "";
 </script>
 
 <template>

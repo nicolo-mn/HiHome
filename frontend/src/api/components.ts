@@ -18,14 +18,6 @@ export interface ToggleableComponent extends BaseComponent {
   state: boolean;
 }
 
-export interface LightComponent extends ToggleableComponent {
-  type: "light";
-}
-
-export interface WindowComponent extends ToggleableComponent {
-  type: "window";
-}
-
 // TODO: Implement controllable thermostat component
 export interface ThermostatComponent extends BaseComponent {
   type: "thermostat";
@@ -34,8 +26,7 @@ export interface ThermostatComponent extends BaseComponent {
 }
 
 export type HomeComponent =
-  | LightComponent
-  | WindowComponent
+  | ToggleableComponent
   | ThermostatComponent
   | (BaseComponent & { type: "unknown" });
 
@@ -43,31 +34,35 @@ interface RawComponent {
   id: string;
   name: string;
   roomId?: string;
+  type: string;
   isOn?: boolean;
   isOpen?: boolean;
-  setpoint?: number;
+  temperature?: number;
   unit?: string;
-  [key: string]: unknown;
 }
-
-// Infers the component type from the raw backend shape (no `type` field yet).
-// Add a branch here for each new type the backend introduces.
-export function inferComponentType(raw: RawComponent): ComponentType {
-  if (typeof raw.isOn === "boolean") return "light";
-  if (typeof raw.isOpen === "boolean") return "window";
-  if (typeof raw.setpoint === "number") return "thermostat";
-  return "unknown";
-}
-
 function normalizeComponent(raw: RawComponent): HomeComponent {
-  const type = inferComponentType(raw);
-  const base = { id: raw.id, name: raw.name, roomId: raw.roomId };
-  if (type === "light") return { ...base, type, state: raw.isOn === true };
-  if (type === "window") return { ...base, type, state: raw.isOpen === true };
-  if (type === "thermostat") {
-    return { ...base, type, setpoint: raw.setpoint!, unit: raw.unit ?? "°C" };
+  const base = {
+    id: raw.id,
+    name: raw.name,
+    roomId: raw.roomId,
+    type: raw.type,
+  };
+
+  switch (raw.type) {
+    case "light":
+      return { ...base, type: "light", state: raw.isOn === true };
+    case "window":
+      return { ...base, type: "window", state: raw.isOpen === true };
+    case "thermostat":
+      return {
+        ...base,
+        type: "thermostat",
+        setpoint: raw.temperature ?? 0,
+        unit: raw.unit ?? "°C",
+      };
+    default:
+      return { ...base, type: "unknown" };
   }
-  return { ...base, type: "unknown" };
 }
 
 export async function getComponents(homeId: string): Promise<HomeComponent[]> {
@@ -94,4 +89,26 @@ export async function getComponentTypes(homeId: string): Promise<string[]> {
   return apiFetch<string[]>(
     `/api/home/${encodeURIComponent(homeId)}/components/types`,
   );
+}
+
+const TOGGLE_ACTIONS: Record<ToggleableType, { on: string; off: string }> = {
+  light: { on: "turnOn", off: "turnOff" },
+  window: { on: "open", off: "close" },
+};
+
+export function toggle(
+  homeId: string,
+  c: ToggleableComponent,
+  next: boolean,
+): Promise<HomeComponent> {
+  const action = TOGGLE_ACTIONS[c.type][next ? "on" : "off"];
+  return executeAction(homeId, c.id, action);
+}
+
+export function setpointDelta(
+  homeId: string,
+  c: ThermostatComponent,
+  dir: "up" | "down",
+): Promise<HomeComponent> {
+  return executeAction(homeId, c.id, "setTemperature", { direction: dir });
 }

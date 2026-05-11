@@ -1,21 +1,14 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import BaseCard from "./BaseCard.vue";
-import thermometerIcon from "../../assets/icons/thermometer.svg?raw";
-import airQualityIcon from "../../assets/icons/air-quality.svg?raw";
-import type { SensorReading } from "../../composables/useSensorSocket";
-
-// Add icons here for new sensor types.
-const sensorIcons: Record<string, string> = {
-  thermometer: thermometerIcon,
-  airquality: airQualityIcon,
-};
+import { sensorTypeIcon, fallbackIcon } from "@/assets/icons";
+import type { SensorReading } from "@/api/sensors";
 
 const props = defineProps<{
   reading: SensorReading;
 }>();
 
-const icon = computed(() => sensorIcons[props.reading.type] ?? thermometerIcon);
+const icon = computed(() => sensorTypeIcon[props.reading.type] ?? fallbackIcon);
 
 const label = computed(() => {
   if (props.reading.type === "thermometer") return "Thermometer";
