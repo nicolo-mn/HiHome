@@ -1,29 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { authApi } from "../api";
-
-interface JwtPayload {
-  username?: string;
-  homeId?: string;
-  exp?: number;
-}
-
-function decodeJwt(jwt: string | null): JwtPayload | null {
-  if (!jwt) return null;
-  try {
-    const parsed = JSON.parse(atob(jwt.split(".")[1] ?? ""));
-    return typeof parsed === "object" && parsed !== null
-      ? (parsed as JwtPayload)
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function isExpired(payload: JwtPayload | null): boolean {
-  if (!payload?.exp) return false;
-  return payload.exp * 1000 <= Date.now();
-}
+import { decodeJwt, isExpired } from "../utils/jwt";
 
 export const useAuthStore = defineStore("auth", () => {
   const storedToken = localStorage.getItem("jwt");
