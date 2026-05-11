@@ -2,7 +2,7 @@
 import BaseCard from "./BaseCard.vue";
 import minusIcon from "../../assets/icons/minus.svg?raw";
 import plusIcon from "../../assets/icons/plus.svg?raw";
-import type { ThermostatComponent } from "../../api/home";
+import type { ThermostatComponent } from "../../api/components";
 
 const props = defineProps<{
   component: ThermostatComponent;
