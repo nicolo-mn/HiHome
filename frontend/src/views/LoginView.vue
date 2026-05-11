@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "../stores/auth";
+import { useAsyncAction } from "../composables/useAsyncAction";
 import BaseInput from "../components/BaseInput.vue";
 import BaseButton from "../components/BaseButton.vue";
 
@@ -12,23 +13,24 @@ const authStore = useAuthStore();
 const houseId = ref("");
 const username = ref("");
 const password = ref("");
-const error = ref<string | null>(null);
-const isLoading = ref(false);
 
-async function handleLogin() {
-  error.value = null;
-  isLoading.value = true;
-  try {
+const {
+  run: submit,
+  isLoading,
+  error,
+} = useAsyncAction(
+  async () => {
     await authStore.login(houseId.value, username.value, password.value);
     const redirect = route.query.redirect;
     router.push(
       typeof redirect === "string" ? redirect : { name: "dashboard" },
     );
-  } catch {
-    error.value = "Invalid credentials. Please try again.";
-  } finally {
-    isLoading.value = false;
-  }
+  },
+  { onError: () => "Invalid credentials. Please try again." },
+);
+
+function handleLogin() {
+  submit();
 }
 </script>
 

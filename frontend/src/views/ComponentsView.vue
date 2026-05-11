@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { homeApi } from "../api";
+import { componentsApi } from "../api";
 import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
-} from "../api/home";
+} from "../api/components";
 import { useAuthStore } from "../stores/auth";
 import { useSensorSocket } from "../composables/useSensorSocket";
+import { useBusyIds } from "../composables/useBusyIds";
+import { useAsyncAction } from "../composables/useAsyncAction";
+import { useRoomGroups } from "../composables/useRoomGroups";
 import ComponentCard from "../components/cards/ComponentCard.vue";
 import SensorCard from "../components/cards/SensorCard.vue";
 import AddComponentCard from "../components/cards/AddComponentCard.vue";
@@ -17,79 +20,36 @@ const authStore = useAuthStore();
 const homeId = computed(() => authStore.homeId);
 
 const components = ref<HomeComponent[]>([]);
-const isLoading = ref(false);
-const error = ref<string | null>(null);
-const busyIds = ref(new Set<string>());
+const busy = useBusyIds();
+
+const {
+  run: load,
+  isLoading,
+  error,
+} = useAsyncAction(
+  async () => {
+    if (!homeId.value) return;
+    components.value = await componentsApi.getComponents(homeId.value);
+  },
+  {
+    onError: (e) =>
+      e instanceof Error ? e.message : "Failed to load components",
+  },
+);
 
 const { readings } = useSensorSocket(homeId, authStore.token);
 const sensorReadings = computed(() => Array.from(readings.value.values()));
 
-interface RoomGroup {
-  roomId: string;
-  label: string;
-  items: HomeComponent[];
-}
-
-function formatRoomLabel(roomId: string): string {
-  return roomId
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
-
-const roomGroups = computed<RoomGroup[]>(() => {
-  const map = new Map<string, HomeComponent[]>();
-  for (const comp of components.value) {
-    const key = comp.roomId ?? "__unassigned__";
-    const list = map.get(key) ?? [];
-    list.push(comp);
-    map.set(key, list);
-  }
-  return Array.from(map.entries()).map(([roomId, items]) => ({
-    roomId,
-    label: roomId === "__unassigned__" ? "Other" : formatRoomLabel(roomId),
-    items,
-  }));
-});
-
-function resolveToggleAction(type: string, next: boolean): string | null {
-  if (type === "light") return next ? "turnOn" : "turnOff";
-  if (type === "window") return next ? "open" : "close";
-  console.warn(`No toggle action mapping for type: ${type}`);
-  return null;
-}
-
-const THERMOSTAT_STEP = 0.5;
-
-function resolveStepAction(
-  component: ThermostatComponent,
-  direction: "up" | "down",
-): { action: string; body: unknown } | null {
-  if (component.type === "thermostat") {
-    const delta = direction === "up" ? THERMOSTAT_STEP : -THERMOSTAT_STEP;
-    return {
-      action: "setTemperature",
-      body: { temperature: component.setpoint + delta },
-    };
-  }
-  console.warn(`No step action mapping for type: ${component.type}`);
-  return null;
-}
+const roomGroups = useRoomGroups(components);
 
 async function executeComponentAction(
   componentId: string,
-  action: string,
-  body?: unknown,
+  run: () => Promise<HomeComponent>,
 ) {
   if (!homeId.value) return;
-  busyIds.value = new Set(busyIds.value).add(componentId);
+  busy.add(componentId);
   try {
-    const updated = await homeApi.executeAction(
-      homeId.value,
-      componentId,
-      action,
-      body,
-    );
+    const updated = await run();
     components.value = components.value.map((c) =>
       c.id === updated.id ? updated : c,
     );
@@ -98,39 +58,29 @@ async function executeComponentAction(
       error.value = e instanceof Error ? e.message : "Action failed";
     }
   } finally {
-    const nextSet = new Set(busyIds.value);
-    nextSet.delete(componentId);
-    busyIds.value = nextSet;
+    busy.remove(componentId);
   }
 }
 
 function handleToggle(component: ToggleableComponent, next: boolean) {
-  const action = resolveToggleAction(component.type, next);
-  if (action) executeComponentAction(component.id, action);
+  if (!homeId.value) return;
+  const id = homeId.value;
+  executeComponentAction(component.id, () =>
+    componentsApi.toggle(id, component, next),
+  );
 }
 
 function handleStep(component: ThermostatComponent, direction: "up" | "down") {
-  const resolved = resolveStepAction(component, direction);
-  if (resolved)
-    executeComponentAction(component.id, resolved.action, resolved.body);
+  if (!homeId.value) return;
+  const id = homeId.value;
+  executeComponentAction(component.id, () =>
+    componentsApi.setpointDelta(id, component, direction),
+  );
 }
 
 function onAddComponentClick(roomId: string) {
   // TODO: open an add-component dialog scoped to roomId.
   void roomId;
-}
-
-async function load() {
-  if (!homeId.value) return;
-  isLoading.value = true;
-  error.value = null;
-  try {
-    components.value = await homeApi.getComponents(homeId.value);
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : "Failed to load components";
-  } finally {
-    isLoading.value = false;
-  }
 }
 
 onMounted(load);
@@ -159,7 +109,7 @@ onMounted(load);
           v-for="item in group.items"
           :key="item.id"
           :component="item"
-          :busy="busyIds.has(item.id)"
+          :busy="busy.has(item.id)"
           @toggle="handleToggle"
           @step="handleStep"
         />

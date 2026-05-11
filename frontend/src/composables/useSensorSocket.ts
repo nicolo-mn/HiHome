@@ -1,13 +1,6 @@
 import { ref, onMounted, onBeforeUnmount, watch, type Ref } from "vue";
 import { io, type Socket } from "socket.io-client";
-
-export interface SensorReading {
-  sensorId: string;
-  type: string;
-  value: unknown;
-  measureUnit: string;
-  receivedAt: number;
-}
+import type { SensorReading } from "../api/sensors";
 
 export function useSensorSocket(
   homeId: Ref<string | null> | string | null,
