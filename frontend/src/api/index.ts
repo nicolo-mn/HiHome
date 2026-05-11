@@ -1,4 +1,8 @@
-export { apiFetch, setUnauthorizedHandler } from "./client";
+export {
+  apiFetch,
+  setUnauthorizedHandler,
+  setAuthTokenProvider,
+} from "./client";
 export type { ApiRequestOptions } from "./client";
 export {
   ApiError,
@@ -8,14 +12,13 @@ export {
 } from "./errors";
 export * as authApi from "./auth";
 export type { LoginRequest, LoginResponse } from "./auth";
-export * as homeApi from "./home";
+export * as componentsApi from "./components";
 export type {
   HomeComponent,
-  LightComponent,
-  WindowComponent,
   ThermostatComponent,
   ToggleableComponent,
   ToggleableType,
   BaseComponent,
   ComponentType,
-} from "./home";
+} from "./components";
+export type { SensorReading } from "./sensors";

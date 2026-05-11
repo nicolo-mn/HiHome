@@ -20,8 +20,11 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
   unauthorizedHandler = handler;
 }
 
-function getAuthToken(): string | null {
-  return localStorage.getItem("jwt");
+type TokenProvider = () => string | null;
+let tokenProvider: TokenProvider = () => null;
+
+export function setAuthTokenProvider(provider: TokenProvider) {
+  tokenProvider = provider;
 }
 
 async function parseBody(res: Response): Promise<unknown> {
@@ -78,7 +81,7 @@ export async function apiFetch<T = unknown>(
     finalHeaders.set("Content-Type", "application/json");
   }
   if (auth) {
-    const token = getAuthToken();
+    const token = tokenProvider();
     if (token) finalHeaders.set("Authorization", `Bearer ${token}`);
   }
 
