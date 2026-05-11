@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import LoginView from "../views/LoginView.vue";
-import AppLayout from "../components/AppLayout.vue";
-import { useAuthStore } from "../stores/auth";
+import LoginView from "@/views/LoginView.vue";
+import AppLayout from "@/components/AppLayout.vue";
+import { useAuthStore } from "@/stores/auth";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,27 +20,27 @@ const router = createRouter({
         {
           path: "/dashboard",
           name: "dashboard",
-          component: () => import("../views/DashboardView.vue"),
+          component: () => import("@/views/DashboardView.vue"),
         },
         {
           path: "/components",
           name: "components",
-          component: () => import("../views/ComponentsView.vue"),
+          component: () => import("@/views/ComponentsView.vue"),
         },
         {
           path: "/rules",
           name: "rules",
-          component: () => import("../views/RulesView.vue"),
+          component: () => import("@/views/RulesView.vue"),
         },
         {
           path: "/notifications",
           name: "notifications",
-          component: () => import("../views/NotificationsView.vue"),
+          component: () => import("@/views/NotificationsView.vue"),
         },
         {
           path: "/settings",
           name: "settings",
-          component: () => import("../views/SettingsView.vue"),
+          component: () => import("@/views/SettingsView.vue"),
         },
       ],
     },

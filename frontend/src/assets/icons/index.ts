@@ -1,4 +1,4 @@
-import type { ComponentType } from "../../api/components";
+import type { ComponentType } from "@/api/components";
 
 import lightIcon from "./light.svg?raw";
 import windowIcon from "./window.svg?raw";

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { useAuthStore } from "../stores/auth";
-import { useAsyncAction } from "../composables/useAsyncAction";
-import BaseInput from "../components/BaseInput.vue";
-import BaseButton from "../components/BaseButton.vue";
+import { useAuthStore } from "@/stores/auth";
+import { useAsyncAction } from "@/composables/useAsyncAction";
+import BaseInput from "@/components/BaseInput.vue";
+import BaseButton from "@/components/BaseButton.vue";
 
 const router = useRouter();
 const route = useRoute();

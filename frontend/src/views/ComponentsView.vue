@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { componentsApi } from "../api";
+import { componentsApi } from "@/api";
 import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
-} from "../api/components";
-import { useAuthStore } from "../stores/auth";
-import { useSensorSocket } from "../composables/useSensorSocket";
-import { useBusyIds } from "../composables/useBusyIds";
-import { useAsyncAction } from "../composables/useAsyncAction";
-import { useRoomGroups } from "../composables/useRoomGroups";
-import ComponentCard from "../components/cards/ComponentCard.vue";
-import SensorCard from "../components/cards/SensorCard.vue";
-import AddComponentCard from "../components/cards/AddComponentCard.vue";
-import BaseButton from "../components/BaseButton.vue";
+} from "@/api/components";
+import { useAuthStore } from "@/stores/auth";
+import { useSensorSocket } from "@/composables/useSensorSocket";
+import { useBusyIds } from "@/composables/useBusyIds";
+import { useAsyncAction } from "@/composables/useAsyncAction";
+import { useRoomGroups } from "@/composables/useRoomGroups";
+import ComponentCard from "@/components/cards/ComponentCard.vue";
+import SensorCard from "@/components/cards/SensorCard.vue";
+import AddComponentCard from "@/components/cards/AddComponentCard.vue";
+import BaseButton from "@/components/BaseButton.vue";
 
 const authStore = useAuthStore();
 const homeId = computed(() => authStore.homeId);

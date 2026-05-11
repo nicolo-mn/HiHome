@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import ToggleCard from "./ToggleCard.vue";
 import StepperCard from "./StepperCard.vue";
-import { componentTypeIcon } from "../../assets/icons";
+import { componentTypeIcon } from "@/assets/icons";
 import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
   ToggleableType,
-} from "../../api/components";
+} from "@/api/components";
 
 const toggleableTypes = new Set<ToggleableType>(["light", "window"]);
 

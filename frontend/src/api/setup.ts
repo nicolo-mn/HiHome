@@ -1,6 +1,6 @@
 import type { Router } from "vue-router";
 import { setAuthTokenProvider, setUnauthorizedHandler } from "./client";
-import type { useAuthStore } from "../stores/auth";
+import type { useAuthStore } from "@/stores/auth";
 
 export function registerApiHandlers(
   authStore: ReturnType<typeof useAuthStore>,

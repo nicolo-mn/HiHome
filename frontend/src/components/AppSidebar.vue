@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import componentsIcon from "../assets/icons/components.svg?raw";
-import dashboardIcon from "../assets/icons/dashboard.svg?raw";
-import rulesIcon from "../assets/icons/rules.svg?raw";
+import componentsIcon from "@/assets/icons/components.svg?raw";
+import dashboardIcon from "@/assets/icons/dashboard.svg?raw";
+import rulesIcon from "@/assets/icons/rules.svg?raw";
 
 const navItems = [
   { name: "Dashboard", to: "/dashboard", icon: dashboardIcon },

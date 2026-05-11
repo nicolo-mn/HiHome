@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import BaseCard from "./BaseCard.vue";
-import { sensorTypeIcon, fallbackIcon } from "../../assets/icons";
-import type { SensorReading } from "../../api/sensors";
+import { sensorTypeIcon, fallbackIcon } from "@/assets/icons";
+import type { SensorReading } from "@/api/sensors";
 
 const props = defineProps<{
   reading: SensorReading;

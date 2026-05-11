@@ -1,5 +1,5 @@
 import { computed, type ComputedRef, type Ref } from "vue";
-import type { HomeComponent } from "../api/components";
+import type { HomeComponent } from "@/api/components";
 
 export interface RoomGroup {
   roomId: string;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import plusIcon from "../../assets/icons/plus.svg?raw";
+import plusIcon from "@/assets/icons/plus.svg?raw";
 
 defineProps<{
   disabled?: boolean;

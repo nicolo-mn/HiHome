@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { authApi } from "../api";
-import { decodeJwt, isExpired } from "../utils/jwt";
+import { authApi } from "@/api";
+import { decodeJwt, isExpired } from "@/utils/jwt";
 
 export const useAuthStore = defineStore("auth", () => {
   const storedToken = localStorage.getItem("jwt");
