@@ -98,4 +98,42 @@ describe("Home Context Integration Tests", () => {
       expect(res.body[0]).toHaveProperty("isOn");
     });
   });
+
+  describe("Socket.IO Sensor Updates", () => {
+    it("should receive sensor updates via socket.io", async () => {
+      return new Promise<void>((resolve, reject) => {
+        const socket: Socket = ioClient(`http://localhost:${port}`, {
+          auth: { token: `Bearer ${token}` },
+          query: { homeId: "1" },
+        });
+
+        // Timeout fallback
+        const timeout = setTimeout(() => {
+          socket.close();
+          reject(new Error("Socket.io test timeout"));
+        }, 5000);
+
+        socket.on("sensorUpdate", (data) => {
+          try {
+            expect(data.sensorId).toBeDefined();
+            expect(data.type).toBe("thermometer");
+            expect(typeof data.value).toBe("number");
+            socket.close();
+            clearTimeout(timeout);
+            resolve();
+          } catch (e) {
+            clearTimeout(timeout);
+            socket.close();
+            reject(e);
+          }
+        });
+
+        socket.on("connect_error", (e) => {
+          clearTimeout(timeout);
+          socket.close();
+          reject(e);
+        });
+      });
+    });
+  });
 });
