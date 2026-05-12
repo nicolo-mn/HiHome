@@ -84,10 +84,10 @@ onMounted(load);
 <template>
   <div class="flex flex-col gap-6">
     <div v-if="error && components.length === 0" class="flex flex-col gap-2">
-      <p class="text-red-400 text-sm">{{ error }}</p>
+      <p class="text-danger text-sm">{{ error }}</p>
       <BaseButton label="Riprova" @click="load" />
     </div>
-    <p v-else-if="error" class="text-red-400 text-sm">{{ error }}</p>
+    <p v-else-if="error" class="text-danger text-sm">{{ error }}</p>
 
     <div v-if="isLoading && components.length === 0" class="text-muted text-sm">
       Loading components…
