@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { HomeService } from "../application/HomeService";
-import { ComponentStateSerializer } from "./ComponentStateSerializer";
-import { NotificationInboundPort } from "../../notification-context/application/NotificationInboundPort";
+import { HomeService } from "../../application/HomeService";
+import { ComponentStateSerializer } from "../ComponentStateSerializer";
+import { NotificationInboundPort } from "../../../notification-context/application/NotificationInboundPort";
 
 // Extends Express Request to include user information from auth middleware
 type AuthenticatedRequest = Request & {
@@ -68,7 +68,6 @@ export class HomeController {
   async getComponent(req: Request, res: Response) {
     try {
       const component = await this.homeService.getComponent(
-        req.params.id as string,
         req.params.componentId as string,
       );
       if (!component)

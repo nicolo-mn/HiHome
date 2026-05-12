@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ChatService, type ChatMessage } from "../application/ChatService";
+import { ChatService, type ChatMessage } from "../../application/ChatService";
 
 type AuthedUser = {
   houseId: string;
