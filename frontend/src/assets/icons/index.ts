@@ -1,4 +1,5 @@
 import type { ComponentType } from "@/api/components";
+import type { SensorReading } from "@/api/sensors";
 
 import lightIcon from "./light.svg?raw";
 import windowIcon from "./window.svg?raw";
@@ -7,6 +8,15 @@ import thermostatIcon from "./thermometer.svg?raw";
 import airQualityIcon from "./air-quality.svg?raw";
 import fallbackIcon from "./fallback.svg?raw";
 
+import clearDayIcon from "./weather/clear-day.svg?raw";
+import partlyCloudyIcon from "./weather/partly-cloudy-day.svg?raw";
+import overcastIcon from "./weather/overcast.svg?raw";
+import fogIcon from "./weather/fog.svg?raw";
+import drizzleIcon from "./weather/drizzle.svg?raw";
+import rainIcon from "./weather/rain.svg?raw";
+import snowIcon from "./weather/snow.svg?raw";
+import thunderstormsIcon from "./weather/thunderstorms.svg?raw";
+
 // Add an entry here for each new component type.
 export const componentTypeIcon: Partial<Record<ComponentType, string>> = {
   light: lightIcon,
@@ -14,10 +24,51 @@ export const componentTypeIcon: Partial<Record<ComponentType, string>> = {
   thermostat: thermostatIcon,
 };
 
-// Add an entry here for each new sensor type.
+// Add an entry here for each new sensor type. `weather` is resolved
+// separately because its icon depends on the reading's description.
 export const sensorTypeIcon: Record<string, string> = {
   thermometer: thermometerIcon,
   airquality: airQualityIcon,
+  outdoor_temperature: thermometerIcon,
+  outdoor_airquality: airQualityIcon,
 };
+
+const weatherDescriptionToIcon: Record<string, string> = {
+  "Clear sky": clearDayIcon,
+  "Mainly clear": clearDayIcon,
+  "Partly cloudy": partlyCloudyIcon,
+  Overcast: overcastIcon,
+  Fog: fogIcon,
+  "Depositing rime fog": fogIcon,
+  "Light drizzle": drizzleIcon,
+  "Moderate drizzle": drizzleIcon,
+  "Dense drizzle": drizzleIcon,
+  "Light freezing drizzle": drizzleIcon,
+  "Dense freezing drizzle": drizzleIcon,
+  "Slight rain": rainIcon,
+  "Moderate rain": rainIcon,
+  "Heavy rain": rainIcon,
+  "Light freezing rain": rainIcon,
+  "Heavy freezing rain": rainIcon,
+  "Slight rain showers": rainIcon,
+  "Moderate rain showers": rainIcon,
+  "Violent rain showers": rainIcon,
+  "Slight snow fall": snowIcon,
+  "Moderate snow fall": snowIcon,
+  "Heavy snow fall": snowIcon,
+  "Snow grains": snowIcon,
+  "Slight snow showers": snowIcon,
+  "Heavy snow showers": snowIcon,
+  Thunderstorm: thunderstormsIcon,
+  "Thunderstorm with slight hail": thunderstormsIcon,
+  "Thunderstorm with heavy hail": thunderstormsIcon,
+};
+
+export function resolveSensorIcon(reading: SensorReading): string {
+  if (reading.type === "weather" && typeof reading.value === "string") {
+    return weatherDescriptionToIcon[reading.value] ?? fallbackIcon;
+  }
+  return sensorTypeIcon[reading.type] ?? fallbackIcon;
+}
 
 export { fallbackIcon };
