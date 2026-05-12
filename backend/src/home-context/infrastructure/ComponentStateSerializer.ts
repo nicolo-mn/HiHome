@@ -1,22 +1,40 @@
-import { ComponentVisitor } from "../domain/ComponentVisitor";
-import { Light } from "../domain/Light";
+import {
+  ComponentTypes,
+  ComponentVisitor,
+  Light,
+  Thermostat,
+  Window,
+} from "../domain";
+import { ComponentSerialization } from "../application/dtos/ComponentDTO";
 
-export type ComponentDto = {
-  id: string;
-  name: string;
-  roomId?: string;
-  type: "light";
-  isOn: boolean;
-};
-
-export class ComponentStateSerializer implements ComponentVisitor<ComponentDto> {
-  visitLight(light: Light): ComponentDto {
+export class ComponentStateSerializer implements ComponentVisitor<ComponentSerialization> {
+  visitLight(light: Light): ComponentSerialization {
     return {
       id: light.id,
       name: light.name,
       roomId: light.roomId,
-      type: "light",
+      type: ComponentTypes.LIGHT,
       isOn: light.isOn,
+    };
+  }
+
+  visitWindow(window: Window): ComponentSerialization {
+    return {
+      id: window.id,
+      name: window.name,
+      roomId: window.roomId,
+      type: ComponentTypes.WINDOW,
+      isOpen: window.isOpen,
+    };
+  }
+
+  visitThermostat(thermostat: Thermostat): ComponentSerialization {
+    return {
+      id: thermostat.id,
+      name: thermostat.name,
+      roomId: thermostat.roomId,
+      type: ComponentTypes.THERMOSTAT,
+      temperature: thermostat.temperature,
     };
   }
 }

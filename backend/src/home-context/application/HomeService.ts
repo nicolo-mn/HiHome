@@ -1,7 +1,16 @@
-import { HomeRepository } from "../domain/HomeRepository";
-import { Component, Sensor, Light, Coordinates } from "../domain";
+import {
+  Component,
+  Sensor,
+  Light,
+  Coordinates,
+  Window,
+  Thermostat,
+  HomeRepository,
+  ComponentTypes,
+} from "../domain";
+import { ActionService } from "./ActionService";
 
-export class HomeService {
+export class HomeService implements ActionService {
   constructor(private homeRepo: HomeRepository) {}
 
   async getComponents(homeId: string): Promise<Component[]> {
@@ -10,13 +19,10 @@ export class HomeService {
     return home.getAllComponents();
   }
 
-  async getComponent(
-    homeId: string,
-    componentId: string,
-  ): Promise<Component | undefined> {
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
-    return home.getComponentById(componentId);
+  async getComponent(componentId: string): Promise<Component | undefined> {
+    const component = await this.homeRepo.getComponentById(componentId);
+    if (!component) throw new Error("Component not found");
+    return component;
   }
 
   async addComponent(
@@ -30,8 +36,12 @@ export class HomeService {
     if (!room) throw new Error("Room not found");
 
     let component: Component;
-    if (componentData.type === "light") {
+    if (componentData.type === ComponentTypes.LIGHT) {
       component = new Light(componentData.id, componentData.name, roomId);
+    } else if (componentData.type === ComponentTypes.WINDOW) {
+      component = new Window(componentData.id, componentData.name, roomId);
+    } else if (componentData.type === ComponentTypes.THERMOSTAT) {
+      component = new Thermostat(componentData.id, componentData.name, roomId);
     } else {
       throw new Error("Unsupported component type");
     }
@@ -63,7 +73,7 @@ export class HomeService {
   }
 
   async getComponentTypes(): Promise<string[]> {
-    return ["light"]; // Could also derive from codebase dynamically, hardcoded for now
+    return Object.values(ComponentTypes); // The component types come from an enum
   }
 
   async getComponentsByType(
@@ -72,7 +82,9 @@ export class HomeService {
   ): Promise<Component[]> {
     const components = await this.getComponents(homeId);
     return components.filter((c) => {
-      if (type === "light") return c instanceof Light;
+      if (type === ComponentTypes.LIGHT) return c instanceof Light;
+      if (type === ComponentTypes.WINDOW) return c instanceof Window;
+      if (type === ComponentTypes.THERMOSTAT) return c instanceof Thermostat;
       return false;
     });
   }
@@ -92,5 +104,99 @@ export class HomeService {
     const home = await this.homeRepo.getHome(homeId);
     if (!home) throw new Error("Home not found");
     return home.coordinates;
+  }
+
+  async lightTurnOn(homeId: string, lightId: string): Promise<void> {
+    const componentType = ComponentTypes.LIGHT;
+
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error("Home not found");
+
+    const component = home.getComponentByIdAndType(lightId, componentType);
+    if (!component)
+      throw new Error(
+        `Component ${lightId} of type ${componentType} not found`,
+      );
+
+    const light = component as Light;
+    light.turnOn();
+
+    await this.homeRepo.saveHome(home);
+  }
+
+  async lightTurnOff(homeId: string, lightId: string): Promise<void> {
+    const componentType = ComponentTypes.LIGHT;
+
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error("Home not found");
+
+    const component = home.getComponentByIdAndType(lightId, componentType);
+    if (!component)
+      throw new Error(
+        `Component ${lightId} of type ${componentType} not found`,
+      );
+
+    const light = component as Light;
+    light.turnOff();
+
+    await this.homeRepo.saveHome(home);
+  }
+
+  async windowOpen(homeId: string, windowId: string): Promise<void> {
+    const componentType = ComponentTypes.WINDOW;
+
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error("Home not found");
+
+    const component = home.getComponentByIdAndType(windowId, componentType);
+    if (!component)
+      throw new Error(
+        `Component ${windowId} of type ${componentType} not found`,
+      );
+
+    const window = component as Window;
+    window.open();
+
+    await this.homeRepo.saveHome(home);
+  }
+
+  async windowClose(homeId: string, windowId: string): Promise<void> {
+    const componentType = ComponentTypes.WINDOW;
+
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error("Home not found");
+
+    const component = home.getComponentByIdAndType(windowId, componentType);
+    if (!component)
+      throw new Error(
+        `Component ${windowId} of type ${componentType} not found`,
+      );
+
+    const window = component as Window;
+    window.close();
+
+    await this.homeRepo.saveHome(home);
+  }
+
+  async thermostatSetTemperature(
+    homeId: string,
+    thermostatId: string,
+    temperature: number,
+  ): Promise<void> {
+    const componentType = ComponentTypes.THERMOSTAT;
+
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error("Home not found");
+
+    const component = home.getComponentByIdAndType(thermostatId, componentType);
+    if (!component)
+      throw new Error(
+        `Component ${thermostatId} of type ${componentType} not found`,
+      );
+
+    const thermostat = component as Thermostat;
+    thermostat.setTemperature(temperature);
+
+    await this.homeRepo.saveHome(home);
   }
 }

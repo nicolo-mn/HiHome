@@ -1,0 +1,37 @@
+import {
+  ComponentActionVisitor,
+  LightTurnOffAction,
+  LightTurnOnAction,
+  ThermostatSetTemperatureAction,
+  WindowCloseAction,
+  WindowOpenAction,
+} from "../domain/Actions";
+import { ActionExecutionPort } from "../domain/ActionExecutionPort";
+
+export class ComponentActionExecutionVisitor implements ComponentActionVisitor<
+  Promise<void>
+> {
+  constructor(private actionPort: ActionExecutionPort) {}
+
+  async visitLightTurnOnAction(action: LightTurnOnAction): Promise<void> {
+    await this.actionPort.executeLightTurnOn(action);
+  }
+
+  async visitLightTurnOffAction(action: LightTurnOffAction): Promise<void> {
+    await this.actionPort.executeLightTurnOff(action);
+  }
+
+  async visitWindowOpenAction(action: WindowOpenAction): Promise<void> {
+    await this.actionPort.executeWindowOpen(action);
+  }
+
+  async visitWindowCloseAction(action: WindowCloseAction): Promise<void> {
+    await this.actionPort.executeWindowClose(action);
+  }
+
+  async visitThermostatSetTemperatureAction(
+    action: ThermostatSetTemperatureAction,
+  ): Promise<void> {
+    await this.actionPort.executeThermostatSetTemperature(action);
+  }
+}
