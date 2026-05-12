@@ -7,12 +7,10 @@ import type {
   ThermostatComponent,
 } from "@/api/components";
 import { useAuthStore } from "@/stores/auth";
-import { useSensorSocket } from "@/composables/useSensorSocket";
 import { useBusyIds } from "@/composables/useBusyIds";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import { useRoomGroups } from "@/composables/useRoomGroups";
 import ComponentCard from "@/components/cards/ComponentCard.vue";
-import SensorCard from "@/components/cards/SensorCard.vue";
 import AddComponentCard from "@/components/cards/AddComponentCard.vue";
 import BaseButton from "@/components/BaseButton.vue";
 
@@ -36,9 +34,6 @@ const {
       e instanceof Error ? e.message : "Failed to load components",
   },
 );
-
-const { readings } = useSensorSocket(homeId, authStore.token);
-const sensorReadings = computed(() => Array.from(readings.value.values()));
 
 const roomGroups = useRoomGroups(components);
 
@@ -114,17 +109,6 @@ onMounted(load);
           @step="handleStep"
         />
         <AddComponentCard disabled @click="onAddComponentClick(group.roomId)" />
-      </div>
-    </section>
-
-    <section v-if="sensorReadings.length > 0" class="flex flex-col gap-3">
-      <h2 class="text-xl font-light text-primary">Sensors</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <SensorCard
-          v-for="reading in sensorReadings"
-          :key="reading.sensorId"
-          :reading="reading"
-        />
       </div>
     </section>
   </div>
