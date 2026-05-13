@@ -22,6 +22,7 @@ import {
 } from "./home-context/infrastructure/middlewares/WebSocketMiddlewares";
 import { RuleService } from "./rule-context/application/RuleService";
 import { InMemoryRuleRepository } from "./rule-context/infrastructure/InMemoryRuleRepository";
+import { MongoRuleRepository } from "./rule-context/infrastructure/MongoRuleRepository";
 import { RuleController } from "./rule-context/infrastructure/controllers/RuleController";
 import { RuleRouter } from "./rule-context/infrastructure/routes/RuleRouter";
 import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
@@ -54,7 +55,10 @@ export const homeController = new HomeController(
 const homeRouter = new HomeRouter(homeController);
 
 // --- Rule Context Setup ---
-const ruleRepo = new InMemoryRuleRepository();
+const ruleRepo =
+  process.env.NODE_ENV === "test"
+    ? new InMemoryRuleRepository()
+    : new MongoRuleRepository();
 const actionExecutor = new ActionExecutionAdapter(homeService);
 const ruleService = new RuleService(ruleRepo, actionExecutor);
 export const ruleController = new RuleController(ruleService);
