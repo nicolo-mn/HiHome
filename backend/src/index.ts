@@ -29,6 +29,7 @@ import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
+import { Home, Light, Room, Thermostat, Window } from "./home-context/domain";
 
 const app = express();
 const server = http.createServer(app);
@@ -218,6 +219,25 @@ app.get("/api/message", async (req: Request, res: Response) => {
 export async function bootstrap() {
   try {
     await mongoose.connect(MONGO_URI);
+
+    const existingHome = await homeRepo.getHome("1");
+    if (!existingHome) {
+      const seededHome = new Home("1", { latitude: 45.4642, longitude: 9.19 }, [
+        new Room("room-1", "Living Room", [
+          new Window("window-1", "Front Window", "room-1", false),
+          new Window("window-2", "Side Window", "room-1", false),
+          new Light("light-1", "Main Light", "room-1", false),
+          new Thermostat("thermostat-1", "Main Thermostat", "room-1", 20),
+        ]),
+        new Room("room-2", "Bedroom", [
+          new Window("window-3", "Bedroom Window", "room-2", false),
+          new Light("light-2", "Bed Light", "room-2", false),
+        ]),
+      ]);
+
+      await homeRepo.saveHome(seededHome);
+      console.log("Seeded home with id 1");
+    }
     server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);
     });
