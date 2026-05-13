@@ -1,33 +1,29 @@
 package infrastructure
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"ext-api-service/application"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 )
 
 type environmentResponse struct {
-	Temperature        float64 `json:"temperature"`
-	WeatherDescription string  `json:"weatherDescription"`
-	WindSpeed          float64 `json:"windSpeed"`
-	WindDirection      float64 `json:"windDirection"`
-	Precipitation      float64 `json:"precipitation"`
-	EuropeanAQI        int     `json:"europeanAqi"`
-	Image              string  `json:"image"`
+	Temperature   float64 `json:"temperature"`
+	WeatherType   int     `json:"weatherType"`
+	WindSpeed     float64 `json:"windSpeed"`
+	WindDirection float64 `json:"windDirection"`
+	Precipitation float64 `json:"precipitation"`
+	EuropeanAQI   int     `json:"europeanAqi"`
 }
 
 type EnvironmentController struct {
-	service  *application.EnvironmentService
-	imageDir string
+	service *application.EnvironmentService
 }
 
-func NewEnvironmentController(service *application.EnvironmentService, imageDir string) *EnvironmentController {
-	return &EnvironmentController{service: service, imageDir: imageDir}
+func NewEnvironmentController(service *application.EnvironmentService) *EnvironmentController {
+	return &EnvironmentController{service: service}
 }
 
 func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -49,23 +45,13 @@ func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	icon := weatherDescriptionToIcon[info.WeatherDescription()]
-	imagePath := h.imageDir + "/" + icon.filename()
-	var imageBase64 string
-	if data, err := os.ReadFile(imagePath); err == nil {
-		imageBase64 = base64.StdEncoding.EncodeToString(data)
-	} else {
-		log.Printf("failed to read image: %v", err)
-	}
-
 	resp := environmentResponse{
-		Temperature:        info.Temperature(),
-		WeatherDescription: info.WeatherDescription().String(),
-		WindSpeed:          info.WindSpeed(),
-		WindDirection:      info.WindDirection(),
-		Precipitation:      info.Precipitation(),
-		EuropeanAQI:        info.EuropeanAQI(),
-		Image:              imageBase64,
+		Temperature:   info.Temperature(),
+		WeatherType:   int(info.WeatherType()),
+		WindSpeed:     info.WindSpeed(),
+		WindDirection: info.WindDirection(),
+		Precipitation: info.Precipitation(),
+		EuropeanAQI:   info.EuropeanAQI(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
