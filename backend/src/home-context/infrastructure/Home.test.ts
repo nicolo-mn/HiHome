@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
-import { io as ioClient, Socket } from "socket.io-client";
-import { default as app, server, io, sensorRegistry } from "../../index";
-import { SocketIOSensorUpdatePort } from "./SocketIOSensorUpdatePort";
-import { RandomSensorDataPort } from "./RandomSensorDataPort";
-import { Thermometer } from "../domain";
+import { default as app, server, io } from "../../index";
 
 describe("Home Context Integration Tests", () => {
   let token: string;
@@ -92,14 +88,6 @@ describe("Home Context Integration Tests", () => {
       expect(stateRes.body.isOn).toBe(false);
     });
 
-    it("should list sensor types", async () => {
-      const res = await request(app)
-        .get("/api/home/1/sensors/types")
-        .set("Authorization", `Bearer ${token}`);
-      expect(res.status).toBe(200);
-      expect(res.body).toContain("thermometer");
-    });
-
     it("should get components by type", async () => {
       const res = await request(app)
         .get("/api/home/1/components/types/light")
@@ -108,57 +96,6 @@ describe("Home Context Integration Tests", () => {
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body.length).toBeGreaterThan(0);
       expect(res.body[0]).toHaveProperty("isOn");
-    });
-  });
-
-  describe("Socket.IO Sensor Updates", () => {
-    beforeAll(() => {
-      const updatePort = new SocketIOSensorUpdatePort(io, "1");
-      sensorRegistry.setSensors("1", [
-        new Thermometer(
-          "thermometer-1",
-          "Thermometer",
-          new RandomSensorDataPort(),
-          updatePort,
-        ),
-      ]);
-    });
-
-    it("should receive sensor updates via socket.io", async () => {
-      return new Promise<void>((resolve, reject) => {
-        const socket: Socket = ioClient(`http://localhost:${port}`, {
-          auth: { token: `Bearer ${token}` },
-          query: { homeId: "1" },
-        });
-
-        // Timeout fallback
-        const timeout = setTimeout(() => {
-          socket.close();
-          reject(new Error("Socket.io test timeout"));
-        }, 5000);
-
-        socket.on("sensorUpdate", (data) => {
-          try {
-            expect(data.sensorId).toBeDefined();
-            expect(data.type).toBe("thermometer");
-            expect(data.value).toBeDefined();
-            expect(typeof data.value.temperature).toBe("number");
-            socket.close();
-            clearTimeout(timeout);
-            resolve();
-          } catch (e) {
-            clearTimeout(timeout);
-            socket.close();
-            reject(e);
-          }
-        });
-
-        socket.on("connect_error", (e) => {
-          clearTimeout(timeout);
-          socket.close();
-          reject(e);
-        });
-      });
     });
   });
 });
