@@ -1,6 +1,5 @@
 import { Coordinates } from "./Coordinates";
 import { Room } from "./Room";
-import { Sensor } from "./Sensor";
 import { Component, ComponentTypes } from "./Component";
 
 export class Home {
@@ -8,7 +7,6 @@ export class Home {
     public id: string,
     public coordinates: Coordinates,
     public rooms: Room[] = [],
-    public sensors: Sensor[] = [],
   ) {}
 
   getAllComponents(): Component[] {
@@ -26,9 +24,5 @@ export class Home {
     return this.getAllComponents().find(
       (c) => c.id === componentId && c.getType() === type,
     );
-  }
-
-  getAllSensors(): Sensor[] {
-    return this.sensors;
   }
 }

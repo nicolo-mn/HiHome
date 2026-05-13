@@ -8,6 +8,7 @@ import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
+import { MongoHomeRepository } from "./home-context/infrastructure/MongoHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
@@ -26,6 +27,7 @@ import { RuleRouter } from "./rule-context/infrastructure/routes/RuleRouter";
 import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
+import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 
 const app = express();
 const server = http.createServer(app);
@@ -39,8 +41,12 @@ const sensorUpdatePort = new SocketIOSensorUpdatePort(
   "1",
   notificationContext.notificationPort,
 );
-const homeRepo = new InMemoryHomeRepository(sensorUpdatePort);
-const homeService = new HomeService(homeRepo);
+const sensorRegistry = new InMemorySensorRegistry();
+const homeRepo =
+  process.env.NODE_ENV === "test"
+    ? new InMemoryHomeRepository(sensorUpdatePort)
+    : new MongoHomeRepository();
+const homeService = new HomeService(homeRepo, sensorRegistry);
 export const homeController = new HomeController(
   homeService,
   notificationContext.notificationPort,
@@ -116,9 +122,9 @@ io.on("connection", (socket) => {
   } else {
     const interval = setInterval(async () => {
       try {
-        const home = await homeRepo.getHome(homeId);
-        if (home) {
-          home.getAllSensors().forEach((sensor) => sensor.sendUpdate());
+        const sensors = sensorRegistry.getSensors(homeId);
+        if (sensors.length > 0) {
+          sensors.forEach((sensor) => sensor.sendUpdate());
         }
       } catch (e) {
         console.error(e);
@@ -221,4 +227,4 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 export default app;
-export { server, io };
+export { server, io, sensorRegistry };

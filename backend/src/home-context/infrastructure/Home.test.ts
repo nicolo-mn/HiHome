@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import { io as ioClient, Socket } from "socket.io-client";
-import { default as app, server, io } from "../../index";
+import { default as app, server, io, sensorRegistry } from "../../index";
+import { SocketIOSensorUpdatePort } from "./SocketIOSensorUpdatePort";
+import { RandomSensorDataPort } from "./RandomSensorDataPort";
+import { Thermometer } from "../domain";
 
 describe("Home Context Integration Tests", () => {
   let token: string;
@@ -109,6 +112,18 @@ describe("Home Context Integration Tests", () => {
   });
 
   describe("Socket.IO Sensor Updates", () => {
+    beforeAll(() => {
+      const updatePort = new SocketIOSensorUpdatePort(io, "1");
+      sensorRegistry.setSensors("1", [
+        new Thermometer(
+          "thermometer-1",
+          "Thermometer",
+          new RandomSensorDataPort(),
+          updatePort,
+        ),
+      ]);
+    });
+
     it("should receive sensor updates via socket.io", async () => {
       return new Promise<void>((resolve, reject) => {
         const socket: Socket = ioClient(`http://localhost:${port}`, {
