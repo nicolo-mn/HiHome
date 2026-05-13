@@ -29,8 +29,5 @@ export class HomeRouter {
     this.router.post("/:id/components/:componentId/:action", (req, res) => {
       this.homeController.executeAction(req, res);
     });
-    this.router.get("/:id/sensors/types", (req, res) =>
-      this.homeController.getSensorTypes(req, res),
-    );
   }
 }

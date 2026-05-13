@@ -1,11 +1,11 @@
 package domain
 
 type WeatherInfo struct {
-	temperature        float64
-	weatherDescription WeatherDescription
-	windSpeed          float64
-	windDirection      float64
-	precipitation      float64
+	temperature   float64
+	weatherType   WeatherType
+	windSpeed     float64
+	windDirection float64
+	precipitation float64
 }
 
 type AirQualityInfo struct {
@@ -19,11 +19,11 @@ type EnvironmentInfo struct {
 
 func NewWeatherInfo(temp float64, code int, windSpeed float64, windDir float64, precip float64) WeatherInfo {
 	return WeatherInfo{
-		temperature:        temp,
-		weatherDescription: FromWMOCode(code),
-		windSpeed:          windSpeed,
-		windDirection:      windDir,
-		precipitation:      precip,
+		temperature:   temp,
+		weatherType:   FromWMOCode(code),
+		windSpeed:     windSpeed,
+		windDirection: windDir,
+		precipitation: precip,
 	}
 }
 
@@ -44,8 +44,8 @@ func (w EnvironmentInfo) Temperature() float64 {
 	return w.weatherInfo.temperature
 }
 
-func (w EnvironmentInfo) WeatherDescription() WeatherDescription {
-	return w.weatherInfo.weatherDescription
+func (w EnvironmentInfo) WeatherType() WeatherType {
+	return w.weatherInfo.weatherType
 }
 
 func (w EnvironmentInfo) WindSpeed() float64 {

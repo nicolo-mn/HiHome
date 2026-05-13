@@ -1,20 +1,30 @@
 import {
   Component,
-  Sensor,
   Light,
   Coordinates,
   Window,
   Thermostat,
+  Home,
   HomeRepository,
   ComponentTypes,
+  TemperatureState,
+  AirQualityState,
+  WindState,
+  WeatherState,
+  SensorUpdatePort,
 } from "../domain";
 import { ActionService } from "./ActionService";
 import { SensorRegistry } from "./SensorRegistry";
+import { ExternalSensorsDataPort } from "./ExternalSensorsDataPort";
+import { RuleServicePort } from "./RuleServicePort";
 
 export class HomeService implements ActionService {
   constructor(
     private homeRepo: HomeRepository,
     private sensorRegistry: SensorRegistry,
+    private sensorUpdatePort: SensorUpdatePort,
+    private ruleServicePort: RuleServicePort,
+    private externalSensorsDataPort: ExternalSensorsDataPort,
   ) {}
 
   async getComponents(homeId: string): Promise<Component[]> {
@@ -88,15 +98,6 @@ export class HomeService implements ActionService {
       if (type === ComponentTypes.THERMOSTAT) return c instanceof Thermostat;
       return false;
     });
-  }
-
-  async getSensorTypes(): Promise<string[]> {
-    return ["thermometer"];
-  }
-
-  async getSensors(homeId: string): Promise<Sensor[]> {
-    await this.ensureHomeExists(homeId);
-    return this.sensorRegistry.getSensors(homeId);
   }
 
   async getHomeCoordinates(homeId: string): Promise<Coordinates> {
@@ -191,6 +192,55 @@ export class HomeService implements ActionService {
     thermostat.setTemperature(temperature);
 
     await this.homeRepo.saveHome(home);
+  }
+
+  async pollAllHomesExternalSensorsData(): Promise<void> {
+    const homes = await this.homeRepo.getAllHomes();
+
+    await Promise.all(
+      homes.map(async (home) => {
+        try {
+          const extSensorsData =
+            await this.externalSensorsDataPort.getExternalSensorsData(home);
+
+          this.sensorRegistry.setExternalSensorsUpdate(home.id, extSensorsData);
+
+          await this.sensorUpdatePort.sendExternalTemperatureUpdate(
+            home,
+            extSensorsData.externalTemperature,
+          );
+          await this.sensorUpdatePort.sendAirQualityUpdate(
+            home,
+            extSensorsData.airQuality,
+          );
+          await this.sensorUpdatePort.sendWindUpdate(home, extSensorsData.wind);
+          await this.sensorUpdatePort.sendWeatherUpdate(
+            home,
+            extSensorsData.weather,
+          );
+
+          const internalTemperature = { temperature: 20 }; // TODO: replace with actual internal temperature
+          this.ruleServicePort.evaluateRules(
+            home.id,
+            extSensorsData,
+            internalTemperature,
+          );
+        } catch (error) {
+          console.error(
+            `Failed to poll external sensors data for home ${home.id}:`,
+            error,
+          );
+        }
+      }),
+    );
+  }
+
+  async updateInternalTemperature(
+    homeId: string,
+    update: TemperatureState,
+  ): Promise<void> {
+    // TODO: connect to internal API to simulate receiving internal temperature updates (leave as is for now)
+    this.sensorRegistry.setInternalTemperature(homeId, update);
   }
 
   private async ensureHomeExists(homeId: string) {

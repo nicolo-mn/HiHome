@@ -40,6 +40,11 @@ export class MongoHomeRepository implements HomeRepository {
     return this.toDomain(doc);
   }
 
+  async getAllHomes(): Promise<Home[]> {
+    const docs = await HomeModel.find().lean<HomeRecord[]>().exec();
+    return docs.map((doc) => this.toDomain(doc));
+  }
+
   async getComponentById(id: string): Promise<Component | null> {
     const doc = await HomeModel.findOne({
       "rooms.components.id": id,

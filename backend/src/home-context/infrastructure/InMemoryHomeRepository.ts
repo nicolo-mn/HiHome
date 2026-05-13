@@ -1,26 +1,10 @@
-import {
-  Home,
-  Light,
-  Thermometer,
-  Room,
-  SensorDataPort,
-  SensorUpdatePort,
-  Component,
-} from "../domain";
+import { Home, Light, Room, SensorUpdatePort, Component } from "../domain";
 import { HomeRepository } from "../domain/HomeRepository";
-
-export class MockSensorDataPort implements SensorDataPort {
-  private temp = 22.5;
-  getTemperature() {
-    this.temp += Math.random() - 0.5;
-    return this.temp;
-  }
-}
 
 export class InMemoryHomeRepository implements HomeRepository {
   private homes: Map<string, Home> = new Map();
 
-  constructor(private sensorUpdatePort: SensorUpdatePort) {
+  constructor() {
     this.seedDb();
   }
 
@@ -39,6 +23,10 @@ export class InMemoryHomeRepository implements HomeRepository {
 
   async getHome(id: string): Promise<Home | null> {
     return this.homes.get(id) || null;
+  }
+
+  async getAllHomes(): Promise<Home[]> {
+    return Array.from(this.homes.values());
   }
 
   async getComponentById(id: string): Promise<Component | null> {

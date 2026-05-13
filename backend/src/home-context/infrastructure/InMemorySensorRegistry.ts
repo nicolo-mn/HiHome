@@ -1,14 +1,31 @@
-import { Sensor } from "../domain";
+import {
+  ExternalSensorsUpdate,
+  SensorState,
+  TemperatureState,
+} from "../domain";
 import { SensorRegistry } from "../application/SensorRegistry";
 
 export class InMemorySensorRegistry implements SensorRegistry {
-  private sensorsByHome = new Map<string, Sensor[]>();
+  private sensorsByHome = new Map<string, SensorState>();
 
-  getSensors(homeId: string): Sensor[] {
-    return this.sensorsByHome.get(homeId) || [];
+  getState(homeId: string): SensorState | undefined {
+    return this.sensorsByHome.get(homeId);
   }
 
-  setSensors(homeId: string, sensors: Sensor[]): void {
-    this.sensorsByHome.set(homeId, sensors);
+  setState(homeId: string, state: SensorState): void {
+    this.sensorsByHome.set(homeId, state);
+  }
+
+  setExternalSensorsUpdate(
+    homeId: string,
+    update: ExternalSensorsUpdate,
+  ): void {
+    const prev = this.sensorsByHome.get(homeId) || {};
+    this.sensorsByHome.set(homeId, { ...prev, externalSensors: update });
+  }
+
+  setInternalTemperature(homeId: string, update: TemperatureState): void {
+    const prev = this.sensorsByHome.get(homeId) || {};
+    this.sensorsByHome.set(homeId, { ...prev, internalTemperature: update });
   }
 }

@@ -11,7 +11,7 @@ import (
 func main() {
 	client := infrastructure.NewOpenMeteoClient(nil)
 	service := application.NewEnvironmentService(client)
-	controller := infrastructure.NewEnvironmentController(service, "resources")
+	controller := infrastructure.NewEnvironmentController(service)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/weather", controller.ServeHTTP)
