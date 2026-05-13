@@ -30,6 +30,7 @@ import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { Home, Light, Room, Thermostat, Window } from "./home-context/domain";
+import { UserModel } from "./user-context/infrastructure/models/UserModel";
 
 const app = express();
 const server = http.createServer(app);
@@ -238,6 +239,36 @@ export async function bootstrap() {
       await homeRepo.saveHome(seededHome);
       console.log("Seeded home with id 1");
     }
+
+    const seedUsers = [
+      {
+        id: "user-1",
+        homeId: "1",
+        username: "admin",
+        password: "admin",
+        role: "Admin",
+      },
+      {
+        id: "user-2",
+        homeId: "1",
+        username: "standard",
+        password: "standard",
+        role: "StandardUser",
+      },
+    ];
+
+    await Promise.all(
+      seedUsers.map(async (user) => {
+        const existingUser = await UserModel.findOne({
+          homeId: user.homeId,
+          username: user.username,
+        }).exec();
+        if (!existingUser) {
+          await UserModel.create(user);
+          console.log(`Seeded user ${user.username}`);
+        }
+      }),
+    );
     server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);
     });
