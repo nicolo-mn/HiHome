@@ -25,26 +25,14 @@ export class InMemoryHomeRepository implements HomeRepository {
   }
 
   private seedDb() {
-    const mockHome = new Home(
-      "1",
-      { latitude: 45.4642, longitude: 9.19 },
-      [
-        new Room("room-1", "Living Room", [
-          new Light("light-1", "Main Light", "room-1"),
-        ]),
-        new Room("room-2", "Bedroom", [
-          new Light("light-2", "Bed Light", "room-2", true),
-        ]),
-      ],
-      [
-        new Thermometer(
-          "sensor-1",
-          "Indoor Thermometer",
-          new MockSensorDataPort(),
-          this.sensorUpdatePort,
-        ),
-      ],
-    );
+    const mockHome = new Home("1", { latitude: 45.4642, longitude: 9.19 }, [
+      new Room("room-1", "Living Room", [
+        new Light("light-1", "Main Light", "room-1"),
+      ]),
+      new Room("room-2", "Bedroom", [
+        new Light("light-2", "Bed Light", "room-2", true),
+      ]),
+    ]);
 
     this.homes.set(mockHome.id, mockHome);
   }

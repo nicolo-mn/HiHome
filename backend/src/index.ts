@@ -8,6 +8,7 @@ import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
+import { MongoHomeRepository } from "./home-context/infrastructure/MongoHomeRepository";
 import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
@@ -21,11 +22,14 @@ import {
 } from "./home-context/infrastructure/middlewares/WebSocketMiddlewares";
 import { RuleService } from "./rule-context/application/RuleService";
 import { InMemoryRuleRepository } from "./rule-context/infrastructure/InMemoryRuleRepository";
+import { MongoRuleRepository } from "./rule-context/infrastructure/MongoRuleRepository";
 import { RuleController } from "./rule-context/infrastructure/controllers/RuleController";
 import { RuleRouter } from "./rule-context/infrastructure/routes/RuleRouter";
 import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
+import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
+import { seedDatabase } from "./bootstrap/seedDatabase";
 
 const app = express();
 const server = http.createServer(app);
@@ -39,8 +43,12 @@ const sensorUpdatePort = new SocketIOSensorUpdatePort(
   "1",
   notificationContext.notificationPort,
 );
-const homeRepo = new InMemoryHomeRepository(sensorUpdatePort);
-const homeService = new HomeService(homeRepo);
+const sensorRegistry = new InMemorySensorRegistry();
+const homeRepo =
+  process.env.NODE_ENV === "test"
+    ? new InMemoryHomeRepository(sensorUpdatePort)
+    : new MongoHomeRepository();
+const homeService = new HomeService(homeRepo, sensorRegistry);
 export const homeController = new HomeController(
   homeService,
   notificationContext.notificationPort,
@@ -48,7 +56,10 @@ export const homeController = new HomeController(
 const homeRouter = new HomeRouter(homeController);
 
 // --- Rule Context Setup ---
-const ruleRepo = new InMemoryRuleRepository();
+const ruleRepo =
+  process.env.NODE_ENV === "test"
+    ? new InMemoryRuleRepository()
+    : new MongoRuleRepository();
 const actionExecutor = new ActionExecutionAdapter(homeService);
 const ruleService = new RuleService(ruleRepo, actionExecutor);
 export const ruleController = new RuleController(ruleService);
@@ -116,9 +127,9 @@ io.on("connection", (socket) => {
   } else {
     const interval = setInterval(async () => {
       try {
-        const home = await homeRepo.getHome(homeId);
-        if (home) {
-          home.getAllSensors().forEach((sensor) => sensor.sendUpdate());
+        const sensors = sensorRegistry.getSensors(homeId);
+        if (sensors.length > 0) {
+          sensors.forEach((sensor) => sensor.sendUpdate());
         }
       } catch (e) {
         console.error(e);
@@ -208,6 +219,7 @@ app.get("/api/message", async (req: Request, res: Response) => {
 export async function bootstrap() {
   try {
     await mongoose.connect(MONGO_URI);
+    await seedDatabase(homeRepo);
     server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);
     });
@@ -221,4 +233,4 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 export default app;
-export { server, io };
+export { server, io, sensorRegistry };
