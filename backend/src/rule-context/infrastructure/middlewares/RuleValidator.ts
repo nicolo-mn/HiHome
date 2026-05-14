@@ -28,11 +28,12 @@ export const conditionValidator = [
     .isIn([
       "internal-thermometer",
       "external-thermometer",
+      "wind-speed",
       "weather",
       "air-quality",
     ])
     .withMessage(
-      "observableId must be one of: internal-thermometer, external-thermometer, weather, air-quality",
+      "observableId must be one of: internal-thermometer, external-thermometer, wind-speed, weather, air-quality",
     ),
 
   body("operator")
@@ -40,9 +41,12 @@ export const conditionValidator = [
     .withMessage("operator is required")
     .bail()
     .if((_value, { req }) =>
-      ["internal-thermometer", "external-thermometer", "air-quality"].includes(
-        req.body?.observableId,
-      ),
+      [
+        "internal-thermometer",
+        "external-thermometer",
+        "wind-speed",
+        "air-quality",
+      ].includes(req.body?.observableId),
     )
     .isIn(["gt", "lt", "eq"])
     .withMessage("operator must be one of: gt, lt, eq for this observable")
@@ -55,9 +59,12 @@ export const conditionValidator = [
     .withMessage("operatorTarget is required")
     .bail()
     .if((_value, { req }) =>
-      ["internal-thermometer", "external-thermometer", "air-quality"].includes(
-        req.body?.observableId,
-      ),
+      [
+        "internal-thermometer",
+        "external-thermometer",
+        "wind-speed",
+        "air-quality",
+      ].includes(req.body?.observableId),
     )
     .isNumeric()
     .withMessage("operatorTarget must be a number for this observable")

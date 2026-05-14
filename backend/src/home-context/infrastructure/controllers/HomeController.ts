@@ -114,13 +114,4 @@ export class HomeController {
       res.status(400).json({ error: e.message });
     }
   }
-
-  async getSensorTypes(req: Request, res: Response) {
-    try {
-      const types = await this.homeService.getSensorTypes();
-      res.json(types);
-    } catch (e: any) {
-      res.status(500).json({ error: e.message });
-    }
-  }
 }

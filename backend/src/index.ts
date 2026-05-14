@@ -8,57 +8,37 @@ import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
-import { SocketIOSensorUpdatePort } from "./home-context/infrastructure/SocketIOSensorUpdatePort";
+import { MongoHomeRepository } from "./home-context/infrastructure/MongoHomeRepository";
+import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/SocketIOSensorUpdateAdapter";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
 import { ChatService } from "./home-context/application/ChatService";
 import { ChatController } from "./home-context/infrastructure/controllers/ChatController";
 import { HomeRouter } from "./home-context/infrastructure/routes/HomeRouter";
+import { ExtApiServiceDataAdapter } from "./home-context/infrastructure/ExtApiServiceDataAdapter";
 import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
 } from "./home-context/infrastructure/middlewares/WebSocketMiddlewares";
 import { RuleService } from "./rule-context/application/RuleService";
 import { InMemoryRuleRepository } from "./rule-context/infrastructure/InMemoryRuleRepository";
+import { MongoRuleRepository } from "./rule-context/infrastructure/MongoRuleRepository";
 import { RuleController } from "./rule-context/infrastructure/controllers/RuleController";
 import { RuleRouter } from "./rule-context/infrastructure/routes/RuleRouter";
 import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
+import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
+import { seedDatabase } from "./bootstrap/seedDatabase";
+import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
+import { HomeRepository } from "./home-context/domain";
 
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { cors: { origin: "*" } });
 
 const notificationContext = NotificationContextFactory.create(io);
-
-// --- Home Context Setup ---
-const sensorUpdatePort = new SocketIOSensorUpdatePort(
-  io,
-  "1",
-  notificationContext.notificationPort,
-);
-const homeRepo = new InMemoryHomeRepository(sensorUpdatePort);
-const homeService = new HomeService(homeRepo);
-export const homeController = new HomeController(
-  homeService,
-  notificationContext.notificationPort,
-);
-const homeRouter = new HomeRouter(homeController);
-
-// --- Rule Context Setup ---
-const ruleRepo = new InMemoryRuleRepository();
-const actionExecutor = new ActionExecutionAdapter(homeService);
-const ruleService = new RuleService(ruleRepo, actionExecutor);
-export const ruleController = new RuleController(ruleService);
-const ruleRouter = new RuleRouter(ruleController);
-const eventEmitter = new EventEmitter();
-const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
-
-// --- User context setup ---
-const authContext = UserContextFactory.create();
-const authController = new UserController(authContext.authPort);
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
@@ -67,6 +47,47 @@ const DEEPSEEK_API_BASE_URL =
 const EXT_API_BASE_URL =
   process.env.EXT_API_BASE_URL || "http://ext_api_service:8080";
 const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 20);
+
+// --- Home Context Setup ---
+const sensorUpdatePort = new SocketIOSensorUpdateAdapter();
+const eventEmitter = new EventEmitter();
+const ruleServicePort = new AsyncBusRuleServiceAdapter(
+  eventEmitter,
+  "observables-updated",
+);
+const externalSensorsDataPort = new ExtApiServiceDataAdapter(EXT_API_BASE_URL);
+const sensorRegistry = new InMemorySensorRegistry();
+const homeRepo =
+  process.env.NODE_ENV === "test"
+    ? new InMemoryHomeRepository()
+    : new MongoHomeRepository();
+const homeService = new HomeService(
+  homeRepo,
+  sensorRegistry,
+  sensorUpdatePort,
+  ruleServicePort,
+  externalSensorsDataPort,
+);
+export const homeController = new HomeController(
+  homeService,
+  notificationContext.notificationPort,
+);
+const homeRouter = new HomeRouter(homeController);
+
+// --- Rule Context Setup ---
+const ruleRepo =
+  process.env.NODE_ENV === "test"
+    ? new InMemoryRuleRepository()
+    : new MongoRuleRepository();
+const actionExecutor = new ActionExecutionAdapter(homeService);
+const ruleService = new RuleService(ruleRepo, actionExecutor);
+export const ruleController = new RuleController(ruleService);
+const ruleRouter = new RuleRouter(ruleController);
+const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
+
+// --- User context setup ---
+const authContext = UserContextFactory.create();
+const authController = new UserController(authContext.authPort);
 
 const chatService = new ChatService(homeService, {
   apiKey: DEEPSEEK_API_KEY,
@@ -93,13 +114,20 @@ app.use(authMiddleware);
 app.use("/api/home", homeRouter.router);
 app.use("/api/home", ruleRouter.router);
 // --- Socket.IO for sensor updates ---
-const activeHomes = new Map<
-  string,
-  { count: number; interval: NodeJS.Timeout }
->();
-
 io.use(wsAuthMiddleware);
 io.use(wsHomeIdMiddleware);
+
+const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
+  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
+);
+
+setInterval(async () => {
+  try {
+    await homeService.pollAllHomesExternalSensorsData();
+  } catch (error) {
+    console.error("Error polling external sensors data:", error);
+  }
+}, EXTERNAL_SENSORS_POLL_INTERVAL_MS);
 
 io.on("connection", (socket) => {
   const homeId = socket.handshake.query.homeId as string;
@@ -109,34 +137,7 @@ io.on("connection", (socket) => {
   }
 
   socket.join(`home-${homeId}`);
-
-  const entry = activeHomes.get(homeId);
-  if (entry) {
-    entry.count++;
-  } else {
-    const interval = setInterval(async () => {
-      try {
-        const home = await homeRepo.getHome(homeId);
-        if (home) {
-          home.getAllSensors().forEach((sensor) => sensor.sendUpdate());
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }, 2000);
-    activeHomes.set(homeId, { count: 1, interval });
-  }
-
-  socket.on("disconnect", () => {
-    const e = activeHomes.get(homeId);
-    if (e) {
-      e.count--;
-      if (e.count <= 0) {
-        clearInterval(e.interval);
-        activeHomes.delete(homeId);
-      }
-    }
-  });
+  void sensorUpdatePort.registerClient(homeId, socket);
 
   socket.on(
     "chat:send",
@@ -208,6 +209,7 @@ app.get("/api/message", async (req: Request, res: Response) => {
 export async function bootstrap() {
   try {
     await mongoose.connect(MONGO_URI);
+    await seedDatabase(homeRepo);
     server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);
     });
@@ -221,4 +223,4 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 export default app;
-export { server, io };
+export { server, io, sensorRegistry };

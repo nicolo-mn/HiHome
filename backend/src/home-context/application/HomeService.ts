@@ -1,21 +1,34 @@
 import {
   Component,
-  Sensor,
   Light,
   Coordinates,
   Window,
   Thermostat,
+  Home,
   HomeRepository,
   ComponentTypes,
+  TemperatureState,
+  AirQualityState,
+  WindState,
+  WeatherState,
+  SensorUpdatePort,
 } from "../domain";
 import { ActionService } from "./ActionService";
+import { SensorRegistry } from "./SensorRegistry";
+import { ExternalSensorsDataPort } from "./ExternalSensorsDataPort";
+import { RuleServicePort } from "./RuleServicePort";
 
 export class HomeService implements ActionService {
-  constructor(private homeRepo: HomeRepository) {}
+  constructor(
+    private homeRepo: HomeRepository,
+    private sensorRegistry: SensorRegistry,
+    private sensorUpdatePort: SensorUpdatePort,
+    private ruleServicePort: RuleServicePort,
+    private externalSensorsDataPort: ExternalSensorsDataPort,
+  ) {}
 
   async getComponents(homeId: string): Promise<Component[]> {
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
     return home.getAllComponents();
   }
 
@@ -30,8 +43,7 @@ export class HomeService implements ActionService {
     roomId: string,
     componentData: any,
   ): Promise<Component> {
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
     const room = home.rooms.find((r) => r.id === roomId);
     if (!room) throw new Error("Room not found");
 
@@ -56,8 +68,7 @@ export class HomeService implements ActionService {
     componentId: string,
     action: string,
   ): Promise<Component> {
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentById(componentId);
     if (!component) throw new Error("Component not found");
@@ -89,28 +100,16 @@ export class HomeService implements ActionService {
     });
   }
 
-  async getSensorTypes(): Promise<string[]> {
-    return ["thermometer"];
-  }
-
-  async getSensors(homeId: string): Promise<Sensor[]> {
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
-    return home.getAllSensors();
-  }
-
   async getHomeCoordinates(homeId: string): Promise<Coordinates> {
     console.log(`Fetching coordinates for home ${homeId}`);
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
     return home.coordinates;
   }
 
   async lightTurnOn(homeId: string, lightId: string): Promise<void> {
     const componentType = ComponentTypes.LIGHT;
 
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(lightId, componentType);
     if (!component)
@@ -127,8 +126,7 @@ export class HomeService implements ActionService {
   async lightTurnOff(homeId: string, lightId: string): Promise<void> {
     const componentType = ComponentTypes.LIGHT;
 
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(lightId, componentType);
     if (!component)
@@ -145,8 +143,7 @@ export class HomeService implements ActionService {
   async windowOpen(homeId: string, windowId: string): Promise<void> {
     const componentType = ComponentTypes.WINDOW;
 
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(windowId, componentType);
     if (!component)
@@ -163,8 +160,7 @@ export class HomeService implements ActionService {
   async windowClose(homeId: string, windowId: string): Promise<void> {
     const componentType = ComponentTypes.WINDOW;
 
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
+    const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(windowId, componentType);
     if (!component)
@@ -185,9 +181,7 @@ export class HomeService implements ActionService {
   ): Promise<void> {
     const componentType = ComponentTypes.THERMOSTAT;
 
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error("Home not found");
-
+    const home = await this.ensureHomeExists(homeId);
     const component = home.getComponentByIdAndType(thermostatId, componentType);
     if (!component)
       throw new Error(
@@ -198,5 +192,60 @@ export class HomeService implements ActionService {
     thermostat.setTemperature(temperature);
 
     await this.homeRepo.saveHome(home);
+  }
+
+  async pollAllHomesExternalSensorsData(): Promise<void> {
+    const homes = await this.homeRepo.getAllHomes();
+
+    await Promise.all(
+      homes.map(async (home) => {
+        try {
+          const extSensorsData =
+            await this.externalSensorsDataPort.getExternalSensorsData(home);
+
+          this.sensorRegistry.setExternalSensorsUpdate(home.id, extSensorsData);
+
+          await this.sensorUpdatePort.sendExternalTemperatureUpdate(
+            home,
+            extSensorsData.externalTemperature,
+          );
+          await this.sensorUpdatePort.sendAirQualityUpdate(
+            home,
+            extSensorsData.airQuality,
+          );
+          await this.sensorUpdatePort.sendWindUpdate(home, extSensorsData.wind);
+          await this.sensorUpdatePort.sendWeatherUpdate(
+            home,
+            extSensorsData.weather,
+          );
+
+          const internalTemperature = { temperature: 20 }; // TODO: replace with actual internal temperature
+          this.ruleServicePort.evaluateRules(
+            home.id,
+            extSensorsData,
+            internalTemperature,
+          );
+        } catch (error) {
+          console.error(
+            `Failed to poll external sensors data for home ${home.id}:`,
+            error,
+          );
+        }
+      }),
+    );
+  }
+
+  async updateInternalTemperature(
+    homeId: string,
+    update: TemperatureState,
+  ): Promise<void> {
+    // TODO: connect to internal API to simulate receiving internal temperature updates (leave as is for now)
+    this.sensorRegistry.setInternalTemperature(homeId, update);
+  }
+
+  private async ensureHomeExists(homeId: string) {
+    const home = await this.homeRepo.getHome(homeId);
+    if (!home) throw new Error(`Home ${homeId} not found`);
+    return home;
   }
 }
