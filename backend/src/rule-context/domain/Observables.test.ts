@@ -8,6 +8,7 @@ import {
   ExternalTemperatureCondition,
   InternalTemperatureCondition,
   AirQualityCondition,
+  WindSpeedCondition,
   WeatherForecast,
   ObservablesUpdatedDomainEvent,
   BoundaryViolationError,
@@ -56,6 +57,7 @@ describe("Conditions", () => {
     externalTemperature: 20,
     internalTemperature: 22,
     airQuality: 50,
+    windSpeed: 10,
     weatherForecast: WeatherForecast.Clear,
   };
 
@@ -103,6 +105,7 @@ describe("Conditions", () => {
         visitWeatherCondition: vi.fn().mockReturnValue("weather"),
         visitTemperatureCondition: vi.fn(),
         visitAirQualityCondition: vi.fn(),
+        visitWindSpeedCondition: vi.fn(),
       };
 
       expect(cond.accept(mockVisitor)).toBe("weather");
@@ -153,6 +156,7 @@ describe("Conditions", () => {
           visitWeatherCondition: vi.fn(),
           visitTemperatureCondition: vi.fn().mockReturnValue("temp"),
           visitAirQualityCondition: vi.fn(),
+          visitWindSpeedCondition: vi.fn(),
         };
 
         expect(cond.accept(mockVisitor)).toBe("temp");
@@ -205,10 +209,44 @@ describe("Conditions", () => {
           visitWeatherCondition: vi.fn(),
           visitTemperatureCondition: vi.fn(),
           visitAirQualityCondition: vi.fn().mockReturnValue("aqi"),
+          visitWindSpeedCondition: vi.fn(),
         };
 
         expect(cond.accept(mockVisitor)).toBe("aqi");
         expect(mockVisitor.visitAirQualityCondition).toHaveBeenCalledWith(cond);
+      });
+    });
+
+    describe("WindSpeedCondition", () => {
+      it("should verify wind speed and track state changes", () => {
+        const op = new NumericGreaterOperator(15);
+        const cond = new WindSpeedCondition(op);
+
+        expect(cond.verify({ ...baseUpdate, windSpeed: 20 })).toBe(true);
+        expect(cond.verify({ ...baseUpdate, windSpeed: 20 })).toBe(false);
+        expect(cond.verify({ ...baseUpdate, windSpeed: 10 })).toBe(false);
+        expect(cond.verify({ ...baseUpdate, windSpeed: 20 })).toBe(true);
+      });
+
+      it("should throw BoundaryViolationError when boundary value is out of range on creation", () => {
+        const op = new NumericGreaterOperator(100);
+        expect(() => new WindSpeedCondition(op)).toThrow(
+          BoundaryViolationError,
+        );
+      });
+
+      it("should accept visitor", () => {
+        const op = new NumericGreaterOperator(15);
+        const cond = new WindSpeedCondition(op);
+        const mockVisitor = {
+          visitWeatherCondition: vi.fn(),
+          visitTemperatureCondition: vi.fn(),
+          visitAirQualityCondition: vi.fn(),
+          visitWindSpeedCondition: vi.fn().mockReturnValue("wind"),
+        };
+
+        expect(cond.accept(mockVisitor)).toBe("wind");
+        expect(mockVisitor.visitWindSpeedCondition).toHaveBeenCalledWith(cond);
       });
     });
   });

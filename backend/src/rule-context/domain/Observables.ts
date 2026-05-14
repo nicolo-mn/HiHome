@@ -2,6 +2,7 @@ interface ConditionVisitor<T> {
   visitWeatherCondition<T>(cond: ObservableCondition): T;
   visitTemperatureCondition<T>(cond: ObservableCondition): T;
   visitAirQualityCondition<T>(cond: ObservableCondition): T;
+  visitWindSpeedCondition<T>(cond: ObservableCondition): T;
 }
 
 export enum WeatherForecast {
@@ -19,6 +20,7 @@ export type ObservablesUpdatedDomainEvent = {
   externalTemperature: number;
   internalTemperature: number;
   airQuality: number;
+  windSpeed: number;
   weatherForecast: WeatherForecast;
 };
 
@@ -208,5 +210,27 @@ export class AirQualityCondition extends BoundedNumericCondition {
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
     return this.checkStateChangeAndAssertInRange(update.airQuality);
+  }
+}
+
+export class WindSpeedCondition extends BoundedNumericCondition {
+  static readonly MIN_WIND_SPEED = 0;
+  static readonly MAX_WIND_SPEED = 60;
+
+  constructor(operator: NumericOperator) {
+    super(
+      operator,
+      WindSpeedCondition.MIN_WIND_SPEED,
+      WindSpeedCondition.MAX_WIND_SPEED,
+      "WindSpeedCondition",
+    );
+  }
+
+  accept<R>(visitor: ConditionVisitor<R>): R {
+    return visitor.visitWindSpeedCondition(this);
+  }
+
+  verify(update: ObservablesUpdatedDomainEvent): boolean {
+    return this.checkStateChangeAndAssertInRange(update.windSpeed);
   }
 }

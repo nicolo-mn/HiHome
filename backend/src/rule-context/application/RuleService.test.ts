@@ -99,6 +99,7 @@ describe("RuleService", () => {
       externalTemperature: 20,
       internalTemperature: 22,
       airQuality: 50,
+      windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
 
@@ -163,6 +164,7 @@ describe("RuleService", () => {
       externalTemperature: 20,
       internalTemperature: 22,
       airQuality: 50,
+      windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
 

@@ -26,6 +26,7 @@ export class AsyncBusRuleServiceAdapter implements RuleServicePort {
       externalTemperature: extSensorsData.externalTemperature.temperature,
       internalTemperature: internalTemperature.temperature,
       airQuality: extSensorsData.airQuality.AQI,
+      windSpeed: extSensorsData.wind.windSpeed,
       weatherForecast: this.convertWeatherForecastToRuleContextFormat(
         extSensorsData.weather.forecast,
       ),

@@ -26,6 +26,7 @@ describe("AsyncBus", () => {
       externalTemperature: 25,
       internalTemperature: 22,
       airQuality: 40,
+      windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
     const homeId = "home-1";
@@ -51,6 +52,7 @@ describe("AsyncBus", () => {
       externalTemperature: 25,
       internalTemperature: 22,
       airQuality: 40,
+      windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
 

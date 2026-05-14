@@ -60,6 +60,7 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
   async sendWeatherUpdate(home: Home, update: WeatherState): Promise<void> {
     this.broadcast(home.id, "sensor:weather", {
       forecast: update.forecast,
+      precipitation: update.precipitation,
     });
   }
 
