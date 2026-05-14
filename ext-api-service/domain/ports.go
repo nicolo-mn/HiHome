@@ -4,4 +4,5 @@ package domain
 type EnvironmentInfoProvider interface {
 	FetchCurrentWeather(lat, lon float64) (*WeatherInfo, error)
 	FetchCurrentAirQuality(lat, lon float64) (*AirQualityInfo, error)
+	FetchWeeklyForecast(lat, lon float64) (*WeeklyForecast, error)
 }

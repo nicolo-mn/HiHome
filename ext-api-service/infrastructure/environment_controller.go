@@ -18,6 +18,22 @@ type environmentResponse struct {
 	EuropeanAQI   int     `json:"europeanAqi"`
 }
 
+type dailyForecastResponse struct {
+	Date                  string  `json:"date"`
+	WeatherType           int     `json:"weatherType"`
+	TemperatureMax        float64 `json:"temperatureMax"`
+	TemperatureMin        float64 `json:"temperatureMin"`
+	WindSpeedMax          float64 `json:"windSpeedMax"`
+	WindDirectionDominant float64 `json:"windDirectionDominant"`
+	PrecipitationHours    float64 `json:"precipitationHours"`
+	DaylightDuration      float64 `json:"daylightDuration"`
+	PrecipitationSum      float64 `json:"precipitationSum"`
+}
+
+type weeklyForecastResponse struct {
+	Days []dailyForecastResponse `json:"days"`
+}
+
 type EnvironmentController struct {
 	service *application.EnvironmentService
 }
@@ -54,6 +70,46 @@ func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request
 		EuropeanAQI:   info.EuropeanAQI(),
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *EnvironmentController) ServeForecast(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	lat, lon, err := parseCoordinates(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	forecast, err := h.service.GetWeeklyForecast(lat, lon)
+	if err != nil {
+		log.Printf("failed to get weekly forecast: %v", err)
+		http.Error(w, "failed to fetch weekly forecast", http.StatusBadGateway)
+		return
+	}
+
+	days := forecast.Days()
+	respDays := make([]dailyForecastResponse, 0, len(days))
+	for _, day := range days {
+		respDays = append(respDays, dailyForecastResponse{
+			Date:                  day.Date(),
+			WeatherType:           int(day.WeatherType()),
+			TemperatureMax:        day.TemperatureMax(),
+			TemperatureMin:        day.TemperatureMin(),
+			WindSpeedMax:          day.WindSpeedMax(),
+			WindDirectionDominant: day.WindDirectionDominant(),
+			PrecipitationHours:    day.PrecipitationHours(),
+			DaylightDuration:      day.DaylightDuration(),
+			PrecipitationSum:      day.PrecipitationSum(),
+		})
+	}
+
+	resp := weeklyForecastResponse{Days: respDays}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }

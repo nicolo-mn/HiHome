@@ -30,3 +30,12 @@ func (s *EnvironmentService) GetEnvironmentInfo(lat, lon float64) (*domain.Envir
 	newEnvInfo := domain.NewEnvironmentInfo(*weatherInfo, *airQualityInfo)
 	return &newEnvInfo, nil
 }
+
+func (s *EnvironmentService) GetWeeklyForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+	weeklyForecast, err := s.environmentProvider.FetchWeeklyForecast(lat, lon)
+	if err != nil {
+		return nil, err
+	}
+
+	return weeklyForecast, nil
+}
