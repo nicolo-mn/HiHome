@@ -7,6 +7,7 @@ import {
   WeatherEqualityOperator,
   WeatherForecast,
   ExternalTemperatureCondition,
+  WindSpeedCondition,
   AirQualityCondition,
   WeatherCondition,
   ObservableCondition,
@@ -76,6 +77,8 @@ export class RuleController {
           observableId === "external-thermometer"
         ) {
           condition = new ExternalTemperatureCondition(numericOperator);
+        } else if (observableId === "wind-speed") {
+          condition = new WindSpeedCondition(numericOperator);
         } else if (observableId === "air-quality") {
           condition = new AirQualityCondition(numericOperator);
         } else {

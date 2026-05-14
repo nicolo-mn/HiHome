@@ -39,6 +39,7 @@ export class ExtApiServiceDataAdapter implements ExternalSensorsDataPort {
       },
       weather: {
         forecast: this.mapWeatherTypeToForecast(payload.weatherType),
+        precipitation: payload.precipitation,
       },
     };
   }

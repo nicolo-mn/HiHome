@@ -24,6 +24,7 @@ export type WindState = {
 
 export type WeatherState = {
   forecast: WeatherForecast;
+  precipitation: number;
 };
 
 export type ExternalSensorsUpdate = {

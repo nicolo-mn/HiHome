@@ -6,6 +6,7 @@ import {
   ExternalTemperatureCondition,
   InternalTemperatureCondition,
   AirQualityCondition,
+  WindSpeedCondition,
   NumericGreaterOperator,
   NumericLowerOperator,
   NumericEqualityOperator,
@@ -26,6 +27,7 @@ const WEATHER_TYPE = "weather";
 const EXTERNAL_TEMP_TYPE = "external-thermometer";
 const INTERNAL_TEMP_TYPE = "internal-thermometer";
 const AIR_QUALITY_TYPE = "air-quality";
+const WIND_SPEED_TYPE = "wind-speed";
 
 const OP_EQ = "eq";
 const OP_GT = "gt";
@@ -110,6 +112,8 @@ export class MongoRuleRepository implements RuleRepository {
         return new InternalTemperatureCondition(operator);
       case AIR_QUALITY_TYPE:
         return new AirQualityCondition(operator);
+      case WIND_SPEED_TYPE:
+        return new WindSpeedCondition(operator);
       default:
         throw new Error(`Unsupported condition type: ${record.type}`);
     }
@@ -165,6 +169,10 @@ export class MongoRuleRepository implements RuleRepository {
       return this.toNumericConditionRecord(condition, AIR_QUALITY_TYPE);
     }
 
+    if (condition instanceof WindSpeedCondition) {
+      return this.toNumericConditionRecord(condition, WIND_SPEED_TYPE);
+    }
+
     throw new Error("Unsupported condition type");
   }
 
@@ -172,7 +180,8 @@ export class MongoRuleRepository implements RuleRepository {
     condition:
       | ExternalTemperatureCondition
       | InternalTemperatureCondition
-      | AirQualityCondition,
+      | AirQualityCondition
+      | WindSpeedCondition,
     type: string,
   ): ConditionRecord {
     const operator = condition.operator;
