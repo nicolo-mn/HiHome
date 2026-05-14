@@ -105,11 +105,16 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/test-db";
 app.use(cors());
 app.use(express.json());
 
+// --- Non authenticated routes ---
 app.post("/api/login", (req, res) => authController.login(req, res));
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok", db: mongoose.connection.readyState });
 });
+app.post("/api/home/:id/sensors/internal-temperature", (req, res) => {
+  homeController.updateInternalTemperature(req, res);
+});
 
+// --- Authenticated routes ---
 app.use(authMiddleware);
 app.use("/api/home", homeRouter.router);
 app.use("/api/home", ruleRouter.router);
