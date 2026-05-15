@@ -32,7 +32,8 @@ const unitSymbol = computed(() => {
   const u = props.reading.measureUnit?.toLowerCase() ?? "";
   if (u === "celsius") return "°C";
   if (u === "fahrenheit") return "°F";
-  if (!u || u === "eaqi") return "";
+  if (u === "eaqi") return "AQI";
+  if (!u) return "";
   return props.reading.measureUnit;
 });
 </script>
