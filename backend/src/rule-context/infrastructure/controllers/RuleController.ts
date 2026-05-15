@@ -7,6 +7,7 @@ import {
   WeatherEqualityOperator,
   WeatherForecast,
   ExternalTemperatureCondition,
+  InternalTemperatureCondition,
   WindSpeedCondition,
   AirQualityCondition,
   WeatherCondition,
@@ -20,6 +21,80 @@ import {
   WindowCloseAction,
   ThermostatSetTemperatureAction,
 } from "../../domain/Actions";
+import { Rule } from "../../domain/Rule";
+
+type ConditionDto = { type: string; operator: string; target: string | number };
+type ActionDto = {
+  type: string;
+  componentId: string;
+  targetTemperature?: number;
+};
+type RuleDto = {
+  id: string;
+  name: string;
+  condition: ConditionDto;
+  actions: ActionDto[];
+};
+
+function conditionToDto(condition: ObservableCondition): ConditionDto {
+  if (condition instanceof WeatherCondition) {
+    return {
+      type: "weather",
+      operator: "is",
+      target: WeatherForecast[condition.operator.getBoundaryValue()],
+    };
+  }
+
+  const bounded = condition as
+    | ExternalTemperatureCondition
+    | InternalTemperatureCondition
+    | AirQualityCondition
+    | WindSpeedCondition;
+  const op = bounded.operator;
+  let operatorStr: string;
+  if (op instanceof NumericGreaterOperator) operatorStr = "gt";
+  else if (op instanceof NumericLowerOperator) operatorStr = "lt";
+  else operatorStr = "eq";
+
+  let type: string;
+  if (condition instanceof ExternalTemperatureCondition)
+    type = "external-thermometer";
+  else if (condition instanceof InternalTemperatureCondition)
+    type = "internal-thermometer";
+  else if (condition instanceof AirQualityCondition) type = "air-quality";
+  else if (condition instanceof WindSpeedCondition) type = "wind-speed";
+  else throw new Error("Unsupported condition type");
+
+  return { type, operator: operatorStr, target: op.getBoundaryValue() };
+}
+
+function actionToDto(action: ComponentAction): ActionDto {
+  if (action instanceof LightTurnOnAction)
+    return { type: "light-turn-on", componentId: action.getComponentId() };
+  if (action instanceof LightTurnOffAction)
+    return { type: "light-turn-off", componentId: action.getComponentId() };
+  if (action instanceof WindowOpenAction)
+    return { type: "window-open", componentId: action.getComponentId() };
+  if (action instanceof WindowCloseAction)
+    return { type: "window-close", componentId: action.getComponentId() };
+  if (action instanceof ThermostatSetTemperatureAction) {
+    return {
+      type: "thermostat-set-temperature",
+      componentId: action.getComponentId(),
+      targetTemperature: action.targetTemperature,
+    };
+  }
+  throw new Error("Unsupported action type");
+}
+
+function ruleToDto(rule: Rule): RuleDto {
+  return {
+    id: rule.id,
+    name: rule.name,
+    condition: conditionToDto(rule.condition),
+    actions: rule.actions.map(actionToDto),
+  };
+}
 
 export class RuleController {
   constructor(private ruleService: RuleService) {}
@@ -29,7 +104,7 @@ export class RuleController {
       const rules = await this.ruleService.getRulesForHome(
         req.params.id as string,
       );
-      res.json({ rules });
+      res.json({ rules: rules.map(ruleToDto) });
     } catch (e: any) {
       res.status(404).json({ error: e.message });
     }

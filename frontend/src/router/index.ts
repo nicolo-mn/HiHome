@@ -33,6 +33,11 @@ const router = createRouter({
           component: () => import("@/views/RulesView.vue"),
         },
         {
+          path: "/rules/create",
+          name: "rule-create",
+          component: () => import("@/views/RuleCreateView.vue"),
+        },
+        {
           path: "/notifications",
           name: "notifications",
           component: () => import("@/views/NotificationsView.vue"),
