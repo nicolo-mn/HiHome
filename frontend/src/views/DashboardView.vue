@@ -7,13 +7,20 @@ import SensorCard from "@/components/cards/SensorCard.vue";
 const authStore = useAuthStore();
 const homeId = computed(() => authStore.homeId);
 
-const { readings } = useSensorSocket(homeId, authStore.token);
+const { readings, connected, error } = useSensorSocket(homeId, authStore.token);
 const sensorReadings = computed(() => Array.from(readings.value.values()));
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
     <h1 class="text-2xl font-light text-primary">Dashboard</h1>
+
+    <p v-if="error" class="text-danger text-sm" role="alert">
+      Connessione in tempo reale non disponibile: {{ error }}
+    </p>
+    <p v-else-if="!connected" class="text-muted text-sm">
+      Connessione in corso…
+    </p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <SensorCard
