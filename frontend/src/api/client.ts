@@ -71,9 +71,10 @@ export async function apiFetch<T = unknown>(
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
+  const onExternalAbort = () => controller.abort();
   if (signal) {
     if (signal.aborted) controller.abort();
-    else signal.addEventListener("abort", () => controller.abort());
+    else signal.addEventListener("abort", onExternalAbort, { once: true });
   }
 
   const finalHeaders = new Headers(headers);
@@ -100,6 +101,7 @@ export async function apiFetch<T = unknown>(
     throw new NetworkError("Network request failed", err);
   } finally {
     window.clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", onExternalAbort);
   }
 
   const parsed = await parseBody(res);

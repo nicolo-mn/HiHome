@@ -110,5 +110,6 @@ export function setpointDelta(
   c: ThermostatComponent,
   dir: "up" | "down",
 ): Promise<HomeComponent> {
-  return executeAction(homeId, c.id, "setTemperature", { direction: dir });
+  const next = dir === "up" ? c.setpoint + 0.5 : c.setpoint - 0.5;
+  return executeAction(homeId, c.id, "setTemperature", { temperature: next });
 }
