@@ -13,27 +13,53 @@ export function useSensorSocket(
 
   const readings = ref(new Map<string, SensorReading>());
   const connected = ref(false);
+  const error = ref<string | null>(null);
   let socket: Socket | null = null;
 
   function connect(id: string) {
     const currentToken = tokenRef.value;
-    socket = io({
+    const currentSocket: Socket = io({
       query: { homeId: id },
       ...(currentToken ? { auth: { token: currentToken } } : {}),
       transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
+    socket = currentSocket;
 
-    socket.on("connect", () => {
+    currentSocket.on("connect", () => {
       connected.value = true;
+      error.value = null;
     });
 
-    socket.on("disconnect", () => {
+    currentSocket.on("disconnect", () => {
       connected.value = false;
     });
 
-    socket.on("sensorUpdate", (data: Omit<SensorReading, "receivedAt">) => {
-      readings.value.set(data.sensorId, { ...data, receivedAt: Date.now() });
+    currentSocket.on("connect_error", (err: Error) => {
+      connected.value = false;
+      error.value = err.message || "Connection error";
     });
+
+    currentSocket.on("error", (err: unknown) => {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : "Socket error";
+      error.value = message;
+    });
+
+    currentSocket.on(
+      "sensorUpdate",
+      (data: Omit<SensorReading, "receivedAt">) => {
+        if (socket !== currentSocket) return;
+        readings.value.set(data.sensorId, { ...data, receivedAt: Date.now() });
+      },
+    );
   }
 
   function disconnect() {
@@ -45,19 +71,26 @@ export function useSensorSocket(
     connected.value = false;
   }
 
+  function reset(nextId: string | null) {
+    disconnect();
+    readings.value = new Map();
+    error.value = null;
+    if (nextId) connect(nextId);
+  }
+
   onMounted(() => {
     if (homeIdRef.value) connect(homeIdRef.value);
   });
 
   watch(homeIdRef, (next, prev) => {
-    if (next !== prev) {
-      disconnect();
-      readings.value = new Map();
-      if (next) connect(next);
-    }
+    if (next !== prev) reset(next);
+  });
+
+  watch(tokenRef, (next, prev) => {
+    if (next !== prev) reset(homeIdRef.value);
   });
 
   onBeforeUnmount(() => disconnect());
 
-  return { readings, connected };
+  return { readings, connected, error };
 }
