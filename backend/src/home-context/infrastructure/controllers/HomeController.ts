@@ -114,4 +114,21 @@ export class HomeController {
       res.status(400).json({ error: e.message });
     }
   }
+
+  async updateInternalTemperature(req: Request, res: Response) {
+    try {
+      const { temperature } = req.body;
+      if (typeof temperature !== "number") {
+        return res.status(400).json({ error: "Temperature must be a number" });
+      }
+
+      await this.homeService.updateInternalTemperature(
+        req.params.id as string,
+        { temperature },
+      );
+      res.status(200).json({ message: "Internal temperature updated" });
+    } catch (e: any) {
+      res.status(400).json({ error: e.message });
+    }
+  }
 }
