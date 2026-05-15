@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useSensorSocket } from "@/composables/useSensorSocket";
 import SensorCard from "@/components/cards/SensorCard.vue";
 
 const authStore = useAuthStore();
+const { token } = storeToRefs(authStore);
 const homeId = computed(() => authStore.homeId);
 
-const { readings, connected, error } = useSensorSocket(homeId, authStore.token);
+const { readings, connected, error } = useSensorSocket(homeId, token);
 const sensorReadings = computed(() => Array.from(readings.value.values()));
 </script>
 
