@@ -2,6 +2,69 @@ import { ref, onMounted, onBeforeUnmount, watch, type Ref } from "vue";
 import { io, type Socket } from "socket.io-client";
 import type { SensorReading } from "@/api/sensors";
 
+const FORECAST_NAMES = [
+  "Clear",
+  "Drizzle",
+  "Fog",
+  "Overcast",
+  "Cloudy",
+  "Rain",
+  "Snow",
+  "Thunderstorm",
+] as const;
+
+type SensorReadingFactory = (
+  payload: unknown,
+) => Omit<SensorReading, "receivedAt">;
+
+const SENSOR_MAPPINGS: Array<{ event: string; build: SensorReadingFactory }> = [
+  {
+    event: "sensor:internal-temperature",
+    build: (p) => ({
+      sensorId: "internal-temperature",
+      type: "thermometer",
+      value: (p as { temperature: number }).temperature,
+      measureUnit: "celsius",
+    }),
+  },
+  {
+    event: "sensor:external-temperature",
+    build: (p) => ({
+      sensorId: "external-temperature",
+      type: "outdoor_temperature",
+      value: (p as { temperature: number }).temperature,
+      measureUnit: "celsius",
+    }),
+  },
+  {
+    event: "sensor:air-quality",
+    build: (p) => ({
+      sensorId: "air-quality",
+      type: "outdoor_airquality",
+      value: (p as { AQI: number }).AQI,
+      measureUnit: "eaqi",
+    }),
+  },
+  {
+    event: "sensor:wind",
+    build: (p) => ({
+      sensorId: "wind",
+      type: "wind",
+      value: (p as { windSpeed: number }).windSpeed,
+      measureUnit: "km/h",
+    }),
+  },
+  {
+    event: "sensor:weather",
+    build: (p) => ({
+      sensorId: "weather",
+      type: "weather",
+      value: FORECAST_NAMES[(p as { forecast: number }).forecast] ?? "Unknown",
+      measureUnit: "",
+    }),
+  },
+];
+
 export function useSensorSocket(
   homeId: Ref<string | null> | string | null,
   token: Ref<string | null> | string | null = null,
@@ -29,27 +92,21 @@ export function useSensorSocket(
     });
     socket = currentSocket;
 
-    const isActive = () => socket === currentSocket;
-
     currentSocket.on("connect", () => {
-      if (!isActive()) return;
       connected.value = true;
       error.value = null;
     });
 
     currentSocket.on("disconnect", () => {
-      if (!isActive()) return;
       connected.value = false;
     });
 
     currentSocket.on("connect_error", (err: Error) => {
-      if (!isActive()) return;
       connected.value = false;
       error.value = err.message || "Connection error";
     });
 
     currentSocket.on("error", (err: unknown) => {
-      if (!isActive()) return;
       const message =
         err instanceof Error
           ? err.message
@@ -59,79 +116,15 @@ export function useSensorSocket(
       error.value = message;
     });
 
-    function record(reading: SensorReading) {
-      if (!isActive()) return;
-      readings.value.set(reading.sensorId, reading);
+    for (const { event, build } of SENSOR_MAPPINGS) {
+      currentSocket.on(event, (payload: unknown) => {
+        const reading: SensorReading = {
+          ...build(payload),
+          receivedAt: Date.now(),
+        };
+        readings.value.set(reading.sensorId, reading);
+      });
     }
-
-    currentSocket.on(
-      "sensor:internal-temperature",
-      (p: { temperature: number }) =>
-        record({
-          sensorId: "internal-temperature",
-          type: "thermometer",
-          value: p.temperature,
-          measureUnit: "celsius",
-          receivedAt: Date.now(),
-        }),
-    );
-
-    currentSocket.on(
-      "sensor:external-temperature",
-      (p: { temperature: number }) =>
-        record({
-          sensorId: "external-temperature",
-          type: "outdoor_temperature",
-          value: p.temperature,
-          measureUnit: "celsius",
-          receivedAt: Date.now(),
-        }),
-    );
-
-    currentSocket.on("sensor:air-quality", (p: { AQI: number }) =>
-      record({
-        sensorId: "air-quality",
-        type: "outdoor_airquality",
-        value: p.AQI,
-        measureUnit: "eaqi",
-        receivedAt: Date.now(),
-      }),
-    );
-
-    currentSocket.on(
-      "sensor:wind",
-      (p: { windDirection: number; windSpeed: number }) =>
-        record({
-          sensorId: "wind",
-          type: "wind",
-          value: p.windSpeed,
-          measureUnit: "km/h",
-          receivedAt: Date.now(),
-        }),
-    );
-
-    const FORECAST_NAMES = [
-      "Clear",
-      "Drizzle",
-      "Fog",
-      "Overcast",
-      "Cloudy",
-      "Rain",
-      "Snow",
-      "Thunderstorm",
-    ] as const;
-
-    currentSocket.on(
-      "sensor:weather",
-      (p: { forecast: number; precipitation: number }) =>
-        record({
-          sensorId: "weather",
-          type: "weather",
-          value: FORECAST_NAMES[p.forecast] ?? "Unknown",
-          measureUnit: "",
-          receivedAt: Date.now(),
-        }),
-    );
   }
 
   function disconnect() {
