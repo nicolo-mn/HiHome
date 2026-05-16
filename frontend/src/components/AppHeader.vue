@@ -1,9 +1,16 @@
 <script setup lang="ts">
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import bellIcon from "@/assets/icons/bell.svg?raw";
 import settingsIcon from "@/assets/icons/settings.svg?raw";
 
 const authStore = useAuthStore();
+const router = useRouter();
+
+function onLogout() {
+  authStore.logout();
+  router.push({ name: "login" });
+}
 </script>
 
 <template>
@@ -31,9 +38,14 @@ const authStore = useAuthStore();
         <span class="w-5 h-5 block" v-html="settingsIcon" />
       </RouterLink>
 
-      <span class="text-primary text-sm">{{
-        authStore.username ?? "User"
-      }}</span>
+      <button
+        type="button"
+        title="Logout"
+        class="px-2 py-1 rounded-lg text-primary text-sm hover:bg-elevated transition"
+        @click="onLogout"
+      >
+        {{ authStore.username ?? "User" }}
+      </button>
     </div>
   </header>
 </template>

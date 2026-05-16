@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -13,6 +14,10 @@
   --primary: #7dd3fc;
   --body: #e0f2fe;
   --muted: #64748b;
+
+  /* State */
+  --success: #6ee7b7;
+  --warning: #fcd34d;
   --danger: #f87171;
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -30,6 +35,8 @@
   --color-primary: var(--primary);
   --color-body: var(--body);
   --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-danger: var(--danger);
 }
 
