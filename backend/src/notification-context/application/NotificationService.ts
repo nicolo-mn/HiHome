@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import {
   ComponentActionEvent,
+  NotificationDTO,
   NotificationInboundPort,
   RuleExecutionEvent,
   SensorUpdateEvent,
@@ -16,6 +17,18 @@ export class NotificationService implements NotificationInboundPort {
     private deliveryPort: NotificationDeliveryPort,
     private policy: NotificationPolicy,
   ) {}
+
+  async listByHome(homeId: string): Promise<NotificationDTO[]> {
+    const notifications = await this.repository.listByHome(homeId);
+    return notifications.map((n) => ({
+      id: n.id,
+      homeId: n.homeId,
+      type: n.type,
+      message: n.message,
+      createdAt: n.createdAt.toISOString(),
+      read: n.read,
+    }));
+  }
 
   async notifySensorUpdate(
     homeId: string,
