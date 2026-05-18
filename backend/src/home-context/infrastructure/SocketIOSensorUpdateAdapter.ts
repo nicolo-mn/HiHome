@@ -50,7 +50,6 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
       AQI: update.AQI,
     });
 
-    console.log("Air quality port exists");
     if (!this.notificationPort) return;
 
     try {
@@ -59,7 +58,6 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
         value: update.AQI,
         measureUnit: "AQI",
       });
-      console.log("Notification sent for air quality update");
     } catch (error) {
       console.error("Notification delivery failed", error);
     }

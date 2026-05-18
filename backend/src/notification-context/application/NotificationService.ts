@@ -40,6 +40,9 @@ export class NotificationService implements NotificationInboundPort {
     const threshold = this.policy.getAirQualityThreshold(homeId);
     if (airQuality <= threshold) return;
 
+    const shouldNotify = await this.shouldNotifyAirQuality(homeId, airQuality);
+    if (!shouldNotify) return;
+
     const notification = new Notification(
       randomUUID(),
       homeId,
@@ -99,5 +102,25 @@ export class NotificationService implements NotificationInboundPort {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
+  }
+
+  private async shouldNotifyAirQuality(
+    homeId: string,
+    airQuality: number,
+  ): Promise<boolean> {
+    // Check when the last air quality notification was sent to avoid spamming
+    const recentNotifications = await this.repository.listByHome(homeId);
+    const lastAirQualityNotification = recentNotifications
+      .filter((n) => n.type === "AirQualityThresholdBreach")
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+    if (
+      lastAirQualityNotification &&
+      Date.now() - lastAirQualityNotification.createdAt.getTime() <
+        60 * 60 * 1000 // 1 hour
+    ) {
+      return false;
+    }
+    return true;
   }
 }

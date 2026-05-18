@@ -5,7 +5,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data_dev:/data/db
+      - mongodb_data:/data/db
 
   backend:
     build:
@@ -49,4 +49,4 @@ services:
       - backend
 
 volumes:
-  mongodb_data_dev:
+  mongodb_data:
