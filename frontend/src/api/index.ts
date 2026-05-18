@@ -21,6 +21,8 @@ export type {
   BaseComponent,
   ComponentType,
 } from "./components";
+export * as notificationsApi from "./notifications";
+export type { NotificationDTO } from "./notifications";
 export type { SensorReading } from "./sensors";
 export * as rulesApi from "./rules";
 export type {

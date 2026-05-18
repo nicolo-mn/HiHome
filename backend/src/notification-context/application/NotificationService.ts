@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import {
   ComponentActionEvent,
+  NotificationDTO,
   NotificationInboundPort,
   RuleExecutionEvent,
   SensorUpdateEvent,
@@ -17,6 +18,18 @@ export class NotificationService implements NotificationInboundPort {
     private policy: NotificationPolicy,
   ) {}
 
+  async listByHome(homeId: string): Promise<NotificationDTO[]> {
+    const notifications = await this.repository.listByHome(homeId);
+    return notifications.map((n) => ({
+      id: n.id,
+      homeId: n.homeId,
+      type: n.type,
+      message: n.message,
+      createdAt: n.createdAt.toISOString(),
+      read: n.read,
+    }));
+  }
+
   async notifySensorUpdate(
     homeId: string,
     update: SensorUpdateEvent,
@@ -25,13 +38,16 @@ export class NotificationService implements NotificationInboundPort {
     if (airQuality === null) return;
 
     const threshold = this.policy.getAirQualityThreshold(homeId);
-    if (airQuality >= threshold) return;
+    if (airQuality <= threshold) return;
+
+    const shouldNotify = await this.shouldNotifyAirQuality(homeId, airQuality);
+    if (!shouldNotify) return;
 
     const notification = new Notification(
       randomUUID(),
       homeId,
       "AirQualityThresholdBreach",
-      `Air quality dropped below the threshold (${threshold}).`,
+      `Air quality exceeded the threshold (${threshold}).`,
     );
 
     await this.repository.add(notification);
@@ -86,5 +102,25 @@ export class NotificationService implements NotificationInboundPort {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
+  }
+
+  private async shouldNotifyAirQuality(
+    homeId: string,
+    airQuality: number,
+  ): Promise<boolean> {
+    // Check when the last air quality notification was sent to avoid spamming
+    const recentNotifications = await this.repository.listByHome(homeId);
+    const lastAirQualityNotification = recentNotifications
+      .filter((n) => n.type === "AirQualityThresholdBreach")
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+    if (
+      lastAirQualityNotification &&
+      Date.now() - lastAirQualityNotification.createdAt.getTime() <
+        60 * 60 * 1000 // 1 hour
+    ) {
+      return false;
+    }
+    return true;
   }
 }

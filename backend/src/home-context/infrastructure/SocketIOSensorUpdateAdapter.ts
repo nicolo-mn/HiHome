@@ -1,4 +1,5 @@
 import { SensorUpdatePort } from "../domain/SensorUpdatePort";
+import { HomeNotificationOutboundPort } from "../application/HomeNotificationPort";
 import {
   Home,
   TemperatureState,
@@ -11,7 +12,7 @@ import { Socket } from "socket.io";
 export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
   private homeSockets: Map<string, Set<Socket>> = new Map();
 
-  constructor() {}
+  constructor(private notificationPort?: HomeNotificationOutboundPort) {}
 
   private getSockets(homeId: string): Set<Socket> {
     return this.homeSockets.get(homeId) ?? new Set();
@@ -48,6 +49,18 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
     this.broadcast(home.id, "sensor:air-quality", {
       AQI: update.AQI,
     });
+
+    if (!this.notificationPort) return;
+
+    try {
+      await this.notificationPort.notifySensorUpdate(home.id, {
+        sensorType: "air-quality",
+        value: update.AQI,
+        measureUnit: "AQI",
+      });
+    } catch (error) {
+      console.error("Notification delivery failed", error);
+    }
   }
 
   async sendWindUpdate(home: Home, update: WindState): Promise<void> {

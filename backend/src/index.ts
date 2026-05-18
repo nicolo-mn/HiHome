@@ -26,6 +26,8 @@ import { InMemoryRuleRepository } from "./rule-context/infrastructure/InMemoryRu
 import { MongoRuleRepository } from "./rule-context/infrastructure/MongoRuleRepository";
 import { RuleController } from "./rule-context/infrastructure/controllers/RuleController";
 import { RuleRouter } from "./rule-context/infrastructure/routes/RuleRouter";
+import { NotificationController } from "./notification-context/infrastructure/controllers/NotificationController";
+import { NotificationRouter } from "./notification-context/infrastructure/routes/NotificationRouter";
 import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
@@ -33,12 +35,20 @@ import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySe
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
 import { HomeRepository } from "./home-context/domain";
+import { NotificationContextAdapter } from "./home-context/infrastructure/NotificationPortAdapter";
 
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { cors: { origin: "*" } });
 
 const notificationContext = NotificationContextFactory.create(io);
+const homeNotificationPort = new NotificationContextAdapter(
+  notificationContext.notificationPort,
+);
+const notificationController = new NotificationController(
+  notificationContext.notificationPort,
+);
+const notificationRouter = new NotificationRouter(notificationController);
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-v4-flash";
@@ -49,7 +59,7 @@ const EXT_API_BASE_URL =
 const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 20);
 
 // --- Home Context Setup ---
-const sensorUpdatePort = new SocketIOSensorUpdateAdapter();
+const sensorUpdatePort = new SocketIOSensorUpdateAdapter(homeNotificationPort);
 const eventEmitter = new EventEmitter();
 const ruleServicePort = new AsyncBusRuleServiceAdapter(
   eventEmitter,
@@ -70,7 +80,7 @@ const homeService = new HomeService(
 );
 export const homeController = new HomeController(
   homeService,
-  notificationContext.notificationPort,
+  homeNotificationPort,
 );
 const homeRouter = new HomeRouter(homeController);
 
@@ -118,6 +128,7 @@ app.post("/api/home/:id/sensors/internal-temperature", (req, res) => {
 app.use(authMiddleware);
 app.use("/api/home", homeRouter.router);
 app.use("/api/home", ruleRouter.router);
+app.use("/api/home", notificationRouter.router);
 // --- Socket.IO for sensor updates ---
 io.use(wsAuthMiddleware);
 io.use(wsHomeIdMiddleware);

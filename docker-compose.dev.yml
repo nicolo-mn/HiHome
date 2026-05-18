@@ -1,11 +1,11 @@
 services:
   mongodb:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data_dev:/data/db
+      - mongodb_data:/data/db
 
   backend:
     build:
@@ -49,4 +49,4 @@ services:
       - backend
 
 volumes:
-  mongodb_data_dev:
+  mongodb_data:

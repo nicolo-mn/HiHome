@@ -1,5 +1,4 @@
 export interface SensorUpdateEvent {
-  sensorId: string;
   sensorType: string;
   value: string | number;
   measureUnit: string;
@@ -22,6 +21,15 @@ export interface RuleExecutionEvent {
   triggeredBy?: string;
 }
 
+export interface NotificationDTO {
+  id: string;
+  homeId: string;
+  type: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
 export interface NotificationInboundPort {
   notifySensorUpdate(homeId: string, update: SensorUpdateEvent): Promise<void>;
   notifyRuleExecuted(homeId: string, event: RuleExecutionEvent): Promise<void>;
@@ -29,4 +37,5 @@ export interface NotificationInboundPort {
     homeId: string,
     event: ComponentActionEvent,
   ): Promise<void>;
+  listByHome(homeId: string): Promise<NotificationDTO[]>;
 }

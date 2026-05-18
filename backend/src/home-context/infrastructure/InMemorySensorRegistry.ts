@@ -8,6 +8,12 @@ import { SensorRegistry } from "../application/SensorRegistry";
 export class InMemorySensorRegistry implements SensorRegistry {
   private sensorsByHome = new Map<string, SensorState>();
 
+  constructor() {
+    // Initialize with some dummy data for testing, in a real environment
+    // this would be empty and populated by actual sensor updates
+    this.setInternalTemperature("1", { temperature: 22 });
+  }
+
   getState(homeId: string): SensorState | undefined {
     return this.sensorsByHome.get(homeId);
   }

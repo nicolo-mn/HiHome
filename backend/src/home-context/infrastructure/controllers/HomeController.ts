@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { HomeService } from "../../application/HomeService";
 import { ComponentStateSerializer } from "../ComponentStateSerializer";
-import { NotificationInboundPort } from "../../../notification-context/application/NotificationInboundPort";
+import { HomeNotificationOutboundPort } from "../../application/HomeNotificationPort";
 
 // Extends Express Request to include user information from auth middleware
 type AuthenticatedRequest = Request & {
@@ -16,7 +16,7 @@ export class HomeController {
 
   constructor(
     private homeService: HomeService,
-    private notificationPort?: NotificationInboundPort,
+    private notificationPort?: HomeNotificationOutboundPort,
   ) {}
 
   async getComponents(req: Request, res: Response) {
