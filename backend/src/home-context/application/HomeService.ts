@@ -219,7 +219,18 @@ export class HomeService implements ActionService {
             extSensorsData.weather,
           );
 
-          const internalTemperature = { temperature: 20 }; // TODO: replace with actual internal temperature
+          const internalTemperatureValue = this.sensorRegistry.getState(
+            home.id,
+          )?.internalTemperature;
+          if (internalTemperatureValue === undefined) {
+            console.warn(
+              `No internal temperature found for home ${home.id}, skipping rules evaluation`,
+            );
+            return;
+          }
+
+          const internalTemperature: TemperatureState =
+            internalTemperatureValue;
           this.ruleServicePort.evaluateRules(
             home.id,
             extSensorsData,

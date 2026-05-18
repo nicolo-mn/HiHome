@@ -134,7 +134,7 @@ io.use(wsAuthMiddleware);
 io.use(wsHomeIdMiddleware);
 
 const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
-  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 60000,
+  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
 );
 
 setInterval(async () => {
