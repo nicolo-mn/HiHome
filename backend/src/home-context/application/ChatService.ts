@@ -1,5 +1,6 @@
 import { HomeService } from "./HomeService";
-import type { Coordinates } from "../domain";
+import type { ChatCompletionPort } from "./ChatCompletionPort";
+import type { ForecastPort, ForecastSummary } from "./ForecastPort";
 
 type ChatRole = "system" | "user" | "assistant";
 
@@ -8,26 +9,16 @@ export type ChatMessage = {
   content: string;
 };
 
-type ForecastSummary = {
-  temperature: number;
-  weatherDescription: string;
-  windSpeed: number;
-  windDirection: number;
-  precipitation: number;
-  europeanAqi: number;
-};
-
 type ChatServiceOptions = {
-  apiKey: string;
-  model: string;
-  apiBaseUrl: string;
-  extApiBaseUrl: string;
   maxHistory: number;
+  model: string;
 };
 
 export class ChatService {
   constructor(
     private homeService: HomeService,
+    private chatCompletionPort: ChatCompletionPort,
+    private forecastPort: ForecastPort,
     private options: ChatServiceOptions,
   ) {}
 
@@ -41,10 +32,6 @@ export class ChatService {
       throw new Error("Message is required");
     }
 
-    if (!this.options.apiKey) {
-      throw new Error("DeepSeek API key is missing");
-    }
-
     const forecastText = await this.getForecastText(houseId);
     const systemPrompt = this.buildSystemPrompt(forecastText);
 
@@ -55,7 +42,10 @@ export class ChatService {
       { role: "user", content: userMessage },
     ];
 
-    const reply = await this.callDeepSeek(messages);
+    const reply = await this.chatCompletionPort.completeChat(
+      messages,
+      this.options.model,
+    );
 
     return reply;
   }
@@ -85,42 +75,10 @@ export class ChatService {
     ].join(" ");
   }
 
-  private async callDeepSeek(messages: ChatMessage[]): Promise<string> {
-    const url = new URL("/chat/completions", this.options.apiBaseUrl);
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.options.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.options.model,
-        messages,
-        temperature: 0.2,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`DeepSeek error: ${response.status} ${errorText}`);
-    }
-
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-
-    const content = data.choices?.[0]?.message?.content?.trim();
-    if (!content) {
-      throw new Error("DeepSeek returned an empty response");
-    }
-
-    return content;
-  }
-
   private async getForecastText(homeId: string): Promise<string> {
     try {
       const coords = await this.homeService.getHomeCoordinates(homeId);
-      const summary = await this.fetchForecast(coords);
+      const summary = await this.forecastPort.getForecastSummary(coords);
       if (!summary) {
         console.log(
           `Failed to fetch forecast for home ${homeId} at coords ${coords.latitude},${coords.longitude}`,
@@ -132,22 +90,6 @@ export class ChatService {
       console.error(`Error fetching forecast for home ${homeId}:`, error);
       return "Forecast unavailable.";
     }
-  }
-
-  private async fetchForecast(
-    coords: Coordinates,
-  ): Promise<ForecastSummary | null> {
-    const url = new URL("/api/weather", this.options.extApiBaseUrl);
-    url.searchParams.set("latitude", coords.latitude.toString());
-    url.searchParams.set("longitude", coords.longitude.toString());
-
-    const response = await fetch(url);
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = (await response.json()) as ForecastSummary;
-    return data;
   }
 
   private formatForecast(summary: ForecastSummary) {

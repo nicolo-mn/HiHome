@@ -1,5 +1,14 @@
 import { ExternalSensorsDataPort } from "../application/ExternalSensorsDataPort";
-import { ExternalSensorsUpdate, Home, WeatherForecast } from "../domain";
+import type {
+  ForecastPort,
+  ForecastSummary,
+} from "../application/ForecastPort";
+import {
+  ExternalSensorsUpdate,
+  Home,
+  WeatherForecast,
+  Coordinates,
+} from "../domain";
 
 type ExtApiServiceResponse = {
   temperature: number;
@@ -10,7 +19,9 @@ type ExtApiServiceResponse = {
   europeanAqi: number;
 };
 
-export class ExtApiServiceDataAdapter implements ExternalSensorsDataPort {
+export class ExtApiServiceDataAdapter
+  implements ExternalSensorsDataPort, ForecastPort
+{
   constructor(
     private readonly baseUrl: string = process.env.EXT_API_BASE_URL ||
       "http://ext-api-service:8080",
@@ -44,6 +55,30 @@ export class ExtApiServiceDataAdapter implements ExternalSensorsDataPort {
     };
   }
 
+  async getForecastSummary(
+    coords: Coordinates,
+  ): Promise<ForecastSummary | null> {
+    const url = new URL("/api/weather", this.baseUrl);
+    url.searchParams.set("latitude", coords.latitude.toString());
+    url.searchParams.set("longitude", coords.longitude.toString());
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as ExtApiServiceResponse;
+
+    return {
+      temperature: payload.temperature,
+      weatherDescription: this.mapWeatherTypeToDescription(payload.weatherType),
+      windSpeed: payload.windSpeed,
+      windDirection: payload.windDirection,
+      precipitation: payload.precipitation,
+      europeanAqi: payload.europeanAqi,
+    };
+  }
+
   private mapWeatherTypeToForecast(weatherType: number): WeatherForecast {
     switch (weatherType) {
       case 0:
@@ -64,6 +99,29 @@ export class ExtApiServiceDataAdapter implements ExternalSensorsDataPort {
         return WeatherForecast.Thunderstorm;
       default:
         return WeatherForecast.Cloudy;
+    }
+  }
+
+  private mapWeatherTypeToDescription(weatherType: number): string {
+    switch (weatherType) {
+      case 0:
+        return "Clear";
+      case 1:
+        return "Cloudy";
+      case 2:
+        return "Overcast";
+      case 3:
+        return "Fog";
+      case 4:
+        return "Drizzle";
+      case 5:
+        return "Rain";
+      case 6:
+        return "Snow";
+      case 7:
+        return "Thunderstorm";
+      default:
+        return "Cloudy";
     }
   }
 }
