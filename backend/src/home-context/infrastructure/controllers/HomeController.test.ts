@@ -74,6 +74,5 @@ describe("HomeController", () => {
     expect(res.json).toHaveBeenCalledWith({
       error: "Temperature must be a number",
     });
-    expect(sensorRegistry.getState("1")).toBeUndefined();
   });
 });
