@@ -1,5 +1,4 @@
 export interface SensorUpdateEvent {
-  sensorId: string;
   sensorType: string;
   value: string | number;
   measureUnit: string;

@@ -35,12 +35,16 @@ import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySe
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
 import { HomeRepository } from "./home-context/domain";
+import { NotificationContextAdapter } from "./home-context/infrastructure/NotificationPortAdapter";
 
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { cors: { origin: "*" } });
 
 const notificationContext = NotificationContextFactory.create(io);
+const homeNotificationPort = new NotificationContextAdapter(
+  notificationContext.notificationPort,
+);
 const notificationController = new NotificationController(
   notificationContext.notificationPort,
 );
@@ -55,7 +59,7 @@ const EXT_API_BASE_URL =
 const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 20);
 
 // --- Home Context Setup ---
-const sensorUpdatePort = new SocketIOSensorUpdateAdapter();
+const sensorUpdatePort = new SocketIOSensorUpdateAdapter(homeNotificationPort);
 const eventEmitter = new EventEmitter();
 const ruleServicePort = new AsyncBusRuleServiceAdapter(
   eventEmitter,
@@ -76,7 +80,7 @@ const homeService = new HomeService(
 );
 export const homeController = new HomeController(
   homeService,
-  notificationContext.notificationPort,
+  homeNotificationPort,
 );
 const homeRouter = new HomeRouter(homeController);
 
@@ -130,7 +134,7 @@ io.use(wsAuthMiddleware);
 io.use(wsHomeIdMiddleware);
 
 const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
-  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
+  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 60000,
 );
 
 setInterval(async () => {

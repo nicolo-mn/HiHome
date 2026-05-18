@@ -38,13 +38,13 @@ export class NotificationService implements NotificationInboundPort {
     if (airQuality === null) return;
 
     const threshold = this.policy.getAirQualityThreshold(homeId);
-    if (airQuality >= threshold) return;
+    if (airQuality <= threshold) return;
 
     const notification = new Notification(
       randomUUID(),
       homeId,
       "AirQualityThresholdBreach",
-      `Air quality dropped below the threshold (${threshold}).`,
+      `Air quality exceeded the threshold (${threshold}).`,
     );
 
     await this.repository.add(notification);
