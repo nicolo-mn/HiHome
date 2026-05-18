@@ -5,6 +5,8 @@ import type {
   ForecastSummary,
 } from "../application/ForecastPort";
 import { HomeService } from "../application/HomeService";
+import type { AddRuleDto } from "../../rule-context/application/RuleService";
+import { RuleService } from "../../rule-context/application/RuleService";
 
 type DeepSeekOptions = {
   apiKey: string;
@@ -56,6 +58,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     private options: DeepSeekOptions,
     private forecastPort: ForecastPort,
     private homeService: HomeService,
+    private ruleService: RuleService,
   ) {}
 
   async completeChat(
@@ -67,7 +70,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = [this.buildForecastTool()];
+    const tools = [this.buildForecastTool(), this.buildAddRuleTool()];
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -115,6 +118,76 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     };
   }
 
+  private buildAddRuleTool(): DeepSeekTool {
+    return {
+      type: "function",
+      function: {
+        name: "add_rule",
+        description:
+          "Create an automation rule for the current home. Use this tool only after collecting all required fields. " +
+          "Fields: ruleName (short label), observableId (weather|external-thermometer|internal-thermometer|wind-speed|air-quality). " +
+          "For weather: operatorTarget must be one of Clear, Drizzle, Fog, Overcast, Cloudy, Rain, Snow, Thunderstorm and operator is omitted. " +
+          "For numeric observables: operator is gt|lt|eq and operatorTarget is a number or numeric string. " +
+          "Actions is a non-empty array; each action has componentType (light|window|thermostat), command (turnOn|turnOff|open|close|setTemperature), componentId, and targetTemp required only when command is setTemperature.",
+        parameters: {
+          type: "object",
+          properties: {
+            ruleName: {
+              type: "string",
+              description: "Human-friendly rule label.",
+            },
+            observableId: {
+              type: "string",
+              enum: [
+                "weather",
+                "external-thermometer",
+                "internal-thermometer",
+                "wind-speed",
+                "air-quality",
+              ],
+            },
+            operator: {
+              type: "string",
+              enum: ["gt", "lt", "eq"],
+              description:
+                "Required for numeric observables; omit for weather.",
+            },
+            operatorTarget: {
+              type: ["string", "number"],
+              description: "Weather forecast string or numeric boundary value.",
+            },
+            actions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  componentType: {
+                    type: "string",
+                    enum: ["light", "window", "thermostat"],
+                  },
+                  command: {
+                    type: "string",
+                    enum: [
+                      "turnOn",
+                      "turnOff",
+                      "open",
+                      "close",
+                      "setTemperature",
+                    ],
+                  },
+                  componentId: { type: ["string", "number"] },
+                  targetTemp: { type: ["string", "number"] },
+                },
+                required: ["componentType", "command", "componentId"],
+              },
+            },
+          },
+          required: ["ruleName", "observableId", "operatorTarget", "actions"],
+        },
+      },
+    };
+  }
+
   private async requestChat(
     model: string,
     messages: DeepSeekMessage[],
@@ -155,26 +228,45 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       console.log(
         `Handling tool call: ${toolCall.function.name} with args ${toolCall.function.arguments}`,
       );
-      if (toolCall.function.name !== "get_forecast_summary") {
-        responses.push({
-          role: "tool",
-          tool_call_id: toolCall.id,
-          content: "Unsupported tool call.",
-        });
-        continue;
-      }
-
       try {
-        const coords = await this.homeService.getHomeCoordinates(homeId);
-        const summary = await this.forecastPort.getForecastSummary({
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-        });
-        if (!summary) {
+        if (toolCall.function.name === "get_forecast_summary") {
+          const coords = await this.homeService.getHomeCoordinates(homeId);
+          const summary = await this.forecastPort.getForecastSummary({
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          });
+          if (!summary) {
+            responses.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              content: "Forecast unavailable.",
+            });
+            continue;
+          }
+
           responses.push({
             role: "tool",
             tool_call_id: toolCall.id,
-            content: "Forecast unavailable.",
+            content: this.formatForecast(summary),
+          });
+          continue;
+        }
+
+        if (toolCall.function.name === "add_rule") {
+          const args = this.parseToolArguments(toolCall.function.arguments);
+          const dto: AddRuleDto = {
+            homeId,
+            ruleName: args.ruleName,
+            observableId: args.observableId,
+            operator: args.operator,
+            operatorTarget: args.operatorTarget,
+            actions: args.actions,
+          };
+          const newRule = await this.ruleService.addRule(dto);
+          responses.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: `Rule created with id ${newRule.id}.`,
           });
           continue;
         }
@@ -182,18 +274,38 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         responses.push({
           role: "tool",
           tool_call_id: toolCall.id,
-          content: this.formatForecast(summary),
+          content: "Unsupported tool call.",
         });
-      } catch {
+      } catch (error: any) {
         responses.push({
           role: "tool",
           tool_call_id: toolCall.id,
-          content: "Forecast unavailable.",
+          content: error?.message ?? "Tool execution failed.",
         });
       }
     }
 
     return responses;
+  }
+
+  private parseToolArguments(raw: string): {
+    ruleName: string;
+    observableId: AddRuleDto["observableId"];
+    operator?: AddRuleDto["operator"];
+    operatorTarget: AddRuleDto["operatorTarget"];
+    actions: AddRuleDto["actions"];
+  } {
+    try {
+      return JSON.parse(raw) as {
+        ruleName: string;
+        observableId: AddRuleDto["observableId"];
+        operator?: AddRuleDto["operator"];
+        operatorTarget: AddRuleDto["operatorTarget"];
+        actions: AddRuleDto["actions"];
+      };
+    } catch {
+      throw new Error("Invalid tool arguments.");
+    }
   }
 
   private formatForecast(summary: ForecastSummary) {

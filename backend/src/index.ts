@@ -108,6 +108,7 @@ const chatCompletionPort = new DeepSeekChatCompletionAdapter(
   },
   forecastPort,
   homeService,
+  ruleService,
 );
 const chatService = new ChatService(chatCompletionPort, {
   model: DEEPSEEK_MODEL,

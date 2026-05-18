@@ -6,6 +6,7 @@ import {
   ObservablesUpdatedDomainEvent,
   ObservableCondition,
   WeatherForecast,
+  WeatherCondition,
 } from "../domain/Observables";
 import {
   ComponentAction,
@@ -15,6 +16,7 @@ import {
   WindowCloseAction,
   WindowOpenAction,
 } from "../domain/Actions";
+import { AddRuleDto } from "./RuleService";
 import { ActionExecutionPort } from "../domain/ActionExecutionPort";
 import { ActionExecutionAdapter } from "../infrastructure/ActionExecutionAdapter";
 
@@ -62,31 +64,39 @@ describe("RuleService", () => {
   });
 
   it("should add a rule", async () => {
-    const condition = {} as ObservableCondition;
-    const actions: ComponentAction[] = [];
     const createdRule: Rule = {
       id: "new-rule-id",
       homeId: "home-1",
       name: "New Rule",
-      condition,
-      actions,
+      condition: {} as ObservableCondition,
+      actions: [],
     };
     vi.mocked(mockRuleRepository.addRule).mockResolvedValue(createdRule);
 
-    const result = await ruleService.addRule(
-      "home-1",
-      "New Rule",
-      condition,
-      actions,
-    );
+    const dto: AddRuleDto = {
+      homeId: "home-1",
+      ruleName: "New Rule",
+      observableId: "weather",
+      operatorTarget: "Rain",
+      actions: [
+        {
+          componentType: "light",
+          command: "turnOn",
+          componentId: "comp-1",
+        },
+      ],
+    };
+
+    const result = await ruleService.addRule(dto);
 
     expect(result).toBe(createdRule);
-    expect(mockRuleRepository.addRule).toHaveBeenCalledWith(
-      "home-1",
-      "New Rule",
-      condition,
-      actions,
-    );
+    const [homeId, name, condition, actions] = vi.mocked(
+      mockRuleRepository.addRule,
+    ).mock.calls[0];
+    expect(homeId).toBe("home-1");
+    expect(name).toBe("New Rule");
+    expect(condition).toBeInstanceOf(WeatherCondition);
+    expect(actions[0]).toBeInstanceOf(LightTurnOnAction);
   });
 
   it("should delete rule delegating the call to the repository", async () => {

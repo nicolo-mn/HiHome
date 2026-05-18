@@ -65,7 +65,21 @@ describe("RuleController", () => {
 
       await ruleController.addRule(req as Request, res as Response);
 
-      expect(ruleService.addRule).toHaveBeenCalled();
+      expect(ruleService.addRule).toHaveBeenCalledWith(
+        expect.objectContaining({
+          homeId: "home-1",
+          ruleName: "Rainy Rule",
+          observableId: "weather",
+          operatorTarget: "Rain",
+          actions: [
+            {
+              componentType: "light",
+              command: "turnOn",
+              componentId: "comp-1",
+            },
+          ],
+        }),
+      );
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ ruleId: "new-rule-id" });
     });
@@ -85,7 +99,22 @@ describe("RuleController", () => {
 
       await ruleController.addRule(req as Request, res as Response);
 
-      expect(ruleService.addRule).toHaveBeenCalled();
+      expect(ruleService.addRule).toHaveBeenCalledWith(
+        expect.objectContaining({
+          homeId: "home-1",
+          ruleName: "Temp Rule",
+          observableId: "external-thermometer",
+          operator: "gt",
+          operatorTarget: "25",
+          actions: [
+            {
+              componentType: "window",
+              command: "open",
+              componentId: "comp-2",
+            },
+          ],
+        }),
+      );
       expect(res.status).toHaveBeenCalledWith(201);
     });
 
@@ -109,7 +138,23 @@ describe("RuleController", () => {
 
       await ruleController.addRule(req as Request, res as Response);
 
-      expect(ruleService.addRule).toHaveBeenCalled();
+      expect(ruleService.addRule).toHaveBeenCalledWith(
+        expect.objectContaining({
+          homeId: "home-1",
+          ruleName: "Thermo Rule",
+          observableId: "internal-thermometer",
+          operator: "lt",
+          operatorTarget: "20",
+          actions: [
+            {
+              componentType: "thermostat",
+              command: "setTemperature",
+              componentId: "comp-3",
+              targetTemp: "22",
+            },
+          ],
+        }),
+      );
       expect(res.status).toHaveBeenCalledWith(201);
     });
   });
