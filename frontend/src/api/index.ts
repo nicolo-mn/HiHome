@@ -22,3 +22,10 @@ export type {
   ComponentType,
 } from "./components";
 export type { SensorReading } from "./sensors";
+export * as rulesApi from "./rules";
+export type {
+  RuleDto,
+  ConditionDto,
+  ActionDto,
+  CreateRulePayload,
+} from "./rules";
