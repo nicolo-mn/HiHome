@@ -146,3 +146,15 @@ export const actionsValidator = [
 
   validate,
 ];
+
+export const reorderValidator = [
+  param("id").notEmpty().withMessage("id must be present"),
+
+  body("ruleIds")
+    .isArray({ min: 1 })
+    .withMessage("ruleIds must be a non-empty array"),
+
+  body("ruleIds.*").isString().withMessage("each ruleId must be a string"),
+
+  validate,
+];

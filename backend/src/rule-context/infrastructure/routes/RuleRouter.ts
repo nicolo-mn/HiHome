@@ -20,5 +20,9 @@ export class RuleRouter {
     this.router.delete("/rules/:ruleId", (req, res) =>
       this.ruleController.deleteRule(req, res),
     );
+
+    this.router.put("/:id/rules/order", (req, res) =>
+      this.ruleController.reorderRules(req, res),
+    );
   }
 }

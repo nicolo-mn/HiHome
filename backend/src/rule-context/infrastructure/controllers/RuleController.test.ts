@@ -14,6 +14,7 @@ describe("RuleController", () => {
       getRulesForHome: vi.fn(),
       addRule: vi.fn(),
       deleteRule: vi.fn(),
+      reorderRules: vi.fn(),
     };
     ruleController = new RuleController(ruleService as any);
 
@@ -131,6 +132,35 @@ describe("RuleController", () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: "Rule not found" });
+    });
+  });
+
+  describe("reorderRules", () => {
+    it("should reorder rules and return the new list", async () => {
+      req.body = { ruleIds: ["rule-2", "rule-1"] };
+      ruleService.reorderRules.mockResolvedValue([]);
+
+      await ruleController.reorderRules(req as Request, res as Response);
+
+      expect(ruleService.reorderRules).toHaveBeenCalledWith("home-1", [
+        "rule-2",
+        "rule-1",
+      ]);
+      expect(res.json).toHaveBeenCalledWith({ rules: [] });
+    });
+
+    it("should return 400 when the service rejects the reorder", async () => {
+      req.body = { ruleIds: ["rule-1"] };
+      ruleService.reorderRules.mockRejectedValue(
+        new Error("Reorder list must contain exactly the rules of the home"),
+      );
+
+      await ruleController.reorderRules(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Reorder list must contain exactly the rules of the home",
+      });
     });
   });
 });
