@@ -78,4 +78,59 @@ describe("RuleRepository", () => {
       "Rule not found",
     );
   });
+
+  it("should assign incremental order per home on add", async () => {
+    const r1 = await repository.addRule("home-1", "R1", {} as any, [{} as any]);
+    const r2 = await repository.addRule("home-1", "R2", {} as any, [{} as any]);
+    const r3 = await repository.addRule("home-2", "R3", {} as any, [{} as any]);
+
+    expect(r1.order).toBe(1);
+    expect(r2.order).toBe(2);
+    expect(r3.order).toBe(1);
+  });
+
+  it("should return rules sorted by order", async () => {
+    const r1 = await repository.addRule("home-1", "R1", {} as any, [{} as any]);
+    const r2 = await repository.addRule("home-1", "R2", {} as any, [{} as any]);
+    const r3 = await repository.addRule("home-1", "R3", {} as any, [{} as any]);
+
+    await repository.reorderRules("home-1", [r3.id, r1.id, r2.id]);
+
+    const rules = await repository.getHomeRules("home-1");
+    expect(rules.map((r) => r.id)).toEqual([r3.id, r1.id, r2.id]);
+    expect(rules.map((r) => r.order)).toEqual([1, 2, 3]);
+  });
+
+  it("should leave gaps in order when a rule is deleted", async () => {
+    const r1 = await repository.addRule("home-1", "R1", {} as any, [{} as any]);
+    const r2 = await repository.addRule("home-1", "R2", {} as any, [{} as any]);
+    const r3 = await repository.addRule("home-1", "R3", {} as any, [{} as any]);
+
+    await repository.deleteRule(r2.id);
+
+    const rules = await repository.getHomeRules("home-1");
+    expect(rules.map((r) => r.id)).toEqual([r1.id, r3.id]);
+    expect(rules.map((r) => r.order)).toEqual([1, 3]);
+  });
+
+  it("should reject reorder when ids do not match the home rules exactly", async () => {
+    const r1 = await repository.addRule("home-1", "R1", {} as any, [{} as any]);
+    const r2 = await repository.addRule("home-1", "R2", {} as any, [{} as any]);
+
+    await expect(repository.reorderRules("home-1", [r1.id])).rejects.toThrow(
+      "Reorder list must contain exactly the rules of the home",
+    );
+
+    await expect(
+      repository.reorderRules("home-1", [r1.id, r2.id, "extra-id"]),
+    ).rejects.toThrow(
+      "Reorder list must contain exactly the rules of the home",
+    );
+
+    await expect(
+      repository.reorderRules("home-1", [r1.id, "wrong-id"]),
+    ).rejects.toThrow(
+      "Reorder list must contain exactly the rules of the home",
+    );
+  });
 });

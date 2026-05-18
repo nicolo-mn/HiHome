@@ -5,6 +5,7 @@ export type Rule = {
   id: string;
   homeId: string;
   name: string;
+  order: number;
   condition: ObservableCondition;
   actions: ComponentAction[];
 };

@@ -32,6 +32,10 @@ export class RuleService {
     await this.ruleRepo.deleteRule(ruleId);
   }
 
+  async reorderRules(homeId: string, orderedIds: string[]): Promise<Rule[]> {
+    return await this.ruleRepo.reorderRules(homeId, orderedIds);
+  }
+
   async executeRulesForHome(
     homeId: string,
     update: ObservablesUpdatedDomainEvent,

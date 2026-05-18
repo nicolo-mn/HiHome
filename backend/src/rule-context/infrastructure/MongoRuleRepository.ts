@@ -50,13 +50,32 @@ type RuleRecord = {
   _id: string | { toString(): string };
   homeId: string;
   name: string;
+  order?: number;
   condition: ConditionRecord;
   actions: ActionRecord[];
 };
 
 export class MongoRuleRepository implements RuleRepository {
   async getHomeRules(homeId: string): Promise<Rule[]> {
-    const docs = await RuleModel.find({ homeId }).lean<RuleRecord[]>().exec();
+    const docs = await RuleModel.find({ homeId })
+      .sort({ order: 1, createdAt: 1 })
+      .lean<RuleRecord[]>()
+      .exec();
+
+    // Lazy migration: legacy documents without `order` get one assigned based on the current sort.
+    if (docs.some((d) => d.order == null)) {
+      const ops = docs.map((doc, idx) => ({
+        updateOne: {
+          filter: { _id: doc._id },
+          update: { $set: { order: idx + 1 } },
+        },
+      }));
+      await RuleModel.bulkWrite(ops);
+      docs.forEach((doc, idx) => {
+        doc.order = idx + 1;
+      });
+    }
+
     return docs.map((doc: RuleRecord) => this.toDomain(doc));
   }
 
@@ -69,9 +88,17 @@ export class MongoRuleRepository implements RuleRepository {
     if (actions.length === 0)
       throw new Error("A rule must have at least one action");
 
+    const last = await RuleModel.findOne({ homeId })
+      .sort({ order: -1 })
+      .select("order")
+      .lean<{ order?: number }>()
+      .exec();
+    const order = (last?.order ?? 0) + 1;
+
     const record = {
       homeId,
       name,
+      order,
       condition: this.toConditionRecord(condition),
       actions: actions.map((action) => this.toActionRecord(action)),
     };
@@ -87,11 +114,40 @@ export class MongoRuleRepository implements RuleRepository {
     }
   }
 
+  async reorderRules(homeId: string, orderedIds: string[]): Promise<Rule[]> {
+    const existing = await RuleModel.find({ homeId })
+      .select("_id")
+      .lean<{ _id: { toString(): string } }[]>()
+      .exec();
+    const existingIds = new Set(existing.map((d) => d._id.toString()));
+    const requestedIds = new Set(orderedIds);
+
+    if (
+      existingIds.size !== requestedIds.size ||
+      [...existingIds].some((id) => !requestedIds.has(id))
+    ) {
+      throw new Error(
+        "Reorder list must contain exactly the rules of the home",
+      );
+    }
+
+    const ops = orderedIds.map((id, idx) => ({
+      updateOne: {
+        filter: { _id: id, homeId },
+        update: { $set: { order: idx + 1 } },
+      },
+    }));
+    await RuleModel.bulkWrite(ops);
+
+    return this.getHomeRules(homeId);
+  }
+
   private toDomain(record: RuleRecord): Rule {
     return {
       id: record._id.toString(),
       homeId: record.homeId,
       name: record.name,
+      order: record.order ?? 0,
       condition: this.toCondition(record.condition),
       actions: record.actions.map((action) => this.toAction(action)),
     };

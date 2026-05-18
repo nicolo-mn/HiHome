@@ -21,13 +21,16 @@ const actionSchema = new Schema(
 
 const ruleSchema = new Schema(
   {
-    homeId: { type: String, required: true, index: true },
+    homeId: { type: String, required: true },
     name: { type: String, required: true },
+    order: { type: Number },
     condition: { type: conditionSchema, required: true },
     actions: { type: [actionSchema], default: [] },
   },
   { timestamps: true },
 );
+
+ruleSchema.index({ homeId: 1, order: 1 });
 
 export type RuleDocument = mongoose.HydratedDocument<
   mongoose.InferSchemaType<typeof ruleSchema>

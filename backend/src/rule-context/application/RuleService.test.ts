@@ -30,6 +30,7 @@ describe("RuleService", () => {
       deleteRule: vi.fn(),
       getRule: vi.fn(),
       updateRule: vi.fn(),
+      reorderRules: vi.fn(),
     } as unknown as RuleRepository;
 
     mockActionExecutionPort = {
@@ -49,6 +50,7 @@ describe("RuleService", () => {
         id: "rule-1",
         homeId: "home-1",
         name: "Rule 1",
+        order: 1,
         condition: {} as ObservableCondition,
         actions: [],
       },
@@ -68,6 +70,7 @@ describe("RuleService", () => {
       id: "new-rule-id",
       homeId: "home-1",
       name: "New Rule",
+      order: 1,
       condition,
       actions,
     };
@@ -92,6 +95,39 @@ describe("RuleService", () => {
   it("should delete rule delegating the call to the repository", async () => {
     await ruleService.deleteRule("rule-1");
     expect(mockRuleRepository.deleteRule).toHaveBeenCalledWith("rule-1");
+  });
+
+  it("should reorder rules delegating the call to the repository", async () => {
+    const reordered: Rule[] = [
+      {
+        id: "rule-2",
+        homeId: "home-1",
+        name: "Rule 2",
+        order: 1,
+        condition: {} as ObservableCondition,
+        actions: [],
+      },
+      {
+        id: "rule-1",
+        homeId: "home-1",
+        name: "Rule 1",
+        order: 2,
+        condition: {} as ObservableCondition,
+        actions: [],
+      },
+    ];
+    vi.mocked(mockRuleRepository.reorderRules).mockResolvedValue(reordered);
+
+    const result = await ruleService.reorderRules("home-1", [
+      "rule-2",
+      "rule-1",
+    ]);
+
+    expect(result).toBe(reordered);
+    expect(mockRuleRepository.reorderRules).toHaveBeenCalledWith("home-1", [
+      "rule-2",
+      "rule-1",
+    ]);
   });
 
   it("should execute rules for home", async () => {
@@ -128,6 +164,7 @@ describe("RuleService", () => {
         id: "rule-1",
         homeId: "home-1",
         name: "Rule 1",
+        order: 1,
         condition: mockConditionFalse,
         actions: [mockAction1],
       },
@@ -135,6 +172,7 @@ describe("RuleService", () => {
         id: "rule-2",
         homeId: "home-1",
         name: "Rule 2",
+        order: 2,
         condition: mockConditionTrue,
         actions: [mockAction2],
       },
@@ -142,6 +180,7 @@ describe("RuleService", () => {
         id: "rule-3",
         homeId: "home-1",
         name: "Rule 3",
+        order: 3,
         condition: mockConditionTrue,
         actions: [mockAction3],
       },
@@ -201,6 +240,7 @@ describe("RuleService", () => {
         id: "rule-1",
         homeId: "home-1",
         name: "Rule 1",
+        order: 1,
         condition: mockConditionTrue,
         actions: [mockAction1Comp1],
       },
@@ -208,6 +248,7 @@ describe("RuleService", () => {
         id: "rule-2",
         homeId: "home-1",
         name: "Rule 2",
+        order: 2,
         condition: mockConditionFalse,
         actions: [mockAction2Comp2],
       },
@@ -215,6 +256,7 @@ describe("RuleService", () => {
         id: "rule-3",
         homeId: "home-1",
         name: "Rule 3",
+        order: 3,
         condition: mockConditionTrue,
         actions: [mockAction3Comp1],
       },
@@ -222,6 +264,7 @@ describe("RuleService", () => {
         id: "rule-4",
         homeId: "home-1",
         name: "Rule 4",
+        order: 4,
         condition: mockConditionTrue,
         actions: [mockAction4Comp2],
       },
@@ -229,6 +272,7 @@ describe("RuleService", () => {
         id: "rule-5",
         homeId: "home-1",
         name: "Rule 5",
+        order: 5,
         condition: mockConditionTrue,
         actions: [mockAction5Comp2],
       },

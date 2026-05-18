@@ -11,4 +11,5 @@ export interface RuleRepository {
   ): Promise<Rule>;
   getHomeRules(homeId: string): Promise<Rule[]>;
   deleteRule(ruleId: string): Promise<void>;
+  reorderRules(homeId: string, orderedIds: string[]): Promise<Rule[]>;
 }
