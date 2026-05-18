@@ -100,20 +100,19 @@ const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
 const authContext = UserContextFactory.create();
 const authController = new UserController(authContext.authPort);
 
-const chatCompletionPort = new DeepSeekChatCompletionAdapter({
-  apiKey: DEEPSEEK_API_KEY,
-  apiBaseUrl: DEEPSEEK_API_BASE_URL,
-});
 const forecastPort = externalSensorsDataPort;
-const chatService = new ChatService(
-  homeService,
-  chatCompletionPort,
-  forecastPort,
+const chatCompletionPort = new DeepSeekChatCompletionAdapter(
   {
-    model: DEEPSEEK_MODEL,
-    maxHistory: CHAT_MAX_HISTORY,
+    apiKey: DEEPSEEK_API_KEY,
+    apiBaseUrl: DEEPSEEK_API_BASE_URL,
   },
+  forecastPort,
+  homeService,
 );
+const chatService = new ChatService(chatCompletionPort, {
+  model: DEEPSEEK_MODEL,
+  maxHistory: CHAT_MAX_HISTORY,
+});
 const chatController = new ChatController(chatService);
 
 const PORT = process.env.PORT || 3000;
