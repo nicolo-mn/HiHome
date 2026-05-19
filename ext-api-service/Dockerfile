@@ -13,7 +13,6 @@ FROM alpine:latest
 
 WORKDIR /app
 COPY --from=builder /app/main .
-COPY --from=builder /app/resources ./resources
 
 EXPOSE 8080
 
