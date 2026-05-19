@@ -170,6 +170,12 @@ io.on("connection", (socket) => {
       error,
     );
   });
+  void homeService.sendInternalSensorsUpdate(homeId).catch((error) => {
+    console.error(
+      `Failed to send internal sensors snapshot for home ${homeId}:`,
+      error,
+    );
+  });
 
   socket.on(
     "chat:send",

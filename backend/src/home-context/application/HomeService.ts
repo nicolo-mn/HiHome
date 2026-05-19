@@ -211,6 +211,16 @@ export class HomeService implements ActionService {
     );
   }
 
+  async sendInternalSensorsUpdate(homeId: string): Promise<void> {
+    const home = await this.ensureHomeExists(homeId);
+
+    const resolvedTemperature =
+      this.sensorRegistry.getState(homeId)?.internalTemperature;
+    if (resolvedTemperature === undefined) return;
+
+    await this.sendInternalSensorsUpdateToClients(home, resolvedTemperature);
+  }
+
   async pollAllHomesExternalSensorsData(): Promise<void> {
     const homes = await this.homeRepo.getAllHomes();
 
@@ -236,6 +246,12 @@ export class HomeService implements ActionService {
 
           const internalTemperature: TemperatureState =
             internalTemperatureValue;
+
+          await this.sendInternalSensorsUpdateToClients(
+            home,
+            internalTemperatureValue,
+          );
+
           this.ruleServicePort.evaluateRules(
             home.id,
             extSensorsData,
@@ -256,6 +272,7 @@ export class HomeService implements ActionService {
     update: TemperatureState,
   ): Promise<void> {
     this.sensorRegistry.setInternalTemperature(homeId, update);
+    await this.sendInternalSensorsUpdate(homeId);
   }
 
   private async sendExternalSensorsUpdateToClients(
@@ -274,6 +291,13 @@ export class HomeService implements ActionService {
     );
     await this.sensorUpdatePort.sendWindUpdate(home, update.wind);
     await this.sensorUpdatePort.sendWeatherUpdate(home, update.weather);
+  }
+
+  private async sendInternalSensorsUpdateToClients(
+    home: Home,
+    update: TemperatureState,
+  ): Promise<void> {
+    await this.sensorUpdatePort.sendInternalTemperatureUpdate(home, update);
   }
 
   private async ensureHomeExists(homeId: string) {
