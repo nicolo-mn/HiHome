@@ -81,10 +81,14 @@ export class HomeController {
 
   async executeAction(req: Request, res: Response) {
     try {
+      const action = req.params.action as string;
+      const param = this.parseActionParams(action, req.body);
+
       const component = await this.homeService.executeAction(
         req.params.id as string,
         req.params.componentId as string,
         req.params.action as string,
+        param,
       );
 
       const user = (req as AuthenticatedRequest).user;
@@ -130,5 +134,16 @@ export class HomeController {
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
+  }
+
+  private parseActionParams(action: string, body: any): number | undefined {
+    if (action === "setTemperature") {
+      const { temperature } = body;
+      if (typeof temperature !== "number") {
+        throw new Error("Temperature parameter must be a number");
+      }
+      return temperature;
+    }
+    return undefined;
   }
 }

@@ -68,6 +68,7 @@ export class HomeService implements ActionService {
     homeId: string,
     componentId: string,
     action: string,
+    param?: number,
   ): Promise<Component> {
     const home = await this.ensureHomeExists(homeId);
 
@@ -75,7 +76,7 @@ export class HomeService implements ActionService {
     if (!component) throw new Error("Component not found");
 
     if (typeof (component as any)[action] === "function") {
-      (component as any)[action]();
+      (component as any)[action](param);
     } else {
       throw new Error("Action not supported");
     }
