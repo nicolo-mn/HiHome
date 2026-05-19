@@ -16,6 +16,7 @@ import drizzleIcon from "./weather/drizzle.svg?raw";
 import rainIcon from "./weather/rain.svg?raw";
 import snowIcon from "./weather/snow.svg?raw";
 import thunderstormsIcon from "./weather/thunderstorms.svg?raw";
+import wind from "./weather/wind.svg?raw";
 
 // Add an entry here for each new component type.
 export const componentTypeIcon: Partial<Record<ComponentType, string>> = {
@@ -31,6 +32,7 @@ export const sensorTypeIcon: Record<string, string> = {
   airquality: airQualityIcon,
   outdoor_temperature: thermometerIcon,
   outdoor_airquality: airQualityIcon,
+  wind: wind,
 };
 
 const weatherDescriptionToIcon: Record<string, string> = {
