@@ -171,32 +171,43 @@ io.on("connection", (socket) => {
         username?: string;
         history?: Array<{ role: "user" | "assistant"; content: string }>;
       },
-      callback?: (response: { reply?: string; error?: string }) => void,
+      callback?: (response: { error?: string }) => void,
     ) => {
-      const respond = (response: { reply?: string; error?: string }) => {
+      const ack = (response: { error?: string }) => {
         if (typeof callback === "function") {
           callback(response);
         }
       };
 
       if (!payload?.message || !payload.username) {
-        respond({ error: "Message and username are required" });
+        ack({ error: "Message and username are required" });
         return;
       }
+
+      ack({});
 
       try {
         const safeHistory = Array.isArray(payload.history)
           ? payload.history
           : [];
-        const reply = await chatService.chat(
+        const reply = await chatService.streamChat(
           homeId,
           payload.username,
           payload.message,
           safeHistory,
+          (event) => {
+            if (event.type === "token") {
+              socket.emit("chat:token", { content: event.content });
+            } else if (event.type === "tool_call") {
+              socket.emit("chat:tool-call", { name: event.name });
+            }
+          },
         );
-        respond({ reply });
+        socket.emit("chat:done", { content: reply });
       } catch (error: any) {
-        respond({ error: error.message ?? "Chat failed" });
+        socket.emit("chat:error", {
+          error: error.message ?? "Chat failed",
+        });
       }
     },
   );
