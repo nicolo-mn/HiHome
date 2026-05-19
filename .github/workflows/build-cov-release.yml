@@ -98,7 +98,7 @@ jobs:
           context: .
           file: ./frontend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/hihome-frontend:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ github.repository }}/hihome-frontend:latest
+          tags: ghcr.io/${{ toLower(github.repository_owner) }}/hihome-frontend:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ toLower(github.repository_owner) }}/hihome-frontend:latest
 
       - name: Build and push Backend
         uses: docker/build-push-action@v5
@@ -106,11 +106,11 @@ jobs:
           context: .
           file: ./backend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/hihome-backend:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ github.repository }}/hihome-backend:latest
+          tags: ghcr.io/${{ toLower(github.repository_owner) }}/hihome-backend:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ toLower(github.repository_owner) }}/hihome-backend:latest
 
       - name: Build and push ext-api-service
         uses: docker/build-push-action@v5
         with:
           context: ./ext-api-service
           push: true
-          tags: ghcr.io/${{ github.repository }}/hihome-ext-api-service:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ github.repository }}/hihome-ext-api-service:latest
+          tags: ghcr.io/${{ toLower(github.repository_owner) }}/hihome-ext-api-service:v${{ needs.release.outputs.new_release_version }},ghcr.io/${{ toLower(github.repository_owner) }}/hihome-ext-api-service:latest
