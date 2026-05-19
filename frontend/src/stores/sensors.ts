@@ -57,11 +57,11 @@ const SENSOR_MAPPINGS: Record<string, ReadingBuilder> = {
         }
       : null,
   "sensor:weather": (p) =>
-    typeof p?.forecast === "number"
+    typeof p?.forecast === "string"
       ? {
           sensorId: "weather",
           type: "weather",
-          value: FORECAST_NAMES[p.forecast] ?? "Unknown",
+          value: p.forecast,
           measureUnit: "",
         }
       : null,
