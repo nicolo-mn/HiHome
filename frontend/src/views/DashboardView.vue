@@ -15,7 +15,17 @@ const sensorReadings = computed(() => Array.from(readings.value.values()));
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1 class="text-2xl font-light text-primary">Dashboard</h1>
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <h1 class="text-2xl font-light text-primary">Dashboard</h1>
+      <RouterLink
+        to="/chat"
+        class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-surface text-sm font-medium hover:brightness-110 transition"
+      >
+        Open chat assistant
+      </RouterLink>
+    </div>
 
     <p v-if="error" class="text-danger text-sm" role="alert">
       Connessione in tempo reale non disponibile: {{ error }}
