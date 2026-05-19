@@ -2,14 +2,16 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
-import { useChatSocket, type ChatMessage } from "@/composables/useChatSocket";
+import {
+  useChatSocket,
+  type ChatMessage,
+  type ToolCallInfo,
+} from "@/composables/useChatSocket";
 
 const authStore = useAuthStore();
 const { token, username, homeId } = storeToRefs(authStore);
 
 const { connected, error, sendMessage } = useChatSocket(homeId, token);
-
-type ToolCallInfo = { name: string };
 
 const messages = ref<ChatMessage[]>([
   {
@@ -64,11 +66,16 @@ function onSend() {
         activeToolCalls.value = [...activeToolCalls.value, { name }];
       },
       onDone(fullContent: string) {
+        const toolCallsSnapshot = activeToolCalls.value.slice();
         streamingContent.value = "";
         activeToolCalls.value = [];
         messages.value = [
           ...messages.value,
-          { role: "assistant", content: fullContent },
+          {
+            role: "assistant",
+            content: fullContent,
+            toolCalls: toolCallsSnapshot,
+          },
         ];
         sending.value = false;
       },
@@ -119,15 +126,42 @@ watch(
           class="flex"
           :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
         >
-          <div
-            class="max-w-[80%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap"
-            :class="
-              message.role === 'user'
-                ? 'bg-primary text-surface'
-                : 'bg-elevated text-body'
-            "
-          >
-            {{ message.content }}
+          <div class="max-w-[80%] flex flex-col gap-2">
+            <div
+              v-if="message.role === 'assistant' && message.toolCalls?.length"
+              class="flex flex-col gap-1"
+            >
+              <div
+                v-for="(tc, i) in message.toolCalls"
+                :key="i"
+                class="flex items-center gap-2 text-xs text-muted"
+              >
+                <svg
+                  class="w-3.5 h-3.5 flex-shrink-0"
+                  viewBox="0 0 512 512"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M78.6 5C69.1-2.4 55.6-1.5 47.7 7L7.7 47c-8.7 8.7-8.7 22.8 0 31.5l37.1 37.1c-13.5 21-20.8 45.7-20.8 71.4c0 73.4 59.6 133 133 133c25.7 0 50.3-7.3 71.4-20.8l37.1 37.1c8.7 8.7 22.8 8.7 31.5 0l39.3-39.3c8.5-8.1 9.4-21.6 2-31.1L78.6 5zM332.6 265.8l27.5-27.5c4.7-4.7 12.3-4.7 17 0l120.2 120.2c15.6 15.6 15.6 40.9 0 56.6l-29 29c-15.6 15.6-40.9 15.6-56.6 0L291.5 323.3c-4.7-4.7-4.7-12.3 0-17l27.5-27.5 13.6 13.6c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-33.9-33.9l33.9-33.9c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L298.7 190l-13.6-13.6c-4.7-4.7-4.7-12.3 0-17l27.5-27.5L432.8 12.1c15.6-15.6 40.9-15.6 56.6 0l29 29c15.6 15.6 15.6 40.9 0 56.6L398.2 217.9l-13.6-13.6c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l13.6 13.6-17.7 17.7-13.6-13.6c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l.5 .5z"
+                  />
+                </svg>
+                <span
+                  >Called <strong>{{ toolLabel(tc.name) }}</strong></span
+                >
+              </div>
+            </div>
+
+            <div
+              class="rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap"
+              :class="
+                message.role === 'user'
+                  ? 'bg-primary text-surface'
+                  : 'bg-elevated text-body'
+              "
+            >
+              {{ message.content }}
+            </div>
           </div>
         </div>
 

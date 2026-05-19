@@ -2,7 +2,12 @@ import { ref, onMounted, onBeforeUnmount, watch, type Ref } from "vue";
 import { io, type Socket } from "socket.io-client";
 
 export type ChatRole = "user" | "assistant";
-export type ChatMessage = { role: ChatRole; content: string };
+export type ToolCallInfo = { name: string };
+export type ChatMessage = {
+  role: ChatRole;
+  content: string;
+  toolCalls?: ToolCallInfo[];
+};
 
 type ChatPayload = {
   message: string;

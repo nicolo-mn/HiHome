@@ -47,7 +47,7 @@ export class ChatService {
     username: string,
     userMessage: string,
     history: ChatMessage[],
-    onEvent: (event: ChatStreamEvent) => void,
+    onEvent: (event: ChatStreamEvent) => void, // TODO: consider to move to adapter
   ): Promise<string> {
     if (!userMessage.trim()) {
       throw new Error("Message is required");
