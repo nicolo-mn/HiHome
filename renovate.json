@@ -12,5 +12,12 @@
   "automergeSchedule": ["* 2-7 * * *"],
   "timezone": "CET",
   "prHourlyLimit": 0,
-  "rebaseWhen": "behind-base-branch"
+  "rebaseWhen": "behind-base-branch",
+  "packageRules": [
+    {
+      "matchPackageNames": ["mongo"],
+      "matchManagers": ["dockerfile"],
+      "allowedVersions": "7.0"
+    }
+  ]
 }
