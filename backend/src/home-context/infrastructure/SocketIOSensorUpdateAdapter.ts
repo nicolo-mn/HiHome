@@ -45,12 +45,13 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
   async sendAirQualityUpdate(
     home: Home,
     update: AirQualityState,
+    notify = true,
   ): Promise<void> {
     this.broadcast(home.id, "sensor:air-quality", {
       AQI: update.AQI,
     });
 
-    if (!this.notificationPort) return;
+    if (!this.notificationPort || !notify) return;
 
     try {
       await this.notificationPort.notifySensorUpdate(home.id, {

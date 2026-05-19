@@ -145,6 +145,8 @@ const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
   process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
 );
 
+homeService.pollAllHomesExternalSensorsData(); // Initial poll on startup to populate data immediately
+
 setInterval(async () => {
   try {
     await homeService.pollAllHomesExternalSensorsData();
@@ -162,6 +164,18 @@ io.on("connection", (socket) => {
 
   socket.join(`home-${homeId}`);
   void sensorUpdatePort.registerClient(homeId, socket);
+  void homeService.sendExternalSensorsUpdate(homeId).catch((error) => {
+    console.error(
+      `Failed to send external sensors snapshot for home ${homeId}:`,
+      error,
+    );
+  });
+  void homeService.sendInternalSensorsUpdate(homeId).catch((error) => {
+    console.error(
+      `Failed to send internal sensors snapshot for home ${homeId}:`,
+      error,
+    );
+  });
 
   socket.on(
     "chat:send",
