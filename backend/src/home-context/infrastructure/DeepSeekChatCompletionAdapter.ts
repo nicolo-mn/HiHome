@@ -129,7 +129,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           "Fields: ruleName (short label), observableId (weather|external-thermometer|internal-thermometer|wind-speed|air-quality). " +
           "For weather: operatorTarget must be one of Clear, Drizzle, Fog, Overcast, Cloudy, Rain, Snow, Thunderstorm and operator is omitted. " +
           "For numeric observables: operator is gt|lt|eq and operatorTarget is a number or numeric string. " +
-          "Actions is a non-empty array; each action has componentType (light|window|thermostat), command (turnOn|turnOff|open|close|setTemperature), componentId, and targetTemp required only when command is setTemperature.",
+          "Actions is a non-empty array; each action has componentType (light|window|thermostat), command, componentId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature.",
         parameters: {
           type: "object",
           properties: {
