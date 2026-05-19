@@ -110,7 +110,7 @@ const chatCompletionPort = new DeepSeekChatCompletionAdapter(
   homeService,
   ruleService,
 );
-const chatService = new ChatService(chatCompletionPort, {
+const chatService = new ChatService(chatCompletionPort, homeService, {
   model: DEEPSEEK_MODEL,
   maxHistory: CHAT_MAX_HISTORY,
 });

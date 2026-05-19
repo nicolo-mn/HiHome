@@ -13,6 +13,7 @@ import {
   WeatherState,
   SensorUpdatePort,
   ExternalSensorsUpdate,
+  Room,
 } from "../domain";
 import { ActionService } from "./ActionService";
 import { SensorRegistry } from "./SensorRegistry";
@@ -31,6 +32,11 @@ export class HomeService implements ActionService {
   async getComponents(homeId: string): Promise<Component[]> {
     const home = await this.ensureHomeExists(homeId);
     return home.getAllComponents();
+  }
+
+  async getRooms(homeId: string): Promise<Room[]> {
+    const home = await this.ensureHomeExists(homeId);
+    return home.rooms;
   }
 
   async getComponent(componentId: string): Promise<Component | undefined> {
