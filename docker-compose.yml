@@ -1,6 +1,6 @@
 services:
   mongodb:
-    image: mongo:7.0
+    image: mongo:8.3
     container_name: mongodb
     ports:
       - "27017:27017"
