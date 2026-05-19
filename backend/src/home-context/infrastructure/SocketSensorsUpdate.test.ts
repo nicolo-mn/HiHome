@@ -106,7 +106,7 @@ describe("End-to-end socket client test to check sensor updates", () => {
       });
 
       socket.once("sensor:weather", (data) => {
-        expect(data.forecast).toBe(0);
+        expect(data.forecast).toBe("Clear");
         expect(data.precipitation).toBe(0);
         received.add("sensor:weather");
         onDone();

@@ -1,5 +1,14 @@
 import { ExternalSensorsDataPort } from "../application/ExternalSensorsDataPort";
-import { ExternalSensorsUpdate, Home, WeatherForecast } from "../domain";
+import type {
+  ForecastPort,
+  ForecastSummary,
+} from "../application/ForecastPort";
+import {
+  ExternalSensorsUpdate,
+  Home,
+  WeatherForecast,
+  Coordinates,
+} from "../domain";
 
 type ExtApiServiceResponse = {
   temperature: number;
@@ -10,7 +19,23 @@ type ExtApiServiceResponse = {
   europeanAqi: number;
 };
 
-export class ExtApiServiceDataAdapter implements ExternalSensorsDataPort {
+type ExtApiServiceForecastResponse = {
+  days: Array<{
+    date: string;
+    weatherType: number;
+    temperatureMax: number;
+    temperatureMin: number;
+    windSpeedMax: number;
+    windDirectionDominant: number;
+    precipitationHours: number;
+    daylightDuration: number;
+    precipitationSum: number;
+  }>;
+};
+
+export class ExtApiServiceDataAdapter
+  implements ExternalSensorsDataPort, ForecastPort
+{
   constructor(
     private readonly baseUrl: string = process.env.EXT_API_BASE_URL ||
       "http://ext-api-service:8080",
@@ -41,6 +66,35 @@ export class ExtApiServiceDataAdapter implements ExternalSensorsDataPort {
         forecast: this.mapWeatherTypeToForecast(payload.weatherType),
         precipitation: payload.precipitation,
       },
+    };
+  }
+
+  async getForecastSummary(
+    coords: Coordinates,
+  ): Promise<ForecastSummary | null> {
+    const url = new URL("/api/forecast", this.baseUrl);
+    url.searchParams.set("latitude", coords.latitude.toString());
+    url.searchParams.set("longitude", coords.longitude.toString());
+
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as ExtApiServiceForecastResponse;
+
+    return {
+      days: payload.days.map((day) => ({
+        date: day.date,
+        weatherForecast: this.mapWeatherTypeToForecast(day.weatherType),
+        temperatureMax: day.temperatureMax,
+        temperatureMin: day.temperatureMin,
+        windSpeedMax: day.windSpeedMax,
+        windDirectionDominant: day.windDirectionDominant,
+        precipitationHours: day.precipitationHours,
+        daylightDuration: day.daylightDuration,
+        precipitationSum: day.precipitationSum,
+      })),
     };
   }
 

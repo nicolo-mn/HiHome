@@ -6,14 +6,14 @@ interface ConditionVisitor<T> {
 }
 
 export enum WeatherForecast {
-  Clear,
-  Drizzle,
-  Fog,
-  Overcast,
-  Cloudy,
-  Rain,
-  Snow,
-  Thunderstorm,
+  Clear = "Clear",
+  Drizzle = "Drizzle",
+  Fog = "Fog",
+  Overcast = "Overcast",
+  Cloudy = "Cloudy",
+  Rain = "Rain",
+  Snow = "Snow",
+  Thunderstorm = "Thunderstorm",
 }
 
 export type ObservablesUpdatedDomainEvent = {

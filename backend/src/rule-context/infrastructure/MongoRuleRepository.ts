@@ -99,7 +99,7 @@ export class MongoRuleRepository implements RuleRepository {
 
   private toCondition(record: ConditionRecord): ObservableCondition {
     if (record.type === WEATHER_TYPE) {
-      const forecast = this.parseWeatherForecast(record.target);
+      const forecast = this.parseWeatherForecast(record.target as string);
       return new WeatherCondition(new WeatherEqualityOperator(forecast));
     }
 
@@ -134,11 +134,7 @@ export class MongoRuleRepository implements RuleRepository {
     }
   }
 
-  private parseWeatherForecast(target: string | number): WeatherForecast {
-    if (typeof target === "number") {
-      return target as WeatherForecast;
-    }
-
+  private parseWeatherForecast(target: string): WeatherForecast {
     const forecast = WeatherForecast[target as keyof typeof WeatherForecast];
     if (forecast === undefined) {
       throw new Error(`Unsupported weather forecast: ${target}`);
@@ -148,12 +144,10 @@ export class MongoRuleRepository implements RuleRepository {
 
   private toConditionRecord(condition: ObservableCondition): ConditionRecord {
     if (condition instanceof WeatherCondition) {
-      const forecastKey =
-        WeatherForecast[condition.operator.getBoundaryValue()];
       return {
         type: WEATHER_TYPE,
         operator: OP_EQ,
-        target: forecastKey,
+        target: condition.operator.getBoundaryValue(),
       };
     }
 

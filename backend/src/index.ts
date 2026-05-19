@@ -17,6 +17,7 @@ import { ChatService } from "./home-context/application/ChatService";
 import { ChatController } from "./home-context/infrastructure/controllers/ChatController";
 import { HomeRouter } from "./home-context/infrastructure/routes/HomeRouter";
 import { ExtApiServiceDataAdapter } from "./home-context/infrastructure/ExtApiServiceDataAdapter";
+import { DeepSeekChatCompletionAdapter } from "./home-context/infrastructure/DeepSeekChatCompletionAdapter";
 import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
@@ -99,11 +100,18 @@ const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
 const authContext = UserContextFactory.create();
 const authController = new UserController(authContext.authPort);
 
-const chatService = new ChatService(homeService, {
-  apiKey: DEEPSEEK_API_KEY,
+const forecastPort = externalSensorsDataPort;
+const chatCompletionPort = new DeepSeekChatCompletionAdapter(
+  {
+    apiKey: DEEPSEEK_API_KEY,
+    apiBaseUrl: DEEPSEEK_API_BASE_URL,
+  },
+  forecastPort,
+  homeService,
+  ruleService,
+);
+const chatService = new ChatService(chatCompletionPort, {
   model: DEEPSEEK_MODEL,
-  apiBaseUrl: DEEPSEEK_API_BASE_URL,
-  extApiBaseUrl: EXT_API_BASE_URL,
   maxHistory: CHAT_MAX_HISTORY,
 });
 const chatController = new ChatController(chatService);
