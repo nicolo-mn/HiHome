@@ -1,4 +1,4 @@
-import type { ChatCompletionPort } from "./ChatCompletionPort";
+import type { ChatCompletionPort, ChatStreamEvent } from "./ChatCompletionPort";
 import { HomeService } from "./HomeService";
 
 type ChatRole = "system" | "user" | "assistant";
@@ -20,6 +20,7 @@ export class ChatService {
     private options: ChatServiceOptions,
   ) {}
 
+  // TODO: consider to remove keeping only streaming version
   async chat(
     houseId: string,
     username: string,
@@ -30,14 +31,7 @@ export class ChatService {
       throw new Error("Message is required");
     }
 
-    const systemPrompt = await this.buildSystemPrompt(houseId);
-
-    const existing = this.normalizeHistory(history);
-    const messages: ChatMessage[] = [
-      { role: "system", content: systemPrompt },
-      ...existing,
-      { role: "user", content: userMessage },
-    ];
+    const messages = await this.buildMessages(houseId, userMessage, history);
 
     const reply = await this.chatCompletionPort.completeChat(
       messages,
@@ -46,6 +40,41 @@ export class ChatService {
     );
 
     return reply;
+  }
+
+  async streamChat(
+    houseId: string,
+    username: string,
+    userMessage: string,
+    history: ChatMessage[],
+    onEvent: (event: ChatStreamEvent) => void,
+  ): Promise<string> {
+    if (!userMessage.trim()) {
+      throw new Error("Message is required");
+    }
+
+    const messages = await this.buildMessages(houseId, userMessage, history);
+
+    return this.chatCompletionPort.streamChat(
+      messages,
+      this.options.model,
+      houseId,
+      onEvent,
+    );
+  }
+
+  private async buildMessages(
+    houseId: string,
+    userMessage: string,
+    history: ChatMessage[],
+  ): Promise<ChatMessage[]> {
+    const systemPrompt = await this.buildSystemPrompt(houseId);
+    const existing = this.normalizeHistory(history);
+    return [
+      { role: "system", content: systemPrompt },
+      ...existing,
+      { role: "user", content: userMessage },
+    ];
   }
 
   private trimHistory(history: ChatMessage[]): ChatMessage[] {

@@ -1,4 +1,7 @@
-import type { ChatCompletionPort } from "../application/ChatCompletionPort";
+import type {
+  ChatCompletionPort,
+  ChatStreamEvent,
+} from "../application/ChatCompletionPort";
 import type { ChatMessage } from "../application/ChatService";
 import type {
   ForecastPort,
@@ -8,7 +11,6 @@ import { HomeService } from "../application/HomeService";
 import type { AddRuleDto } from "../../rule-context/application/RuleService";
 import { RuleService } from "../../rule-context/application/RuleService";
 // TODO: markdown reader in frontend
-// TODO: add streaming and tool call UI elements
 type DeepSeekOptions = {
   apiKey: string;
   apiBaseUrl: string;
@@ -54,6 +56,24 @@ type DeepSeekAssistantMessage = {
   tool_calls?: DeepSeekToolCall[];
 };
 
+type StreamDelta = {
+  content?: string | null;
+  reasoning_content?: string | null;
+  tool_calls?: Array<{
+    index: number;
+    id?: string;
+    type?: "function";
+    function?: { name?: string; arguments?: string };
+  }>;
+};
+
+type StreamChunk = {
+  choices?: Array<{
+    delta?: StreamDelta;
+    finish_reason?: string | null;
+  }>;
+};
+
 export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
   constructor(
     private options: DeepSeekOptions,
@@ -87,6 +107,60 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           throw new Error("DeepSeek returned an empty response");
         }
         return content;
+      }
+
+      const toolResponses = await this.handleToolCalls(toolCalls, homeId);
+      chatMessages = [
+        ...chatMessages,
+        {
+          role: "assistant",
+          content: reply.content ?? null,
+          reasoning_content: reply.reasoning_content ?? null,
+          tool_calls: toolCalls,
+        },
+        ...toolResponses,
+      ];
+    }
+
+    throw new Error("DeepSeek did not return a final response");
+  }
+
+  async streamChat(
+    messages: ChatMessage[],
+    model: string,
+    homeId: string,
+    onEvent: (event: ChatStreamEvent) => void,
+  ): Promise<string> {
+    if (!this.options.apiKey) {
+      throw new Error("DeepSeek API key is missing");
+    }
+
+    const tools = [this.buildForecastTool(), this.buildAddRuleTool()];
+    let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const reply = await this.requestStreamChat(
+        model,
+        chatMessages,
+        tools,
+        onEvent,
+      );
+      const toolCalls = reply.tool_calls ?? [];
+
+      if (toolCalls.length === 0) {
+        const content = reply.content?.trim();
+        if (!content) {
+          throw new Error("DeepSeek returned an empty response");
+        }
+        return content;
+      }
+
+      // Notify frontend about each tool being called
+      for (const tc of toolCalls) {
+        onEvent({ type: "tool_call", name: tc.function.name });
       }
 
       const toolResponses = await this.handleToolCalls(toolCalls, homeId);
@@ -217,6 +291,123 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
 
     const data = (await response.json()) as DeepSeekResponse;
     return data.choices?.[0]?.message ?? {};
+  }
+
+  private async requestStreamChat(
+    model: string,
+    messages: DeepSeekMessage[],
+    tools: DeepSeekTool[],
+    onEvent: (event: ChatStreamEvent) => void,
+  ): Promise<DeepSeekAssistantMessage> {
+    const url = new URL("/chat/completions", this.options.apiBaseUrl);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.options.apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        tools,
+        tool_choice: "auto",
+        temperature: 0,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`DeepSeek error: ${response.status} ${errorText}`);
+    }
+
+    if (!response.body) {
+      throw new Error("DeepSeek returned no stream body");
+    }
+
+    let contentParts: string[] = [];
+    let reasoningParts: string[] = [];
+    const toolCallAccumulators: Map<
+      number,
+      { id: string; name: string; arguments: string }
+    > = new Map();
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith("data: ")) continue;
+        const data = trimmed.slice(6);
+        if (data === "[DONE]") continue;
+
+        let chunk: StreamChunk;
+        try {
+          chunk = JSON.parse(data) as StreamChunk;
+        } catch {
+          continue;
+        }
+
+        const choice = chunk.choices?.[0];
+        if (!choice?.delta) continue;
+
+        const delta = choice.delta;
+
+        if (delta.content) {
+          contentParts.push(delta.content);
+          onEvent({ type: "token", content: delta.content });
+        }
+
+        if (delta.reasoning_content) {
+          reasoningParts.push(delta.reasoning_content);
+        }
+
+        if (delta.tool_calls) {
+          for (const tc of delta.tool_calls) {
+            if (!toolCallAccumulators.has(tc.index)) {
+              toolCallAccumulators.set(tc.index, {
+                id: tc.id ?? "",
+                name: tc.function?.name ?? "",
+                arguments: "",
+              });
+            }
+            const acc = toolCallAccumulators.get(tc.index)!;
+            if (tc.id) acc.id = tc.id;
+            if (tc.function?.name) acc.name = tc.function.name;
+            if (tc.function?.arguments) {
+              acc.arguments += tc.function.arguments;
+            }
+          }
+        }
+      }
+    }
+
+    const toolCalls: DeepSeekToolCall[] = [];
+    for (const [, acc] of toolCallAccumulators) {
+      toolCalls.push({
+        id: acc.id,
+        type: "function",
+        function: { name: acc.name, arguments: acc.arguments },
+      });
+    }
+
+    const content = contentParts.join("") || null;
+    const reasoningContent = reasoningParts.join("") || null;
+
+    return {
+      content,
+      reasoning_content: reasoningContent,
+      tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+    };
   }
 
   private async handleToolCalls(
