@@ -19,6 +19,20 @@ type ExtApiServiceResponse = {
   europeanAqi: number;
 };
 
+type ExtApiServiceForecastResponse = {
+  days: Array<{
+    date: string;
+    weatherType: number;
+    temperatureMax: number;
+    temperatureMin: number;
+    windSpeedMax: number;
+    windDirectionDominant: number;
+    precipitationHours: number;
+    daylightDuration: number;
+    precipitationSum: number;
+  }>;
+};
+
 export class ExtApiServiceDataAdapter
   implements ExternalSensorsDataPort, ForecastPort
 {
@@ -58,7 +72,7 @@ export class ExtApiServiceDataAdapter
   async getForecastSummary(
     coords: Coordinates,
   ): Promise<ForecastSummary | null> {
-    const url = new URL("/api/weather", this.baseUrl);
+    const url = new URL("/api/forecast", this.baseUrl);
     url.searchParams.set("latitude", coords.latitude.toString());
     url.searchParams.set("longitude", coords.longitude.toString());
 
@@ -67,15 +81,20 @@ export class ExtApiServiceDataAdapter
       return null;
     }
 
-    const payload = (await response.json()) as ExtApiServiceResponse;
+    const payload = (await response.json()) as ExtApiServiceForecastResponse;
 
     return {
-      temperature: payload.temperature,
-      weatherDescription: this.mapWeatherTypeToDescription(payload.weatherType),
-      windSpeed: payload.windSpeed,
-      windDirection: payload.windDirection,
-      precipitation: payload.precipitation,
-      europeanAqi: payload.europeanAqi,
+      days: payload.days.map((day) => ({
+        date: day.date,
+        weatherForecast: this.mapWeatherTypeToForecast(day.weatherType),
+        temperatureMax: day.temperatureMax,
+        temperatureMin: day.temperatureMin,
+        windSpeedMax: day.windSpeedMax,
+        windDirectionDominant: day.windDirectionDominant,
+        precipitationHours: day.precipitationHours,
+        daylightDuration: day.daylightDuration,
+        precipitationSum: day.precipitationSum,
+      })),
     };
   }
 
@@ -99,29 +118,6 @@ export class ExtApiServiceDataAdapter
         return WeatherForecast.Thunderstorm;
       default:
         return WeatherForecast.Cloudy;
-    }
-  }
-
-  private mapWeatherTypeToDescription(weatherType: number): string {
-    switch (weatherType) {
-      case 0:
-        return "Clear";
-      case 1:
-        return "Cloudy";
-      case 2:
-        return "Overcast";
-      case 3:
-        return "Fog";
-      case 4:
-        return "Drizzle";
-      case 5:
-        return "Rain";
-      case 6:
-        return "Snow";
-      case 7:
-        return "Thunderstorm";
-      default:
-        return "Cloudy";
     }
   }
 }

@@ -1,12 +1,19 @@
-import type { Coordinates } from "../domain";
+import type { Coordinates, WeatherForecast } from "../domain";
+
+export type ForecastDaySummary = {
+  date: string;
+  weatherForecast: WeatherForecast;
+  temperatureMax: number;
+  temperatureMin: number;
+  windSpeedMax: number;
+  windDirectionDominant: number;
+  precipitationHours: number;
+  daylightDuration: number;
+  precipitationSum: number;
+};
 
 export type ForecastSummary = {
-  temperature: number;
-  weatherDescription: string;
-  windSpeed: number;
-  windDirection: number;
-  precipitation: number;
-  europeanAqi: number;
+  days: ForecastDaySummary[];
 };
 
 export interface ForecastPort {

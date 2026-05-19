@@ -3,7 +3,6 @@ import { RuleService, AddRuleDto } from "../../application/RuleService";
 import {
   NumericGreaterOperator,
   NumericLowerOperator,
-  WeatherForecast,
   ExternalTemperatureCondition,
   InternalTemperatureCondition,
   WindSpeedCondition,
@@ -39,7 +38,7 @@ function conditionToDto(condition: ObservableCondition): ConditionDto {
     return {
       type: "weather",
       operator: "is",
-      target: WeatherForecast[condition.operator.getBoundaryValue()],
+      target: condition.operator.getBoundaryValue(),
     };
   }
 

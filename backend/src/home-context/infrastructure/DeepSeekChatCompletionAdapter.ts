@@ -7,7 +7,8 @@ import type {
 import { HomeService } from "../application/HomeService";
 import type { AddRuleDto } from "../../rule-context/application/RuleService";
 import { RuleService } from "../../rule-context/application/RuleService";
-
+// TODO: markdown reader in frontend
+// TODO: add streaming and tool call UI elements
 type DeepSeekOptions = {
   apiKey: string;
   apiBaseUrl: string;
@@ -309,12 +310,18 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
   }
 
   private formatForecast(summary: ForecastSummary) {
-    return [
-      `Temperature ${summary.temperature.toFixed(1)}C,`,
-      `${summary.weatherDescription}.`,
-      `Wind ${summary.windSpeed.toFixed(1)} m/s at ${summary.windDirection.toFixed(0)} deg.`,
-      `Precipitation ${summary.precipitation.toFixed(1)} mm.`,
-      `European AQI ${summary.europeanAqi}.`,
-    ].join(" ");
+    return summary.days
+      .map((day) => {
+        const daylightHours = day.daylightDuration / 3600;
+        return [
+          `${day.date}:`,
+          `${day.weatherForecast},`,
+          `${day.temperatureMin.toFixed(1)}-${day.temperatureMax.toFixed(1)}C,`,
+          `wind ${day.windSpeedMax.toFixed(1)} m/s ${day.windDirectionDominant.toFixed(0)} deg,`,
+          `precip ${day.precipitationSum.toFixed(1)} mm (${day.precipitationHours.toFixed(1)}h),`,
+          `daylight ${daylightHours.toFixed(1)}h.`,
+        ].join(" ");
+      })
+      .join("\n");
   }
 }
