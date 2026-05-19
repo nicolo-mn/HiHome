@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { authApi } from "@/api";
 import { decodeJwt, isExpired } from "@/utils/jwt";
+import { useSensorStore } from "@/stores/sensors";
 
 export const useAuthStore = defineStore("auth", () => {
   const storedToken = localStorage.getItem("jwt");
@@ -38,11 +39,13 @@ export const useAuthStore = defineStore("auth", () => {
     });
     token.value = newToken;
     localStorage.setItem("jwt", newToken);
+    useSensorStore().connect();
   }
 
   function logout() {
     token.value = null;
     localStorage.removeItem("jwt");
+    useSensorStore().disconnect();
   }
 
   return {
