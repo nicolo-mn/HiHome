@@ -16,10 +16,14 @@ type DeepSeekOptions = {
   apiBaseUrl: string;
 };
 
+// DeepSeek supports multiple replies possibilities. In this case, as this feature
+// is not used, choices is always an array of one element
+// TODO: consider removing if standard chat completion is unused
 type DeepSeekResponse = {
   choices?: Array<{ message?: DeepSeekAssistantMessage }>;
 };
 
+// DTO to be sent to the model when invoking it, to let it know about the possible tools
 type DeepSeekTool = {
   type: "function";
   function: {
@@ -33,6 +37,7 @@ type DeepSeekTool = {
   };
 };
 
+// Represents a tool invocation request by the model
 type DeepSeekToolCall = {
   id: string;
   type: "function";
@@ -42,6 +47,7 @@ type DeepSeekToolCall = {
   };
 };
 
+// DTO used for communication with the infrastructure layer
 type DeepSeekMessage = {
   role: "system" | "user" | "assistant" | "tool";
   content?: string | null;
@@ -50,12 +56,14 @@ type DeepSeekMessage = {
   tool_calls?: DeepSeekToolCall[];
 };
 
+// output of chat request
 type DeepSeekAssistantMessage = {
   content?: string | null;
   reasoning_content?: string | null;
   tool_calls?: DeepSeekToolCall[];
 };
 
+// reply update sent incrementally when using streaming
 type StreamDelta = {
   content?: string | null;
   reasoning_content?: string | null;
@@ -67,6 +75,7 @@ type StreamDelta = {
   }>;
 };
 
+// DTO used to parse the streaming updates sent by DeepSeek
 type StreamChunk = {
   choices?: Array<{
     delta?: StreamDelta;
@@ -293,6 +302,11 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     return data.choices?.[0]?.message ?? {};
   }
 
+  // Format sent by DeepSeek:
+  // text update: {"choices":[{"delta":{"content":"Hello"}}]}
+  // reasonig update (currently unused): {"choices":[{"delta":{"content":"Hello"}}]}
+  // tool update: {"choices":[{"delta":{"tool_calls":[...]}}]}
+  // end update: [DONE]
   private async requestStreamChat(
     model: string,
     messages: DeepSeekMessage[],
@@ -371,6 +385,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           reasoningParts.push(delta.reasoning_content);
         }
 
+        // tool calls, like tokens arrive fragmented, so they need to be accumulated
         if (delta.tool_calls) {
           for (const tc of delta.tool_calls) {
             if (!toolCallAccumulators.has(tc.index)) {
