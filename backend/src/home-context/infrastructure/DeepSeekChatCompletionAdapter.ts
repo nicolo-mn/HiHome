@@ -14,13 +14,6 @@ type DeepSeekOptions = {
   apiBaseUrl: string;
 };
 
-// DeepSeek supports multiple replies possibilities. In this case, as this feature
-// is not used, choices is always an array of one element
-// TODO: consider removing if standard chat completion is unused
-type DeepSeekResponse = {
-  choices?: Array<{ message?: DeepSeekAssistantMessage }>;
-};
-
 // DTO to be sent to the model when invoking it, to let it know about the possible tools
 type DeepSeekTool = {
   type: "function";
@@ -45,7 +38,9 @@ type DeepSeekToolCall = {
   };
 };
 
-// DTO used for communication with the infrastructure layer
+// DTO used for requests to DeepSeek APIs
+// if role is "tool", content contains the tool response and tool_call_id identifies which tool call this is responding to
+// if role is "assistant", content contains the model reply and reasoning_content contains the model reasoning trace
 type DeepSeekMessage = {
   role: "system" | "user" | "assistant" | "tool";
   content?: string | null;
@@ -54,15 +49,15 @@ type DeepSeekMessage = {
   tool_calls?: DeepSeekToolCall[];
 };
 
-// output of chat request
-type DeepSeekAssistantMessage = {
+// Parses payload obtained from DeepSeek APIs
+type DeepSeekResponseDTO = {
   content?: string | null;
   reasoning_content?: string | null;
   tool_calls?: DeepSeekToolCall[];
 };
 
 // reply update sent incrementally when using streaming
-type StreamDelta = {
+type StreamChunk = {
   content?: string | null;
   reasoning_content?: string | null;
   tool_calls?: Array<{
@@ -70,14 +65,6 @@ type StreamDelta = {
     id?: string;
     type?: "function";
     function?: { name?: string; arguments?: string };
-  }>;
-};
-
-// DTO used to parse the streaming updates sent by DeepSeek
-type StreamChunk = {
-  choices?: Array<{
-    delta?: StreamDelta;
-    finish_reason?: string | null;
   }>;
 };
 
@@ -277,7 +264,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     model: string,
     messages: DeepSeekMessage[],
     tools: DeepSeekTool[],
-  ): Promise<DeepSeekAssistantMessage> {
+  ): Promise<DeepSeekResponseDTO> {
     const url = new URL("/chat/completions", this.options.apiBaseUrl);
     const response = await fetch(url, {
       method: "POST",
@@ -299,8 +286,8 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       throw new Error(`DeepSeek error: ${response.status} ${errorText}`);
     }
 
-    const data = (await response.json()) as DeepSeekResponse;
-    return data.choices?.[0]?.message ?? {};
+    const data = (await response.json()) as unknown;
+    return this.parseChatResponse(data);
   }
 
   // Format sent by DeepSeek:
@@ -313,7 +300,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     messages: DeepSeekMessage[],
     tools: DeepSeekTool[],
     streamPort: ChatStreamPort,
-  ): Promise<DeepSeekAssistantMessage> {
+  ): Promise<DeepSeekResponseDTO> {
     const url = new URL("/chat/completions", this.options.apiBaseUrl);
     const response = await fetch(url, {
       method: "POST",
@@ -365,17 +352,12 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         const data = trimmed.slice(6);
         if (data === "[DONE]") continue;
 
-        let chunk: StreamChunk;
-        try {
-          chunk = JSON.parse(data) as StreamChunk;
-        } catch {
+        const chunk = this.parseStreamChunk(data);
+        if (!chunk) {
           continue;
         }
 
-        const choice = chunk.choices?.[0];
-        if (!choice?.delta) continue;
-
-        const delta = choice.delta;
+        const delta = chunk;
 
         if (delta.content) {
           contentParts.push(delta.content);
@@ -497,6 +479,26 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     }
 
     return responses;
+  }
+
+  private parseChatResponse(data: unknown): DeepSeekResponseDTO {
+    const raw = data as {
+      message?: DeepSeekResponseDTO;
+      choices?: Array<{ message?: DeepSeekResponseDTO }>;
+    };
+    return raw.message ?? raw.choices?.[0]?.message ?? {};
+  }
+
+  private parseStreamChunk(data: string): StreamChunk | null {
+    try {
+      const raw = JSON.parse(data) as {
+        delta?: StreamChunk;
+        choices?: Array<{ delta?: StreamChunk }>;
+      };
+      return raw.delta ?? raw.choices?.[0]?.delta ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private parseToolArguments(raw: string): {
