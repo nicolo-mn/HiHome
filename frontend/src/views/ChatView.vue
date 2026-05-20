@@ -71,6 +71,7 @@ function onSend() {
         streamingContent.value += token;
       },
       onToolCall(name: string) {
+        streamingContent.value = "";
         activeToolCalls.value = [...activeToolCalls.value, { name }];
       },
       onDone(fullContent: string) {
