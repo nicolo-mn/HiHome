@@ -2,7 +2,12 @@ import { ref, onMounted, onBeforeUnmount, watch, type Ref } from "vue";
 import { io, type Socket } from "socket.io-client";
 
 export type ChatRole = "user" | "assistant";
-export type ChatMessage = { role: ChatRole; content: string };
+export type ToolCallInfo = { name: string };
+export type ChatMessage = {
+  role: ChatRole;
+  content: string;
+  toolCalls?: ToolCallInfo[];
+};
 
 type ChatPayload = {
   message: string;
@@ -10,9 +15,14 @@ type ChatPayload = {
   history: ChatMessage[];
 };
 
-type ChatResponse = { reply?: string; error?: string };
+export type StreamCallbacks = {
+  onToken: (content: string) => void;
+  onToolCall: (name: string) => void;
+  onDone: (content: string) => void;
+  onError: (error: string) => void;
+};
 
-const ACK_TIMEOUT_MS = 12_000;
+const ACK_TIMEOUT_MS = 5_000;
 
 export function useChatSocket(
   homeId: Ref<string | null> | string | null,
@@ -80,35 +90,56 @@ export function useChatSocket(
     if (nextId) connect(nextId);
   }
 
-  async function sendMessage(payload: ChatPayload): Promise<string> {
+  function sendMessage(payload: ChatPayload, callbacks: StreamCallbacks): void {
     const currentSocket = socket;
     if (!currentSocket || !connected.value) {
-      throw new Error("Chat connection is not available");
+      callbacks.onError("Chat connection is not available");
+      return;
     }
 
-    return new Promise((resolve, reject) => {
-      let resolved = false;
-      const timer = window.setTimeout(() => {
-        if (resolved) return;
-        resolved = true;
-        reject(new Error("Chat reply timed out"));
-      }, ACK_TIMEOUT_MS);
+    const onToken = (data: { content: string }) =>
+      callbacks.onToken(data.content);
+    const onToolCall = (data: { name: string }) =>
+      callbacks.onToolCall(data.name);
 
-      currentSocket.emit("chat:send", payload, (response: ChatResponse) => {
-        if (resolved) return;
-        resolved = true;
-        window.clearTimeout(timer);
-        if (response?.error) {
-          reject(new Error(response.error));
-          return;
+    const cleanup = () => {
+      currentSocket.off("chat:token", onToken);
+      currentSocket.off("chat:tool-call", onToolCall);
+      currentSocket.off("chat:done", onDone);
+      currentSocket.off("chat:error", onErr);
+    };
+
+    const onDone = (data: { content: string }) => {
+      cleanup();
+      callbacks.onDone(data.content);
+    };
+
+    const onErr = (data: { error: string }) => {
+      cleanup();
+      callbacks.onError(data.error);
+    };
+
+    currentSocket.on("chat:token", onToken);
+    currentSocket.on("chat:tool-call", onToolCall);
+    currentSocket.on("chat:done", onDone);
+    currentSocket.on("chat:error", onErr);
+
+    currentSocket.emit(
+      "chat:send",
+      payload,
+      (ackResponse: { error?: string }) => {
+        if (ackResponse?.error) {
+          cleanup();
+          callbacks.onError(ackResponse.error);
         }
-        if (!response?.reply) {
-          reject(new Error("Chat reply was empty"));
-          return;
-        }
-        resolve(response.reply);
-      });
-    });
+      },
+    );
+
+    // Safety timeout — if nothing comes back in a long while, clean up
+    const STREAM_TIMEOUT_MS = 60_000;
+    setTimeout(() => {
+      cleanup();
+    }, STREAM_TIMEOUT_MS);
   }
 
   onMounted(() => {

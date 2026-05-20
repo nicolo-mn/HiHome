@@ -37,6 +37,8 @@ import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
 import { HomeRepository } from "./home-context/domain";
 import { NotificationContextAdapter } from "./home-context/infrastructure/NotificationPortAdapter";
+import { SocketIOChatStreamAdapter } from "./home-context/infrastructure/SocketIOChatStreamAdapter";
+import { ChatStreamEventType } from "./home-context/application/ChatStreamPort";
 
 const app = express();
 const server = http.createServer(app);
@@ -110,7 +112,7 @@ const chatCompletionPort = new DeepSeekChatCompletionAdapter(
   homeService,
   ruleService,
 );
-const chatService = new ChatService(chatCompletionPort, {
+const chatService = new ChatService(chatCompletionPort, homeService, {
   model: DEEPSEEK_MODEL,
   maxHistory: CHAT_MAX_HISTORY,
 });
@@ -185,32 +187,44 @@ io.on("connection", (socket) => {
         username?: string;
         history?: Array<{ role: "user" | "assistant"; content: string }>;
       },
-      callback?: (response: { reply?: string; error?: string }) => void,
+      callback?: (response: { error?: string }) => void,
     ) => {
-      const respond = (response: { reply?: string; error?: string }) => {
+      const ack = (response: { error?: string }) => {
         if (typeof callback === "function") {
           callback(response);
         }
       };
 
       if (!payload?.message || !payload.username) {
-        respond({ error: "Message and username are required" });
+        ack({ error: "Message and username are required" });
         return;
       }
+
+      ack({});
+
+      const chatStreamPort = new SocketIOChatStreamAdapter(socket);
 
       try {
         const safeHistory = Array.isArray(payload.history)
           ? payload.history
           : [];
-        const reply = await chatService.chat(
+        const reply = await chatService.streamChat(
           homeId,
           payload.username,
           payload.message,
           safeHistory,
+          chatStreamPort,
         );
-        respond({ reply });
+        chatStreamPort.emit({
+          type: ChatStreamEventType.Done,
+          content: reply,
+        });
       } catch (error: any) {
-        respond({ error: error.message ?? "Chat failed" });
+        const message = error.message ?? "Chat failed";
+        chatStreamPort.emit({
+          type: ChatStreamEventType.Error,
+          error: message,
+        });
       }
     },
   );
