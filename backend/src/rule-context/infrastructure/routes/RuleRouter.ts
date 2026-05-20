@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { RuleController } from "../controllers/RuleController";
+import { reorderValidator } from "../middlewares/RuleValidator";
 
 export class RuleRouter {
   public router = Router();
@@ -15,6 +16,10 @@ export class RuleRouter {
 
     this.router.post("/:id/rules", (req, res) =>
       this.ruleController.addRule(req, res),
+    );
+
+    this.router.put("/:id/rules/order", ...reorderValidator, (req, res) =>
+      this.ruleController.reorderRules(req, res),
     );
 
     this.router.delete("/rules/:ruleId", (req, res) =>

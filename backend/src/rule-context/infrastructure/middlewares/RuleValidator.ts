@@ -146,3 +146,21 @@ export const actionsValidator = [
 
   validate,
 ];
+
+export const reorderValidator = [
+  body("ruleIds")
+    .isArray({ min: 1 })
+    .withMessage("ruleIds must be a non-empty array")
+    .bail()
+    .custom((ids: unknown[]) => {
+      if (!ids.every((id) => typeof id === "string" && id.length > 0)) {
+        throw new Error("ruleIds must be an array of non-empty strings");
+      }
+      if (new Set(ids).size !== ids.length) {
+        throw new Error("ruleIds must not contain duplicates");
+      }
+      return true;
+    }),
+
+  validate,
+];

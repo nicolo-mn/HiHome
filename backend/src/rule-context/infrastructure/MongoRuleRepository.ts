@@ -21,6 +21,7 @@ import {
 } from "../domain/Actions";
 import { RuleRepository } from "../application/RuleRepository";
 import { Rule } from "../domain/Rule";
+import { HomeRuleSet } from "../domain/HomeRuleSet";
 import { RuleModel } from "./models/RuleModel";
 
 const WEATHER_TYPE = "weather";
@@ -50,14 +51,31 @@ type RuleRecord = {
   _id: string | { toString(): string };
   homeId: string;
   name: string;
+  order: number;
   condition: ConditionRecord;
   actions: ActionRecord[];
 };
 
 export class MongoRuleRepository implements RuleRepository {
   async getHomeRules(homeId: string): Promise<Rule[]> {
-    const docs = await RuleModel.find({ homeId }).lean<RuleRecord[]>().exec();
+    const docs = await RuleModel.find({ homeId })
+      .sort({ order: 1 })
+      .lean<RuleRecord[]>()
+      .exec();
     return docs.map((doc: RuleRecord) => this.toDomain(doc));
+  }
+
+  async getRule(ruleId: string): Promise<Rule> {
+    const doc = await RuleModel.findById(ruleId).lean<RuleRecord>().exec();
+    if (!doc) {
+      throw new Error("Rule not found");
+    }
+    return this.toDomain(doc);
+  }
+
+  async findHomeRuleSet(homeId: string): Promise<HomeRuleSet> {
+    const rules = await this.getHomeRules(homeId);
+    return HomeRuleSet.fromPersisted(homeId, rules);
   }
 
   async addRule(
@@ -65,6 +83,7 @@ export class MongoRuleRepository implements RuleRepository {
     name: string,
     condition: ObservableCondition,
     actions: ComponentAction[],
+    order: number,
   ): Promise<Rule> {
     if (actions.length === 0)
       throw new Error("A rule must have at least one action");
@@ -72,6 +91,7 @@ export class MongoRuleRepository implements RuleRepository {
     const record = {
       homeId,
       name,
+      order,
       condition: this.toConditionRecord(condition),
       actions: actions.map((action) => this.toActionRecord(action)),
     };
@@ -87,11 +107,27 @@ export class MongoRuleRepository implements RuleRepository {
     }
   }
 
+  async reorderRules(
+    homeId: string,
+    positions: { id: string; order: number }[],
+  ): Promise<void> {
+    if (positions.length === 0) return;
+    await RuleModel.bulkWrite(
+      positions.map((p) => ({
+        updateOne: {
+          filter: { _id: p.id, homeId },
+          update: { $set: { order: p.order } },
+        },
+      })),
+    );
+  }
+
   private toDomain(record: RuleRecord): Rule {
     return {
       id: record._id.toString(),
       homeId: record.homeId,
       name: record.name,
+      order: record.order,
       condition: this.toCondition(record.condition),
       actions: record.actions.map((action) => this.toAction(action)),
     };

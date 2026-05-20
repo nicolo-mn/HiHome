@@ -16,6 +16,10 @@ const homeId = computed(() => authStore.homeId);
 const rules = ref<RuleDto[]>([]);
 const components = ref<HomeComponent[]>([]);
 
+const sortedRules = computed(() =>
+  [...rules.value].sort((a, b) => a.order - b.order),
+);
+
 const {
   run: load,
   isLoading,
@@ -33,9 +37,48 @@ const {
 const { run: remove, error: deleteError } = useAsyncAction(
   async (ruleId: string) => {
     await rulesApi.deleteRule(ruleId);
-    rules.value = rules.value.filter((r) => r.id !== ruleId);
+    await load();
   },
 );
+
+const { run: reorder, error: reorderError } = useAsyncAction(
+  async (orderedIds: string[]) => {
+    if (!homeId.value) return;
+    const snapshot = rules.value;
+    rules.value = orderedIds
+      .map((id, index) => {
+        const rule = snapshot.find((r) => r.id === id);
+        return rule ? { ...rule, order: index } : null;
+      })
+      .filter((r): r is RuleDto => r !== null);
+    try {
+      await rulesApi.reorderRules(homeId.value, orderedIds);
+    } catch (err) {
+      rules.value = snapshot;
+      throw err;
+    }
+  },
+);
+
+function swap(ids: string[], i: number, j: number) {
+  const tmp = ids[i] as string;
+  ids[i] = ids[j] as string;
+  ids[j] = tmp;
+}
+
+function moveUp(index: number) {
+  if (index <= 0) return;
+  const ids = sortedRules.value.map((r) => r.id);
+  swap(ids, index - 1, index);
+  reorder(ids);
+}
+
+function moveDown(index: number) {
+  if (index >= sortedRules.value.length - 1) return;
+  const ids = sortedRules.value.map((r) => r.id);
+  swap(ids, index, index + 1);
+  reorder(ids);
+}
 
 onMounted(load);
 </script>
@@ -54,6 +97,7 @@ onMounted(load);
 
     <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
     <p v-if="deleteError" class="text-red-400 text-sm">{{ deleteError }}</p>
+    <p v-if="reorderError" class="text-red-400 text-sm">{{ reorderError }}</p>
 
     <div v-if="isLoading && rules.length === 0" class="text-muted text-sm">
       Loading rules…
@@ -65,11 +109,15 @@ onMounted(load);
 
     <div v-else class="flex flex-col gap-3">
       <RuleCard
-        v-for="rule in rules"
+        v-for="(rule, index) in sortedRules"
         :key="rule.id"
         :rule="rule"
         :components="components"
+        :can-move-up="index > 0"
+        :can-move-down="index < sortedRules.length - 1"
         @delete="remove(rule.id)"
+        @move-up="moveUp(index)"
+        @move-down="moveDown(index)"
       />
     </div>
   </div>

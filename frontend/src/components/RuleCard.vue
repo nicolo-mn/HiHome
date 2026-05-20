@@ -5,9 +5,16 @@ import type { HomeComponent } from "@/api/components";
 const props = defineProps<{
   rule: RuleDto;
   components?: HomeComponent[];
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  reorderDisabled?: boolean;
 }>();
 
-defineEmits<{ delete: [] }>();
+defineEmits<{
+  delete: [];
+  "move-up": [];
+  "move-down": [];
+}>();
 
 const CONDITION_LABELS: Record<string, string> = {
   "internal-thermometer": "Internal temperature",
@@ -57,11 +64,38 @@ function getComponentName(componentId: string): string {
   <div
     class="bg-surface border border-border rounded-2xl p-4 md:p-5 flex flex-col gap-2"
   >
-    <div class="flex items-center justify-between">
-      <h3 class="text-base font-medium text-primary">{{ rule.name }}</h3>
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="flex flex-col">
+          <button
+            type="button"
+            class="text-muted hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition leading-none"
+            :disabled="!canMoveUp || reorderDisabled"
+            aria-label="Move rule up"
+            @click="$emit('move-up')"
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            class="text-muted hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition leading-none"
+            :disabled="!canMoveDown || reorderDisabled"
+            aria-label="Move rule down"
+            @click="$emit('move-down')"
+          >
+            ▼
+          </button>
+        </div>
+        <span class="text-xs text-muted w-6 text-center"
+          >#{{ rule.order + 1 }}</span
+        >
+        <h3 class="text-base font-medium text-primary truncate">
+          {{ rule.name }}
+        </h3>
+      </div>
       <button
         type="button"
-        class="text-xs text-muted hover:text-red-400 transition"
+        class="text-xs text-muted hover:text-red-400 transition shrink-0"
         @click="$emit('delete')"
       >
         Delete
