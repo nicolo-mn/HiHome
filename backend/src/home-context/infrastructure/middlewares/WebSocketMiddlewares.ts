@@ -1,44 +1,84 @@
+import { header, query, validationResult } from "express-validator";
 import { Socket } from "socket.io";
 import { verifyAuthToken } from "../../../utils/JwtUtils";
 
-export const wsAuthMiddleware = (
+type SocketRequest = {
+  headers: { authorization?: string };
+  query: { homeId?: string };
+  user?: { homeId?: string; [key: string]: unknown } | string;
+};
+
+const wsAuthValidators = [
+  header("authorization").custom((value, { req }) => {
+    if (!value) {
+      throw new Error("Unauthorized: Missing token");
+    }
+
+    const token = value.startsWith("Bearer ") ? value.split(" ")[1] : value;
+    try {
+      const decoded = verifyAuthToken(token);
+      (req as SocketRequest).user = decoded;
+      return true;
+    } catch (error) {
+      throw new Error("Unauthorized: Invalid token");
+    }
+  }),
+];
+
+const wsHomeIdValidators = [
+  query("homeId").custom((value, { req }) => {
+    const homeId = value as string | undefined;
+    if (!homeId) {
+      throw new Error("Bad Request: Missing homeId parameter");
+    }
+
+    const user = (req as SocketRequest).user as { homeId?: string } | undefined;
+    if (!user || user.homeId !== homeId) {
+      throw new Error("Forbidden: Access to this house is denied");
+    }
+
+    return true;
+  }),
+];
+
+function getValidationMessage(req: SocketRequest): string | null {
+  const errors = validationResult(req as any).array({ onlyFirstError: true });
+  if (errors.length === 0) return null;
+  return typeof errors[0]?.msg === "string" ? errors[0].msg : null;
+}
+
+export const wsAuthMiddleware = async (
   socket: Socket,
   next: (err?: Error) => void,
 ) => {
   const authHeader =
     socket.handshake.auth.token || socket.handshake.headers.authorization;
+  const req: SocketRequest = {
+    headers: { authorization: authHeader },
+    query: {},
+  };
 
-  if (!authHeader) {
-    return next(new Error("Unauthorized: Missing token"));
-  }
+  await Promise.all(wsAuthValidators.map((validator) => validator.run(req)));
+  const message = getValidationMessage(req);
+  if (message) return next(new Error(message));
 
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.split(" ")[1]
-    : authHeader;
-
-  try {
-    const decoded = verifyAuthToken(token);
-    (socket as any).user = decoded;
-    next();
-  } catch (error) {
-    next(new Error("Unauthorized: Invalid token"));
-  }
+  (socket as any).user = req.user;
+  next();
 };
 
-export const wsHomeIdMiddleware = (
+export const wsHomeIdMiddleware = async (
   socket: Socket,
   next: (err?: Error) => void,
 ) => {
-  const homeId = socket.handshake.query.homeId as string;
+  const req: SocketRequest = {
+    headers: {},
+    query: { homeId: socket.handshake.query.homeId as string },
+    user: (socket as any).user,
+  };
 
-  if (!homeId) {
-    return next(new Error("Bad Request: Missing homeId parameter"));
-  }
-
-  const user = (socket as any).user;
-  if (!user || user.homeId !== homeId) {
-    return next(new Error("Forbidden: Access to this house is denied"));
-  }
+  await Promise.all(wsHomeIdValidators.map((validator) => validator.run(req)));
+  const message = getValidationMessage(req);
+  if (message) return next(new Error(message));
 
   next();
 };

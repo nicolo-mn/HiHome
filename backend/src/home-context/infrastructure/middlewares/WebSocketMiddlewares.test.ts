@@ -35,20 +35,20 @@ describe("wsAuthMiddleware", () => {
     vi.clearAllMocks();
   });
 
-  it("uses Bearer token from handshake.auth", () => {
+  it("uses Bearer token from handshake.auth", async () => {
     const socket = createSocket({ auth: { token: "Bearer token-123" } });
     const next = vi.fn();
     const decoded = { userId: "user-1", homeId: "1" };
     verifyAuthTokenMock.mockReturnValue(decoded);
 
-    wsAuthMiddleware(socket, next);
+    await wsAuthMiddleware(socket, next);
 
     expect(verifyAuthTokenMock).toHaveBeenCalledWith("token-123");
     expect((socket as any).user).toEqual(decoded);
     expect(next).toHaveBeenCalledWith();
   });
 
-  it("uses raw token from headers when no Bearer prefix", () => {
+  it("uses raw token from headers when no Bearer prefix", async () => {
     const socket = createSocket({
       headers: { authorization: "raw-token" },
     });
@@ -56,32 +56,32 @@ describe("wsAuthMiddleware", () => {
     const decoded = { userId: "user-2", homeId: "1" };
     verifyAuthTokenMock.mockReturnValue(decoded);
 
-    wsAuthMiddleware(socket, next);
+    await wsAuthMiddleware(socket, next);
 
     expect(verifyAuthTokenMock).toHaveBeenCalledWith("raw-token");
     expect((socket as any).user).toEqual(decoded);
     expect(next).toHaveBeenCalledWith();
   });
 
-  it("rejects missing token", () => {
+  it("rejects missing token", async () => {
     const socket = createSocket();
     const next = vi.fn();
 
-    wsAuthMiddleware(socket, next);
+    await wsAuthMiddleware(socket, next);
 
     const error = next.mock.calls[0]?.[0] as Error;
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toBe("Unauthorized: Missing token");
   });
 
-  it("rejects invalid token", () => {
+  it("rejects invalid token", async () => {
     const socket = createSocket({ auth: { token: "Bearer bad-token" } });
     const next = vi.fn();
     verifyAuthTokenMock.mockImplementation(() => {
       throw new Error("bad token");
     });
 
-    wsAuthMiddleware(socket, next);
+    await wsAuthMiddleware(socket, next);
 
     const error = next.mock.calls[0]?.[0] as Error;
     expect(error).toBeInstanceOf(Error);
@@ -90,24 +90,24 @@ describe("wsAuthMiddleware", () => {
 });
 
 describe("wsHomeIdMiddleware", () => {
-  it("rejects homeId mismatch", () => {
+  it("rejects homeId mismatch", async () => {
     const socket = createSocket({ query: { homeId: "2" } });
     (socket as any).user = { homeId: "1" };
     const next = vi.fn();
 
-    wsHomeIdMiddleware(socket, next);
+    await wsHomeIdMiddleware(socket, next);
 
     const error = next.mock.calls[0]?.[0] as Error;
     expect(error).toBeInstanceOf(Error);
     expect(error.message).toBe("Forbidden: Access to this house is denied");
   });
 
-  it("accepts matching homeId", () => {
+  it("accepts matching homeId", async () => {
     const socket = createSocket({ query: { homeId: "1" } });
     (socket as any).user = { homeId: "1" };
     const next = vi.fn();
 
-    wsHomeIdMiddleware(socket, next);
+    await wsHomeIdMiddleware(socket, next);
 
     expect(next).toHaveBeenCalledWith();
   });
