@@ -37,6 +37,8 @@ import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
 import { HomeRepository } from "./home-context/domain";
 import { NotificationContextAdapter } from "./home-context/infrastructure/NotificationPortAdapter";
+import { SocketIOChatStreamAdapter } from "./home-context/infrastructure/SocketIOChatStreamAdapter";
+import { ChatStreamEventType } from "./home-context/application/ChatStreamPort";
 
 const app = express();
 const server = http.createServer(app);
@@ -200,6 +202,8 @@ io.on("connection", (socket) => {
 
       ack({});
 
+      const chatStreamPort = new SocketIOChatStreamAdapter(socket);
+
       try {
         const safeHistory = Array.isArray(payload.history)
           ? payload.history
@@ -209,18 +213,17 @@ io.on("connection", (socket) => {
           payload.username,
           payload.message,
           safeHistory,
-          (event) => {
-            if (event.type === "token") {
-              socket.emit("chat:token", { content: event.content });
-            } else if (event.type === "tool_call") {
-              socket.emit("chat:tool-call", { name: event.name });
-            }
-          },
+          chatStreamPort,
         );
-        socket.emit("chat:done", { content: reply });
+        chatStreamPort.emit({
+          type: ChatStreamEventType.Done,
+          content: reply,
+        });
       } catch (error: any) {
-        socket.emit("chat:error", {
-          error: error.message ?? "Chat failed",
+        const message = error.message ?? "Chat failed";
+        chatStreamPort.emit({
+          type: ChatStreamEventType.Error,
+          error: message,
         });
       }
     },

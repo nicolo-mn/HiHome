@@ -1,8 +1,7 @@
-import type {
-  ChatCompletionPort,
-  ChatStreamEvent,
-} from "../application/ChatCompletionPort";
+import type { ChatCompletionPort } from "../application/ChatCompletionPort";
 import type { ChatMessage } from "../application/ChatService";
+import type { ChatStreamPort } from "../application/ChatStreamPort";
+import { ChatStreamEventType } from "../application/ChatStreamPort";
 import type {
   ForecastPort,
   ForecastSummary,
@@ -138,7 +137,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     messages: ChatMessage[],
     model: string,
     homeId: string,
-    onEvent: (event: ChatStreamEvent) => void,
+    streamPort: ChatStreamPort,
   ): Promise<string> {
     if (!this.options.apiKey) {
       throw new Error("DeepSeek API key is missing");
@@ -155,7 +154,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         model,
         chatMessages,
         tools,
-        onEvent,
+        streamPort,
       );
       const toolCalls = reply.tool_calls ?? [];
 
@@ -169,7 +168,10 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
 
       // Notify frontend about each tool being called
       for (const tc of toolCalls) {
-        onEvent({ type: "tool_call", name: tc.function.name });
+        streamPort.emit({
+          type: ChatStreamEventType.ToolCall,
+          name: tc.function.name,
+        });
       }
 
       const toolResponses = await this.handleToolCalls(toolCalls, homeId);
@@ -311,7 +313,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     model: string,
     messages: DeepSeekMessage[],
     tools: DeepSeekTool[],
-    onEvent: (event: ChatStreamEvent) => void,
+    streamPort: ChatStreamPort,
   ): Promise<DeepSeekAssistantMessage> {
     const url = new URL("/chat/completions", this.options.apiBaseUrl);
     const response = await fetch(url, {
@@ -378,7 +380,10 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
 
         if (delta.content) {
           contentParts.push(delta.content);
-          onEvent({ type: "token", content: delta.content });
+          streamPort.emit({
+            type: ChatStreamEventType.Token,
+            content: delta.content,
+          });
         }
 
         if (delta.reasoning_content) {

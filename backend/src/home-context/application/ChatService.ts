@@ -1,4 +1,5 @@
-import type { ChatCompletionPort, ChatStreamEvent } from "./ChatCompletionPort";
+import type { ChatCompletionPort } from "./ChatCompletionPort";
+import type { ChatStreamPort } from "./ChatStreamPort";
 import { HomeService } from "./HomeService";
 
 type ChatRole = "system" | "user" | "assistant";
@@ -47,7 +48,7 @@ export class ChatService {
     username: string,
     userMessage: string,
     history: ChatMessage[],
-    onEvent: (event: ChatStreamEvent) => void, // TODO: consider to move to adapter
+    streamPort: ChatStreamPort,
   ): Promise<string> {
     if (!userMessage.trim()) {
       throw new Error("Message is required");
@@ -59,7 +60,7 @@ export class ChatService {
       messages,
       this.options.model,
       houseId,
-      onEvent,
+      streamPort,
     );
   }
 

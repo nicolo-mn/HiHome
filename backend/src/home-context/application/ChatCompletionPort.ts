@@ -1,10 +1,5 @@
 import type { ChatMessage } from "./ChatService";
-
-export type ChatStreamEvent =
-  | { type: "token"; content: string }
-  | { type: "tool_call"; name: string }
-  | { type: "done"; content: string }
-  | { type: "error"; message: string };
+import type { ChatStreamPort } from "./ChatStreamPort";
 
 export interface ChatCompletionPort {
   completeChat(
@@ -17,6 +12,6 @@ export interface ChatCompletionPort {
     messages: ChatMessage[],
     model: string,
     homeId: string,
-    onEvent: (event: ChatStreamEvent) => void,
+    streamPort: ChatStreamPort,
   ): Promise<string>;
 }
