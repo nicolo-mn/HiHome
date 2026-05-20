@@ -58,25 +58,37 @@ export class RuleService {
   async addRule(dto: AddRuleDto): Promise<Rule> {
     const condition = this.buildCondition(dto);
     const actions = this.buildActions(dto.homeId, dto.actions);
+    const ruleSet = await this.ruleRepo.findHomeRuleSet(dto.homeId);
     return await this.ruleRepo.addRule(
       dto.homeId,
       dto.ruleName,
       condition,
       actions,
+      ruleSet.nextOrder(),
     );
   }
 
   async deleteRule(ruleId: string): Promise<void> {
+    const rule = await this.ruleRepo.getRule(ruleId);
+    const ruleSet = await this.ruleRepo.findHomeRuleSet(rule.homeId);
+    ruleSet.remove(ruleId);
     await this.ruleRepo.deleteRule(ruleId);
+    await this.ruleRepo.reorderRules(rule.homeId, ruleSet.positions());
+  }
+
+  async reorderRules(homeId: string, orderedRuleIds: string[]): Promise<void> {
+    const ruleSet = await this.ruleRepo.findHomeRuleSet(homeId);
+    ruleSet.reorder(orderedRuleIds);
+    await this.ruleRepo.reorderRules(homeId, ruleSet.positions());
   }
 
   async executeRulesForHome(
     homeId: string,
     update: ObservablesUpdatedDomainEvent,
   ): Promise<void> {
-    const rules = await this.ruleRepo.getHomeRules(homeId);
+    const rulesByPriority = await this.ruleRepo.getHomeRules(homeId);
     const actionPerComponent = new Map<string, ComponentAction>();
-    for (const rule of rules) {
+    for (const rule of rulesByPriority) {
       if (rule.condition.verify(update)) {
         rule.actions
           .filter((action) => !actionPerComponent.has(action.getComponentId()))

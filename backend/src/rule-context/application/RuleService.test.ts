@@ -2,23 +2,26 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RuleService } from "./RuleService";
 import { RuleRepository } from "./RuleRepository";
 import { Rule } from "../domain/Rule";
+import { HomeRuleSet } from "../domain/HomeRuleSet";
 import {
   ObservablesUpdatedDomainEvent,
   ObservableCondition,
   WeatherForecast,
   WeatherCondition,
 } from "../domain/Observables";
-import {
-  ComponentAction,
-  LightTurnOffAction,
-  LightTurnOnAction,
-  ThermostatSetTemperatureAction,
-  WindowCloseAction,
-  WindowOpenAction,
-} from "../domain/Actions";
+import { ComponentAction, LightTurnOnAction } from "../domain/Actions";
 import { AddRuleDto } from "./RuleService";
 import { ActionExecutionPort } from "../domain/ActionExecutionPort";
-import { ActionExecutionAdapter } from "../infrastructure/ActionExecutionAdapter";
+
+function makeRule(partial: Partial<Rule> & Pick<Rule, "id" | "order">): Rule {
+  return {
+    homeId: "home-1",
+    name: `Rule ${partial.id}`,
+    condition: {} as ObservableCondition,
+    actions: [],
+    ...partial,
+  };
+}
 
 describe("RuleService", () => {
   let ruleService: RuleService;
@@ -31,7 +34,8 @@ describe("RuleService", () => {
       addRule: vi.fn(),
       deleteRule: vi.fn(),
       getRule: vi.fn(),
-      updateRule: vi.fn(),
+      findHomeRuleSet: vi.fn(),
+      reorderRules: vi.fn(),
     } as unknown as RuleRepository;
 
     mockActionExecutionPort = {
@@ -46,15 +50,7 @@ describe("RuleService", () => {
   });
 
   it("should get rules for a home", async () => {
-    const rules: Rule[] = [
-      {
-        id: "rule-1",
-        homeId: "home-1",
-        name: "Rule 1",
-        condition: {} as ObservableCondition,
-        actions: [],
-      },
-    ];
+    const rules: Rule[] = [makeRule({ id: "rule-1", order: 0 })];
     vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue(rules);
 
     const result = await ruleService.getRulesForHome("home-1");
@@ -63,14 +59,15 @@ describe("RuleService", () => {
     expect(mockRuleRepository.getHomeRules).toHaveBeenCalledWith("home-1");
   });
 
-  it("should add a rule", async () => {
-    const createdRule: Rule = {
-      id: "new-rule-id",
-      homeId: "home-1",
-      name: "New Rule",
-      condition: {} as ObservableCondition,
-      actions: [],
-    };
+  it("should add a rule with order equal to existing rules count", async () => {
+    const existing = [
+      makeRule({ id: "r1", order: 0 }),
+      makeRule({ id: "r2", order: 1 }),
+    ];
+    vi.mocked(mockRuleRepository.findHomeRuleSet).mockResolvedValue(
+      HomeRuleSet.fromPersisted("home-1", existing),
+    );
+    const createdRule: Rule = makeRule({ id: "new-rule-id", order: 2 });
     vi.mocked(mockRuleRepository.addRule).mockResolvedValue(createdRule);
 
     const dto: AddRuleDto = {
@@ -79,29 +76,95 @@ describe("RuleService", () => {
       observableId: "weather",
       operatorTarget: "Rain",
       actions: [
-        {
-          componentType: "light",
-          command: "turnOn",
-          componentId: "comp-1",
-        },
+        { componentType: "light", command: "turnOn", componentId: "comp-1" },
       ],
     };
 
     const result = await ruleService.addRule(dto);
 
     expect(result).toBe(createdRule);
-    const [homeId, name, condition, actions] = vi.mocked(
+    const [homeId, name, condition, actions, order] = vi.mocked(
       mockRuleRepository.addRule,
     ).mock.calls[0];
     expect(homeId).toBe("home-1");
     expect(name).toBe("New Rule");
     expect(condition).toBeInstanceOf(WeatherCondition);
     expect(actions[0]).toBeInstanceOf(LightTurnOnAction);
+    expect(order).toBe(2);
   });
 
-  it("should delete rule delegating the call to the repository", async () => {
-    await ruleService.deleteRule("rule-1");
-    expect(mockRuleRepository.deleteRule).toHaveBeenCalledWith("rule-1");
+  it("should add the first rule with order 0", async () => {
+    vi.mocked(mockRuleRepository.findHomeRuleSet).mockResolvedValue(
+      HomeRuleSet.empty("home-1"),
+    );
+    vi.mocked(mockRuleRepository.addRule).mockResolvedValue(
+      makeRule({ id: "r1", order: 0 }),
+    );
+
+    await ruleService.addRule({
+      homeId: "home-1",
+      ruleName: "First",
+      observableId: "weather",
+      operatorTarget: "Rain",
+      actions: [
+        { componentType: "light", command: "turnOn", componentId: "c" },
+      ],
+    });
+
+    const [, , , , order] = vi.mocked(mockRuleRepository.addRule).mock.calls[0];
+    expect(order).toBe(0);
+  });
+
+  it("should delete a rule and recompact remaining orders", async () => {
+    const existing = [
+      makeRule({ id: "r1", order: 0 }),
+      makeRule({ id: "r2", order: 1 }),
+      makeRule({ id: "r3", order: 2 }),
+    ];
+    vi.mocked(mockRuleRepository.getRule).mockResolvedValue(existing[1]);
+    vi.mocked(mockRuleRepository.findHomeRuleSet).mockResolvedValue(
+      HomeRuleSet.fromPersisted("home-1", existing),
+    );
+
+    await ruleService.deleteRule("r2");
+
+    expect(mockRuleRepository.deleteRule).toHaveBeenCalledWith("r2");
+    expect(mockRuleRepository.reorderRules).toHaveBeenCalledWith("home-1", [
+      { id: "r1", order: 0 },
+      { id: "r3", order: 1 },
+    ]);
+  });
+
+  it("should reorder rules through the aggregate", async () => {
+    const existing = [
+      makeRule({ id: "r1", order: 0 }),
+      makeRule({ id: "r2", order: 1 }),
+      makeRule({ id: "r3", order: 2 }),
+    ];
+    vi.mocked(mockRuleRepository.findHomeRuleSet).mockResolvedValue(
+      HomeRuleSet.fromPersisted("home-1", existing),
+    );
+
+    await ruleService.reorderRules("home-1", ["r3", "r1", "r2"]);
+
+    expect(mockRuleRepository.reorderRules).toHaveBeenCalledWith("home-1", [
+      { id: "r3", order: 0 },
+      { id: "r1", order: 1 },
+      { id: "r2", order: 2 },
+    ]);
+  });
+
+  it("should reject a reorder that is not a full permutation", async () => {
+    const existing = [
+      makeRule({ id: "r1", order: 0 }),
+      makeRule({ id: "r2", order: 1 }),
+    ];
+    vi.mocked(mockRuleRepository.findHomeRuleSet).mockResolvedValue(
+      HomeRuleSet.fromPersisted("home-1", existing),
+    );
+
+    await expect(ruleService.reorderRules("home-1", ["r1"])).rejects.toThrow();
+    expect(mockRuleRepository.reorderRules).not.toHaveBeenCalled();
   });
 
   it("should execute rules for home", async () => {
@@ -134,27 +197,24 @@ describe("RuleService", () => {
     } as unknown as ObservableCondition;
 
     const rules: Rule[] = [
-      {
+      makeRule({
         id: "rule-1",
-        homeId: "home-1",
-        name: "Rule 1",
+        order: 0,
         condition: mockConditionFalse,
         actions: [mockAction1],
-      },
-      {
+      }),
+      makeRule({
         id: "rule-2",
-        homeId: "home-1",
-        name: "Rule 2",
+        order: 1,
         condition: mockConditionTrue,
         actions: [mockAction2],
-      },
-      {
+      }),
+      makeRule({
         id: "rule-3",
-        homeId: "home-1",
-        name: "Rule 3",
+        order: 2,
         condition: mockConditionTrue,
         actions: [mockAction3],
-      },
+      }),
     ];
     vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue(rules);
 
@@ -207,41 +267,36 @@ describe("RuleService", () => {
     } as unknown as ObservableCondition;
 
     const rules: Rule[] = [
-      {
+      makeRule({
         id: "rule-1",
-        homeId: "home-1",
-        name: "Rule 1",
+        order: 0,
         condition: mockConditionTrue,
         actions: [mockAction1Comp1],
-      },
-      {
+      }),
+      makeRule({
         id: "rule-2",
-        homeId: "home-1",
-        name: "Rule 2",
+        order: 1,
         condition: mockConditionFalse,
         actions: [mockAction2Comp2],
-      },
-      {
+      }),
+      makeRule({
         id: "rule-3",
-        homeId: "home-1",
-        name: "Rule 3",
+        order: 2,
         condition: mockConditionTrue,
         actions: [mockAction3Comp1],
-      },
-      {
+      }),
+      makeRule({
         id: "rule-4",
-        homeId: "home-1",
-        name: "Rule 4",
+        order: 3,
         condition: mockConditionTrue,
         actions: [mockAction4Comp2],
-      },
-      {
+      }),
+      makeRule({
         id: "rule-5",
-        homeId: "home-1",
-        name: "Rule 5",
+        order: 4,
         condition: mockConditionTrue,
         actions: [mockAction5Comp2],
-      },
+      }),
     ];
     vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue(rules);
 

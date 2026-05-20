@@ -29,6 +29,7 @@ type ActionDto = {
 type RuleDto = {
   id: string;
   name: string;
+  order: number;
   condition: ConditionDto;
   actions: ActionDto[];
 };
@@ -88,6 +89,7 @@ function ruleToDto(rule: Rule): RuleDto {
   return {
     id: rule.id,
     name: rule.name,
+    order: rule.order,
     condition: conditionToDto(rule.condition),
     actions: rule.actions.map(actionToDto),
   };
@@ -134,6 +136,17 @@ export class RuleController {
       res.json({ message: "Rule deleted successfully" });
     } catch (e: any) {
       res.status(404).json({ error: e.message });
+    }
+  }
+
+  async reorderRules(req: Request, res: Response) {
+    try {
+      const homeId = req.params.id as string;
+      const ruleIds = req.body.ruleIds as string[];
+      await this.ruleService.reorderRules(homeId, ruleIds);
+      res.json({ message: "Rules reordered successfully" });
+    } catch (e: any) {
+      res.status(400).json({ error: e.message });
     }
   }
 }

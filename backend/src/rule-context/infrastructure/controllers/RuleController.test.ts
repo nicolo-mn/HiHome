@@ -14,6 +14,7 @@ describe("RuleController", () => {
       getRulesForHome: vi.fn(),
       addRule: vi.fn(),
       deleteRule: vi.fn(),
+      reorderRules: vi.fn(),
     };
     ruleController = new RuleController(ruleService as any);
 
@@ -176,6 +177,37 @@ describe("RuleController", () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: "Rule not found" });
+    });
+  });
+
+  describe("reorderRules", () => {
+    it("should reorder rules", async () => {
+      req.body = { ruleIds: ["r2", "r1", "r3"] };
+
+      await ruleController.reorderRules(req as Request, res as Response);
+
+      expect(ruleService.reorderRules).toHaveBeenCalledWith("home-1", [
+        "r2",
+        "r1",
+        "r3",
+      ]);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Rules reordered successfully",
+      });
+    });
+
+    it("should handle invalid permutation errors", async () => {
+      req.body = { ruleIds: ["r1"] };
+      ruleService.reorderRules.mockRejectedValue(
+        new Error("Reorder must include every rule of the home exactly once"),
+      );
+
+      await ruleController.reorderRules(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Reorder must include every rule of the home exactly once",
+      });
     });
   });
 });
