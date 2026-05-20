@@ -49,13 +49,19 @@ describe("Home Context Integration Tests", () => {
         .post("/api/home/1/components")
         .set("Authorization", `Bearer ${token}`)
         .send({
-          id: "light-3",
           name: "Kitchen Light",
           type: "light",
           roomId: "room-1",
         });
       expect(res.status).toBe(201);
-      expect(res.body).toHaveProperty("id", "light-3");
+      expect(res.body).toHaveProperty("id");
+      expect(typeof res.body.id).toBe("string");
+      expect(res.body.id.length).toBeGreaterThan(0);
+      expect(res.body).toMatchObject({
+        name: "Kitchen Light",
+        type: "light",
+        roomId: "room-1",
+      });
     });
 
     it("should turn on a light", async () => {

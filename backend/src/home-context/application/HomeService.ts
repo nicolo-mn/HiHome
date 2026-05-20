@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import {
   Component,
   Light,
@@ -14,11 +15,13 @@ import {
   SensorUpdatePort,
   ExternalSensorsUpdate,
   Room,
+  createComponent,
 } from "../domain";
 import { ActionService } from "./ActionService";
 import { SensorRegistry } from "./SensorRegistry";
 import { ExternalSensorsDataPort } from "./ExternalSensorsDataPort";
 import { RuleServicePort } from "./RuleServicePort";
+import { CreateComponentInput } from "./dtos/ComponentDTO";
 
 export class HomeService implements ActionService {
   constructor(
@@ -47,24 +50,13 @@ export class HomeService implements ActionService {
 
   async addComponent(
     homeId: string,
-    roomId: string,
-    componentData: any,
+    input: CreateComponentInput,
   ): Promise<Component> {
     const home = await this.ensureHomeExists(homeId);
-    const room = home.rooms.find((r) => r.id === roomId);
+    const room = home.rooms.find((r) => r.id === input.roomId);
     if (!room) throw new Error("Room not found");
 
-    let component: Component;
-    if (componentData.type === ComponentTypes.LIGHT) {
-      component = new Light(componentData.id, componentData.name, roomId);
-    } else if (componentData.type === ComponentTypes.WINDOW) {
-      component = new Window(componentData.id, componentData.name, roomId);
-    } else if (componentData.type === ComponentTypes.THERMOSTAT) {
-      component = new Thermostat(componentData.id, componentData.name, roomId);
-    } else {
-      throw new Error("Unsupported component type");
-    }
-
+    const component = createComponent(randomUUID(), input);
     room.components.push(component);
     await this.homeRepo.saveHome(home);
     return component;
