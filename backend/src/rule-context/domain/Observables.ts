@@ -80,14 +80,6 @@ export interface ObservableCondition {
 }
 
 abstract class AbstractCondition implements ObservableCondition {
-  private prev = false;
-
-  protected checkStateChange(current: boolean): boolean {
-    const old = this.prev;
-    this.prev = current;
-    return this.prev && old !== this.prev;
-  }
-
   abstract verify(update: ObservablesUpdatedDomainEvent): boolean;
 
   abstract accept<R>(visitor: ConditionVisitor<R>): R;
@@ -120,9 +112,7 @@ export class WeatherCondition extends AbstractCondition {
   }
 
   verify(update: ObservablesUpdatedDomainEvent) {
-    return super.checkStateChange(
-      this.operator.evaluate(update.weatherForecast),
-    );
+    return this.operator.evaluate(update.weatherForecast);
   }
 
   accept<R>(visitor: ConditionVisitor<R>): R {
@@ -141,9 +131,9 @@ abstract class BoundedNumericCondition extends AbstractCondition {
     super();
   }
 
-  protected checkStateChangeAndAssertInRange(value: number): boolean {
+  protected assertInRangeAndEvaluate(value: number): boolean {
     assertInRange(this.conditionDesc, value, this.min, this.max);
-    return super.checkStateChange(this.operator.evaluate(value));
+    return this.operator.evaluate(value);
   }
 }
 
@@ -165,7 +155,7 @@ export class ExternalTemperatureCondition extends BoundedNumericCondition {
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
-    return this.checkStateChangeAndAssertInRange(update.externalTemperature);
+    return this.assertInRangeAndEvaluate(update.externalTemperature);
   }
 }
 
@@ -187,7 +177,7 @@ export class InternalTemperatureCondition extends BoundedNumericCondition {
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
-    return this.checkStateChangeAndAssertInRange(update.internalTemperature);
+    return this.assertInRangeAndEvaluate(update.internalTemperature);
   }
 }
 
@@ -209,7 +199,7 @@ export class AirQualityCondition extends BoundedNumericCondition {
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
-    return this.checkStateChangeAndAssertInRange(update.airQuality);
+    return this.assertInRangeAndEvaluate(update.airQuality);
   }
 }
 
@@ -231,6 +221,6 @@ export class WindSpeedCondition extends BoundedNumericCondition {
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
-    return this.checkStateChangeAndAssertInRange(update.windSpeed);
+    return this.assertInRangeAndEvaluate(update.windSpeed);
   }
 }
