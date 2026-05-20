@@ -10,6 +10,7 @@ import {
   WindSpeedCondition,
   AirQualityCondition,
   WeatherCondition,
+  InternalTemperatureCondition,
 } from "../domain/Observables";
 import {
   ComponentAction,
@@ -46,6 +47,8 @@ export type AddRuleDto = {
 };
 
 export class RuleService {
+  private lastMatchByRuleId = new Map<string, boolean>();
+
   constructor(
     private ruleRepo: RuleRepository,
     private actionExecutionPort: ActionExecutionPort,
@@ -86,10 +89,16 @@ export class RuleService {
     homeId: string,
     update: ObservablesUpdatedDomainEvent,
   ): Promise<void> {
+    console.log(`Executing rules for home ${homeId} with update:`, update);
     const rulesByPriority = await this.ruleRepo.getHomeRules(homeId);
     const actionPerComponent = new Map<string, ComponentAction>();
     for (const rule of rulesByPriority) {
-      if (rule.condition.verify(update)) {
+      const currentMatch = rule.condition.verify(update);
+      const prevMatch = this.lastMatchByRuleId.get(rule.id) ?? false;
+      const shouldFire = currentMatch && !prevMatch;
+      this.lastMatchByRuleId.set(rule.id, currentMatch);
+
+      if (shouldFire) {
         rule.actions
           .filter((action) => !actionPerComponent.has(action.getComponentId()))
           .forEach((action) =>
@@ -133,11 +142,11 @@ export class RuleService {
         throw new Error("Invalid operator for numeric condition");
     }
 
-    if (
-      dto.observableId === "internal-thermometer" ||
-      dto.observableId === "external-thermometer"
-    ) {
+    if (dto.observableId === "external-thermometer") {
       return new ExternalTemperatureCondition(numericOperator);
+    }
+    if (dto.observableId === "internal-thermometer") {
+      return new InternalTemperatureCondition(numericOperator);
     }
     if (dto.observableId === "wind-speed") {
       return new WindSpeedCondition(numericOperator);

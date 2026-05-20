@@ -71,7 +71,7 @@ describe("Conditions", () => {
       ).toBe(true);
     });
 
-    it("should track state change and return false if condition remains true in consecutive updates", () => {
+    it("should return true when condition remains true in consecutive updates", () => {
       const op = new WeatherEqualityOperator(WeatherForecast.Rain);
       const cond = new WeatherCondition(op);
 
@@ -80,22 +80,19 @@ describe("Conditions", () => {
       ).toBe(true);
       expect(
         cond.verify({ ...baseUpdate, weatherForecast: WeatherForecast.Rain }),
-      ).toBe(false);
+      ).toBe(true);
     });
 
-    it("should track state change and return true again when state flips to false then true", () => {
+    it("should return values based on the current weather", () => {
       const op = new WeatherEqualityOperator(WeatherForecast.Rain);
       const cond = new WeatherCondition(op);
 
       expect(
-        cond.verify({ ...baseUpdate, weatherForecast: WeatherForecast.Rain }),
-      ).toBe(true); // state: true
-      expect(
         cond.verify({ ...baseUpdate, weatherForecast: WeatherForecast.Clear }),
-      ).toBe(false); // state: false
+      ).toBe(false);
       expect(
         cond.verify({ ...baseUpdate, weatherForecast: WeatherForecast.Rain }),
-      ).toBe(true); // state: true again
+      ).toBe(true);
     });
 
     it("should accept visitor", () => {
@@ -115,7 +112,7 @@ describe("Conditions", () => {
 
   describe("BoundedNumericConditions", () => {
     describe("ExternalTemperatureCondition", () => {
-      it("should verify external temperature and track state changes", () => {
+      it("should verify external temperature against the threshold", () => {
         const op = new NumericGreaterOperator(25);
         const cond = new ExternalTemperatureCondition(op);
 
@@ -123,7 +120,7 @@ describe("Conditions", () => {
           true,
         );
         expect(cond.verify({ ...baseUpdate, externalTemperature: 30 })).toBe(
-          false,
+          true,
         );
         expect(cond.verify({ ...baseUpdate, externalTemperature: 20 })).toBe(
           false,
@@ -167,7 +164,7 @@ describe("Conditions", () => {
     });
 
     describe("InternalTemperatureCondition", () => {
-      it("should verify internal temperature and track state changes", () => {
+      it("should verify internal temperature against the threshold", () => {
         const op = new NumericLowerOperator(20);
         const cond = new InternalTemperatureCondition(op);
 
@@ -175,7 +172,7 @@ describe("Conditions", () => {
           true,
         );
         expect(cond.verify({ ...baseUpdate, internalTemperature: 18 })).toBe(
-          false,
+          true,
         );
       });
 
@@ -188,11 +185,12 @@ describe("Conditions", () => {
     });
 
     describe("AirQualityCondition", () => {
-      it("should verify air quality and track state changes", () => {
+      it("should verify air quality against the threshold", () => {
         const op = new NumericGreaterOperator(100);
         const cond = new AirQualityCondition(op);
 
         expect(cond.verify({ ...baseUpdate, airQuality: 120 })).toBe(true);
+        expect(cond.verify({ ...baseUpdate, airQuality: 80 })).toBe(false);
       });
 
       it("should throw BoundaryViolationError when boundary value is out of range on creation", () => {
@@ -218,12 +216,12 @@ describe("Conditions", () => {
     });
 
     describe("WindSpeedCondition", () => {
-      it("should verify wind speed and track state changes", () => {
+      it("should verify wind speed against the threshold", () => {
         const op = new NumericGreaterOperator(15);
         const cond = new WindSpeedCondition(op);
 
         expect(cond.verify({ ...baseUpdate, windSpeed: 20 })).toBe(true);
-        expect(cond.verify({ ...baseUpdate, windSpeed: 20 })).toBe(false);
+        expect(cond.verify({ ...baseUpdate, windSpeed: 20 })).toBe(true);
         expect(cond.verify({ ...baseUpdate, windSpeed: 10 })).toBe(false);
         expect(cond.verify({ ...baseUpdate, windSpeed: 20 })).toBe(true);
       });

@@ -229,6 +229,79 @@ describe("RuleService", () => {
     expect(mockAction3.accept).toHaveBeenCalled();
   });
 
+  it("should execute actions only on false-to-true transitions", async () => {
+    const update: ObservablesUpdatedDomainEvent = {
+      externalTemperature: 20,
+      internalTemperature: 22,
+      airQuality: 50,
+      windSpeed: 10,
+      weatherForecast: WeatherForecast.Clear,
+    };
+
+    const mockAction = {
+      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      accept: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ComponentAction;
+
+    const mockConditionTrue = {
+      verify: vi.fn().mockReturnValue(true),
+    } as unknown as ObservableCondition;
+
+    const rules: Rule[] = [
+      makeRule({
+        id: "rule-1",
+        order: 0,
+        condition: mockConditionTrue,
+        actions: [mockAction],
+      }),
+    ];
+    vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue(rules);
+
+    await ruleService.executeRulesForHome("home-1", update);
+    await ruleService.executeRulesForHome("home-1", update);
+
+    expect(mockAction.accept).toHaveBeenCalledTimes(1);
+  });
+
+  it("should re-arm when condition becomes false", async () => {
+    const update: ObservablesUpdatedDomainEvent = {
+      externalTemperature: 20,
+      internalTemperature: 22,
+      airQuality: 50,
+      windSpeed: 10,
+      weatherForecast: WeatherForecast.Clear,
+    };
+
+    const mockAction = {
+      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      accept: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ComponentAction;
+
+    const mockConditionSequence = {
+      verify: vi
+        .fn()
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true),
+    } as unknown as ObservableCondition;
+
+    const rules: Rule[] = [
+      makeRule({
+        id: "rule-1",
+        order: 0,
+        condition: mockConditionSequence,
+        actions: [mockAction],
+      }),
+    ];
+    vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue(rules);
+
+    await ruleService.executeRulesForHome("home-1", update);
+    await ruleService.executeRulesForHome("home-1", update);
+    await ruleService.executeRulesForHome("home-1", update);
+
+    expect(mockAction.accept).toHaveBeenCalledTimes(2);
+  });
+
   it("should execute one action for component when multiple are accepted", async () => {
     const update: ObservablesUpdatedDomainEvent = {
       externalTemperature: 20,
