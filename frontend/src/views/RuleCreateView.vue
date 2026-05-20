@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { componentsApi, rulesApi } from "@/api";
+import { ApiError } from "@/api/errors";
 import type { HomeComponent, ComponentType } from "@/api/components";
 import { useAuthStore } from "@/stores/auth";
 import { useAsyncAction } from "@/composables/useAsyncAction";
@@ -266,31 +267,42 @@ function actionTargetPlaceholder(action: ActionDraft): string {
   );
 }
 
+function getApiErrorMessage(error: unknown): string | null {
+  if (!(error instanceof ApiError)) return null;
+  const body = error.body as { error?: unknown } | null;
+  return typeof body?.error === "string" ? body.error : null;
+}
+
 const {
   run: save,
   isLoading: saving,
   error: saveError,
-} = useAsyncAction(async () => {
-  if (!homeId.value) return;
-  const isNumeric = isNumericCondition.value;
-  const operatorTarget = isNumeric
-    ? Number(condition.value.operatorTarget)
-    : condition.value.operatorTarget;
+} = useAsyncAction(
+  async () => {
+    if (!homeId.value) return;
+    const isNumeric = isNumericCondition.value;
+    const operatorTarget = isNumeric
+      ? Number(condition.value.operatorTarget)
+      : condition.value.operatorTarget;
 
-  await rulesApi.createRule(homeId.value, {
-    ruleName: ruleName.value,
-    observableId: condition.value.observableId,
-    operator: condition.value.operator,
-    operatorTarget,
-    actions: actions.value.map((a) => ({
-      componentId: a.componentId,
-      componentType: a.componentType as ComponentType,
-      command: a.command,
-      targetTemp: a.targetTemp === "" ? undefined : Number(a.targetTemp),
-    })),
-  });
-  router.push({ name: "rules" });
-});
+    await rulesApi.createRule(homeId.value, {
+      ruleName: ruleName.value,
+      observableId: condition.value.observableId,
+      operator: condition.value.operator,
+      operatorTarget,
+      actions: actions.value.map((a) => ({
+        componentId: a.componentId,
+        componentType: a.componentType as ComponentType,
+        command: a.command,
+        targetTemp: a.targetTemp === "" ? undefined : Number(a.targetTemp),
+      })),
+    });
+    router.push({ name: "rules" });
+  },
+  {
+    onError: (error) => getApiErrorMessage(error),
+  },
+);
 </script>
 
 <template>
