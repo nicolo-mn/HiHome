@@ -36,7 +36,8 @@ const {
 
 const { run: remove, error: deleteError } = useAsyncAction(
   async (ruleId: string) => {
-    await rulesApi.deleteRule(ruleId);
+    if (!homeId.value) return;
+    await rulesApi.deleteRule(homeId.value, ruleId);
     await load();
   },
 );

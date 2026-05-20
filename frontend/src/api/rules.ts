@@ -52,10 +52,14 @@ export async function createRule(
   return res.ruleId;
 }
 
-export async function deleteRule(ruleId: string): Promise<void> {
-  await apiFetch(`/api/home/rules/${encodeURIComponent(ruleId)}`, {
-    method: "DELETE",
-  });
+export async function deleteRule(
+  homeId: string,
+  ruleId: string,
+): Promise<void> {
+  await apiFetch(
+    `/api/home/${encodeURIComponent(homeId)}/rules/${encodeURIComponent(ruleId)}`,
+    { method: "DELETE" },
+  );
 }
 
 export async function reorderRules(
