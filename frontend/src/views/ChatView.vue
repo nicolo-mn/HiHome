@@ -98,6 +98,12 @@ function onSend() {
   );
 }
 
+function onDraftKeydown(event: KeyboardEvent) {
+  if (event.key !== "Enter" || event.shiftKey) return;
+  event.preventDefault();
+  onSend();
+}
+
 watch(
   () => [messages.value.length, streamingContent.value],
   async () => {
@@ -234,6 +240,7 @@ watch(
         rows="3"
         placeholder="Type your request…"
         class="bg-elevated rounded-lg px-4 py-3 text-body placeholder:text-muted outline-none border border-border focus:border-primary transition"
+        @keydown="onDraftKeydown"
       />
       <p v-if="sendError" class="text-danger text-sm" role="alert">
         {{ sendError }}
