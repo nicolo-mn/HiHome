@@ -10,6 +10,7 @@ import {
   WindSpeedCondition,
   AirQualityCondition,
   WeatherCondition,
+  InternalTemperatureCondition,
 } from "../domain/Observables";
 import {
   ComponentAction,
@@ -95,6 +96,7 @@ export class RuleService {
           .forEach((action) =>
             actionPerComponent.set(action.getComponentId(), action),
           );
+      } else {
       }
     }
 
@@ -133,11 +135,11 @@ export class RuleService {
         throw new Error("Invalid operator for numeric condition");
     }
 
-    if (
-      dto.observableId === "internal-thermometer" ||
-      dto.observableId === "external-thermometer"
-    ) {
+    if (dto.observableId === "external-thermometer") {
       return new ExternalTemperatureCondition(numericOperator);
+    }
+    if (dto.observableId === "internal-thermometer") {
+      return new InternalTemperatureCondition(numericOperator);
     }
     if (dto.observableId === "wind-speed") {
       return new WindSpeedCondition(numericOperator);
