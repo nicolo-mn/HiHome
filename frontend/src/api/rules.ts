@@ -16,6 +16,7 @@ export type ActionDto = {
 export type RuleDto = {
   id: string;
   name: string;
+  order: number;
   condition: ConditionDto;
   actions: ActionDto[];
 };
@@ -54,5 +55,15 @@ export async function createRule(
 export async function deleteRule(ruleId: string): Promise<void> {
   await apiFetch(`/api/home/rules/${encodeURIComponent(ruleId)}`, {
     method: "DELETE",
+  });
+}
+
+export async function reorderRules(
+  homeId: string,
+  ruleIds: string[],
+): Promise<void> {
+  await apiFetch(`/api/home/${encodeURIComponent(homeId)}/rules/order`, {
+    method: "PUT",
+    body: { ruleIds },
   });
 }
