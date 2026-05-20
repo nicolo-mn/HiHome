@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { HomeService } from "../../application/HomeService";
 import { ComponentStateSerializer } from "../ComponentStateSerializer";
 import { HomeNotificationOutboundPort } from "../../application/HomeNotificationPort";
+import { CreateComponentInput } from "../../application/dtos/ComponentDTO";
+import { ComponentTypes } from "../../domain";
 
 // Extends Express Request to include user information from auth middleware
 type AuthenticatedRequest = Request & {
@@ -31,17 +33,40 @@ export class HomeController {
   }
 
   async addComponent(req: Request, res: Response) {
+    const input = this.parseCreateComponentInput(req.body);
+    if ("error" in input) {
+      return res.status(400).json({ error: input.error });
+    }
+
     try {
-      const { roomId, ...componentData } = req.body;
       const component = await this.homeService.addComponent(
         req.params.id as string,
-        roomId,
-        componentData,
+        input,
       );
       res.status(201).json(component.accept(this.stateSerializer));
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
+  }
+
+  private parseCreateComponentInput(
+    body: any,
+  ): CreateComponentInput | { error: string } {
+    const { name, type, roomId } = body ?? {};
+    if (typeof name !== "string" || name.length === 0) {
+      return { error: "name must be a non-empty string" };
+    }
+    if (typeof roomId !== "string" || roomId.length === 0) {
+      return { error: "roomId must be a non-empty string" };
+    }
+    if (typeof type !== "string" || !this.isComponentType(type)) {
+      return { error: "Unsupported component type" };
+    }
+    return { name, type, roomId };
+  }
+
+  private isComponentType(value: string): value is ComponentTypes {
+    return (Object.values(ComponentTypes) as string[]).includes(value);
   }
 
   async getComponentTypes(req: Request, res: Response) {
