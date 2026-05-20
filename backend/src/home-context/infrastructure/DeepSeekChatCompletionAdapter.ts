@@ -9,7 +9,6 @@ import type {
 import { HomeService } from "../application/HomeService";
 import type { AddRuleDto } from "../../rule-context/application/RuleService";
 import { RuleService } from "../../rule-context/application/RuleService";
-// TODO: markdown reader in frontend
 type DeepSeekOptions = {
   apiKey: string;
   apiBaseUrl: string;

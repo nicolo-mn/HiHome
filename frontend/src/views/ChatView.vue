@@ -7,6 +7,7 @@ import {
   type ChatMessage,
   type ToolCallInfo,
 } from "@/composables/useChatSocket";
+import { renderMarkdown } from "@/utils/markdown";
 
 const authStore = useAuthStore();
 const { token, username, homeId } = storeToRefs(authStore);
@@ -25,6 +26,9 @@ const sendError = ref<string | null>(null);
 const scrollAnchor = ref<HTMLDivElement | null>(null);
 const streamingContent = ref("");
 const activeToolCalls = ref<ToolCallInfo[]>([]);
+const streamingHtml = computed(() =>
+  streamingContent.value ? renderMarkdown(`${streamingContent.value}▌`) : "",
+);
 
 const canSend = computed(() =>
   Boolean(draft.value.trim() && username.value && homeId.value),
@@ -37,6 +41,10 @@ const TOOL_LABELS: Record<string, string> = {
 
 function toolLabel(name: string): string {
   return TOOL_LABELS[name] ?? name;
+}
+
+function renderMessage(content: string): string {
+  return renderMarkdown(content);
 }
 
 function onSend() {
@@ -153,14 +161,22 @@ watch(
             </div>
 
             <div
-              class="rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap"
+              class="rounded-2xl px-4 py-2 text-sm"
               :class="
                 message.role === 'user'
-                  ? 'bg-primary text-surface'
+                  ? 'bg-primary text-surface whitespace-pre-wrap'
                   : 'bg-elevated text-body'
               "
             >
-              {{ message.content }}
+              <template v-if="message.role === 'assistant'">
+                <div
+                  class="chat-markdown"
+                  v-html="renderMessage(message.content)"
+                ></div>
+              </template>
+              <template v-else>
+                {{ message.content }}
+              </template>
             </div>
           </div>
         </div>
@@ -192,9 +208,9 @@ watch(
             <!-- Streaming text -->
             <div
               v-if="streamingContent"
-              class="rounded-2xl px-4 py-2 text-sm bg-elevated text-body whitespace-pre-wrap"
+              class="rounded-2xl px-4 py-2 text-sm bg-elevated text-body"
             >
-              {{ streamingContent }}<span class="animate-pulse">▌</span>
+              <div class="chat-markdown" v-html="streamingHtml"></div>
             </div>
 
             <!-- Thinking indicator when no content yet -->
@@ -233,3 +249,46 @@ watch(
     </form>
   </div>
 </template>
+
+<style scoped>
+.chat-markdown :deep(p) {
+  margin: 0;
+}
+
+.chat-markdown :deep(p + p) {
+  margin-top: 0.5rem;
+}
+
+.chat-markdown :deep(ul),
+.chat-markdown :deep(ol) {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.chat-markdown :deep(code) {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.1rem 0.35rem;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+.chat-markdown :deep(pre) {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 0.75rem;
+  margin: 0.5rem 0 0;
+  overflow-x: auto;
+  padding: 0.75rem;
+}
+
+.chat-markdown :deep(pre code) {
+  background: transparent;
+  padding: 0;
+}
+
+.chat-markdown :deep(a) {
+  color: inherit;
+  text-decoration: underline;
+}
+</style>
