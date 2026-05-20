@@ -75,4 +75,76 @@ describe("HomeController", () => {
       error: "Temperature must be a number",
     });
   });
+
+  describe("addComponent", () => {
+    const addRequest = (body: unknown, homeId = "1") =>
+      ({ params: { id: homeId }, body }) as unknown as Request;
+
+    it.each([
+      ["light", { isOn: false }],
+      ["window", { isOpen: false }],
+      ["thermostat", { temperature: 20 }],
+    ])("creates a %s with a generated id", async (type, extraState) => {
+      const req = addRequest({ name: `My ${type}`, type, roomId: "room-1" });
+      const res = createResponse();
+
+      await controller.addComponent(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      const payload = (res.json as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(payload).toMatchObject({
+        name: `My ${type}`,
+        type,
+        roomId: "room-1",
+        ...extraState,
+      });
+      expect(typeof payload.id).toBe("string");
+      expect(payload.id.length).toBeGreaterThan(0);
+    });
+
+    it.each([
+      [{ type: "light", roomId: "room-1" }, "name must be a non-empty string"],
+      [{ name: "X", type: "light" }, "roomId must be a non-empty string"],
+      [{ name: "X", roomId: "room-1" }, "Unsupported component type"],
+      [
+        { name: "X", type: "fridge", roomId: "room-1" },
+        "Unsupported component type",
+      ],
+    ])("returns 400 on invalid body %#", async (body, expectedError) => {
+      const req = addRequest(body);
+      const res = createResponse();
+
+      await controller.addComponent(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: expectedError });
+    });
+
+    it("returns 400 when the room does not exist", async () => {
+      const req = addRequest({
+        name: "Lamp",
+        type: "light",
+        roomId: "missing",
+      });
+      const res = createResponse();
+
+      await controller.addComponent(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: "Room not found" });
+    });
+
+    it("returns 400 when the home does not exist", async () => {
+      const req = addRequest(
+        { name: "Lamp", type: "light", roomId: "room-1" },
+        "999",
+      );
+      const res = createResponse();
+
+      await controller.addComponent(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: "Home 999 not found" });
+    });
+  });
 });
