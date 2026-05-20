@@ -24,6 +24,13 @@ const CONDITION_LABELS: Record<string, string> = {
   weather: "Weather",
 };
 
+const CONDITION_UNITS: Record<string, string> = {
+  "internal-thermometer": "°C",
+  "external-thermometer": "°C",
+  "wind-speed": " m/s",
+  "air-quality": " AQI",
+};
+
 const OPERATOR_LABELS: Record<string, string> = {
   gt: ">",
   lt: "<",
@@ -43,7 +50,8 @@ function conditionSummary(rule: RuleDto): string {
   const sensor = CONDITION_LABELS[rule.condition.type] ?? rule.condition.type;
   const op =
     OPERATOR_LABELS[rule.condition.operator] ?? rule.condition.operator;
-  return `${sensor} ${op} ${rule.condition.target}`;
+  const unit = CONDITION_UNITS[rule.condition.type] ?? "";
+  return `${sensor} ${op} ${rule.condition.target}${unit}`;
 }
 
 function actionSummary(action: RuleDto["actions"][number]): string {
