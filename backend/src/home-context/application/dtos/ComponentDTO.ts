@@ -1,5 +1,11 @@
 import { ComponentTypes } from "../../domain";
 
+export type CreateComponentInput = {
+  name: string;
+  type: ComponentTypes;
+  roomId: string;
+};
+
 export type ComponentSerialization = LightDTO | WindowDTO | ThermostatDTO;
 
 export type ComponentDTO = {

@@ -6,6 +6,22 @@ export enum ComponentTypes {
   THERMOSTAT = "thermostat",
 }
 
+export function createComponent(
+  id: string,
+  input: { name: string; type: ComponentTypes; roomId: string },
+): Component {
+  switch (input.type) {
+    case ComponentTypes.LIGHT:
+      return new Light(id, input.name, input.roomId);
+    case ComponentTypes.WINDOW:
+      return new Window(id, input.name, input.roomId);
+    case ComponentTypes.THERMOSTAT:
+      return new Thermostat(id, input.name, input.roomId);
+    default:
+      throw new Error("Unsupported component type");
+  }
+}
+
 export interface Component {
   id: string;
   name: string;
