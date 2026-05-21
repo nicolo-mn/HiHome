@@ -8,7 +8,7 @@ describe("Home Context Integration Tests", () => {
 
   beforeAll(async () => {
     const loginRes = await request(app).post("/api/login").send({
-      username: "mockuser",
+      username: "adminuser",
       homeId: "1",
       password: "mockpassword",
     });

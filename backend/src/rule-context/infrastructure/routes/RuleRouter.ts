@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { RuleController } from "../controllers/RuleController";
 import { reorderValidator } from "../middlewares/RuleValidator";
+import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
 
 export class RuleRouter {
   public router = Router();
@@ -10,19 +11,22 @@ export class RuleRouter {
   }
 
   registerRoutes() {
-    this.router.get("/:id/rules", (req, res) =>
+    this.router.get("/:id/rules", adminMiddleware, (req, res) =>
       this.ruleController.getRules(req, res),
     );
 
-    this.router.post("/:id/rules", (req, res) =>
+    this.router.post("/:id/rules", adminMiddleware, (req, res) =>
       this.ruleController.addRule(req, res),
     );
 
-    this.router.put("/:id/rules/order", ...reorderValidator, (req, res) =>
-      this.ruleController.reorderRules(req, res),
+    this.router.put(
+      "/:id/rules/order",
+      adminMiddleware,
+      ...reorderValidator,
+      (req, res) => this.ruleController.reorderRules(req, res),
     );
 
-    this.router.delete("/:id/rules/:ruleId", (req, res) =>
+    this.router.delete("/:id/rules/:ruleId", adminMiddleware, (req, res) =>
       this.ruleController.deleteRule(req, res),
     );
   }

@@ -11,6 +11,13 @@ export class InMemoryUserRepository implements UserRepository {
       homeId: "1",
       role: "StandardUser",
     },
+    {
+      id: "2",
+      username: "adminuser",
+      password: "mockpassword",
+      homeId: "1",
+      role: "Admin",
+    },
   ];
 
   async findByUsernameAndHomeId(

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { HomeController } from "../controllers/HomeController";
 import { homeIdMiddleware } from "../middlewares/RoutesMiddlewares";
+import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
 
 export class HomeRouter {
   public router = Router();
@@ -20,7 +21,7 @@ export class HomeRouter {
     this.router.get("/:id/components", (req, res) =>
       this.homeController.getComponents(req, res),
     );
-    this.router.post("/:id/components", (req, res) =>
+    this.router.post("/:id/components", adminMiddleware, (req, res) =>
       this.homeController.addComponent(req, res),
     );
     this.router.get("/:id/components/:componentId", (req, res) =>
