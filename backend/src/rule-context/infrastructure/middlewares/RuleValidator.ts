@@ -1,5 +1,5 @@
 import { body, param } from "express-validator";
-import { validate } from "./Validate";
+import { validate } from "../../../shared/middlewares/Validate";
 
 const COMPONENT_TYPES = ["light", "window", "thermostat"] as const;
 
@@ -10,11 +10,11 @@ const COMMANDS_BY_TYPE: Record<string, string[]> = {
 };
 
 export const namingAndOwnershipValidator = [
-  param("homeId")
+  param("id")
     .notEmpty()
-    .withMessage("homeId must be present")
+    .withMessage("id must be present")
     .isInt()
-    .withMessage("homeId must be a number"),
+    .withMessage("id must be a number"),
 
   body("ruleName").notEmpty().withMessage("ruleName must be present"),
 
@@ -85,7 +85,6 @@ export const conditionValidator = [
   validate,
 ];
 
-// Get the index of an action to access other fields
 const getActionIndex = (path: string) => parseInt(path.split("[")[1], 10);
 
 export const actionsValidator = [
@@ -107,24 +106,18 @@ export const actionsValidator = [
     .notEmpty()
     .withMessage("command is required")
     .bail()
-    .if((_value, { req, path }) => {
+    .custom((value, { req, path }) => {
       const index = getActionIndex(path);
-      return req.body?.actions?.[index]?.componentType === "light";
-    })
-    .isIn(["turnOn", "turnOff"])
-    .withMessage("command must be one of: turnOn, turnOff for light")
-    .if((_value, { req, path }) => {
-      const index = getActionIndex(path);
-      return req.body?.actions?.[index]?.componentType === "window";
-    })
-    .isIn(["open", "close"])
-    .withMessage("command must be one of: open, close for window")
-    .if((_value, { req, path }) => {
-      const index = getActionIndex(path);
-      return req.body?.actions?.[index]?.componentType === "thermostat";
-    })
-    .isIn(["setTemperature"])
-    .withMessage('command must be "setTemperature" for thermostat'),
+      const componentType = req.body?.actions?.[index]?.componentType;
+      const validCommands = COMMANDS_BY_TYPE[componentType];
+      if (!validCommands) return true;
+      if (!validCommands.includes(value)) {
+        throw new Error(
+          `command must be one of: ${validCommands.join(", ")} for ${componentType}`,
+        );
+      }
+      return true;
+    }),
 
   body("actions[*].targetTemp")
     .if((_value, { req, path }) => {
@@ -135,6 +128,8 @@ export const actionsValidator = [
     .withMessage("targetTemp is required when command is setTemperature")
     .isNumeric()
     .withMessage("targetTemp must be a number")
+    .isFloat({ min: 5, max: 40 })
+    .withMessage("targetTemp must be between 5 and 40")
     .if((_value, { req, path }) => {
       const index = getActionIndex(path);
       return req.body?.actions?.[index]?.command !== "setTemperature";
