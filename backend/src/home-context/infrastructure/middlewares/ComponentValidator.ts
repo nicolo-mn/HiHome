@@ -1,13 +1,5 @@
 import { body, param } from "express-validator";
-import { ComponentTypes } from "../../domain";
 import { validate } from "../../../shared/middlewares/Validate";
-import { HomeService } from "../../application/HomeService";
-
-const COMMANDS_BY_TYPE: Record<string, string[]> = {
-  light: ["turnOn", "turnOff"],
-  window: ["open", "close"],
-  thermostat: ["setTemperature"],
-};
 
 export const componentIdValidator = [
   param("componentId").notEmpty().withMessage("componentId is required"),

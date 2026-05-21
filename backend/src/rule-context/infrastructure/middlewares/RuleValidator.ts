@@ -85,7 +85,6 @@ export const conditionValidator = [
   validate,
 ];
 
-// Get the index of an action to access other fields
 const getActionIndex = (path: string) => parseInt(path.split("[")[1], 10);
 
 export const actionsValidator = [
@@ -107,24 +106,18 @@ export const actionsValidator = [
     .notEmpty()
     .withMessage("command is required")
     .bail()
-    .if((_value, { req, path }) => {
+    .custom((value, { req, path }) => {
       const index = getActionIndex(path);
-      return req.body?.actions?.[index]?.componentType === "light";
-    })
-    .isIn(["turnOn", "turnOff"])
-    .withMessage("command must be one of: turnOn, turnOff for light")
-    .if((_value, { req, path }) => {
-      const index = getActionIndex(path);
-      return req.body?.actions?.[index]?.componentType === "window";
-    })
-    .isIn(["open", "close"])
-    .withMessage("command must be one of: open, close for window")
-    .if((_value, { req, path }) => {
-      const index = getActionIndex(path);
-      return req.body?.actions?.[index]?.componentType === "thermostat";
-    })
-    .isIn(["setTemperature"])
-    .withMessage('command must be "setTemperature" for thermostat'),
+      const componentType = req.body?.actions?.[index]?.componentType;
+      const validCommands = COMMANDS_BY_TYPE[componentType];
+      if (!validCommands) return true;
+      if (!validCommands.includes(value)) {
+        throw new Error(
+          `command must be one of: ${validCommands.join(", ")} for ${componentType}`,
+        );
+      }
+      return true;
+    }),
 
   body("actions[*].targetTemp")
     .if((_value, { req, path }) => {
