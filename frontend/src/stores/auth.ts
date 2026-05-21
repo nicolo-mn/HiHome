@@ -17,6 +17,8 @@ export const useAuthStore = defineStore("auth", () => {
   const payload = computed(() => decodeJwt(token.value));
   const username = computed(() => payload.value?.username ?? null);
   const homeId = computed(() => payload.value?.homeId ?? null);
+  const role = computed(() => payload.value?.role ?? null);
+  const isAdmin = computed(() => role.value === "Admin");
   const expiresAt = computed(() =>
     payload.value?.exp ? payload.value.exp * 1000 : null,
   );
@@ -52,6 +54,8 @@ export const useAuthStore = defineStore("auth", () => {
     token,
     username,
     homeId,
+    role,
+    isAdmin,
     expiresAt,
     isAuthenticated,
     login,

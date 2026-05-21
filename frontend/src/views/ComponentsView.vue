@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
 import { useComponentsStore } from "@/stores/components";
 import { useRoomGroups } from "@/composables/useRoomGroups";
 import { useAsyncAction } from "@/composables/useAsyncAction";
@@ -11,6 +12,7 @@ import AddComponentCard from "@/components/cards/AddComponentCard.vue";
 import BaseButton from "@/components/BaseButton.vue";
 import BaseInput from "@/components/BaseInput.vue";
 
+const auth = useAuthStore();
 const store = useComponentsStore();
 const { components, isLoading, error } = storeToRefs(store);
 const { load, toggle, step, isBusy, addComponent } = store;
@@ -127,7 +129,10 @@ onMounted(load);
 
 <template>
   <div class="flex flex-col gap-6">
-    <section class="bg-surface border border-border rounded-2xl p-4 md:p-6">
+    <section
+      v-if="auth.isAdmin"
+      class="bg-surface border border-border rounded-2xl p-4 md:p-6"
+    >
       <div class="flex items-center justify-between gap-3">
         <h2 class="text-lg font-medium text-primary">Add component</h2>
         <button
@@ -218,6 +223,7 @@ onMounted(load);
           @step="step"
         />
         <AddComponentCard
+          v-if="auth.isAdmin"
           :disabled="creating || !hasRooms"
           @click="onAddComponentClick(group.roomId)"
         />

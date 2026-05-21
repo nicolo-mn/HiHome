@@ -31,11 +31,13 @@ const router = createRouter({
           path: "/rules",
           name: "rules",
           component: () => import("@/views/RulesView.vue"),
+          meta: { requiresAdmin: true },
         },
         {
           path: "/rules/create",
           name: "rule-create",
           component: () => import("@/views/RuleCreateView.vue"),
+          meta: { requiresAdmin: true },
         },
         {
           path: "/notifications",
@@ -63,6 +65,10 @@ router.beforeEach((to) => {
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     if (auth.token) auth.logout();
     return { name: "login", query: { redirect: to.fullPath } };
+  }
+
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
+    return { name: "dashboard" };
   }
 
   if (to.name === "login" && auth.isAuthenticated) {
