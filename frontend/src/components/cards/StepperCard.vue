@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import BaseCard from "./BaseCard.vue";
 import minusIcon from "@/assets/icons/minus.svg?raw";
 import plusIcon from "@/assets/icons/plus.svg?raw";
 import type { ThermostatComponent } from "@/api/components";
+
+const MIN_SETPOINT = 5;
+const MAX_SETPOINT = 40;
 
 const props = defineProps<{
   component: ThermostatComponent;
@@ -13,6 +17,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "step", component: ThermostatComponent, direction: "up" | "down"): void;
 }>();
+
+const canDecrease = computed(
+  () => !props.busy && props.component.setpoint > MIN_SETPOINT,
+);
+const canIncrease = computed(
+  () => !props.busy && props.component.setpoint < MAX_SETPOINT,
+);
 </script>
 
 <template>
@@ -21,7 +32,7 @@ const emit = defineEmits<{
       <div class="flex items-center gap-1">
         <button
           type="button"
-          :disabled="busy"
+          :disabled="!canDecrease"
           class="w-6 h-6 flex items-center justify-center rounded border border-border text-muted hover:text-primary hover:border-primary transition disabled:opacity-50"
           :aria-label="`Decrease ${component.name}`"
           @click="emit('step', component, 'down')"
@@ -35,7 +46,7 @@ const emit = defineEmits<{
         </span>
         <button
           type="button"
-          :disabled="busy"
+          :disabled="!canIncrease"
           class="w-6 h-6 flex items-center justify-center rounded border border-border text-muted hover:text-primary hover:border-primary transition disabled:opacity-50"
           :aria-label="`Increase ${component.name}`"
           @click="emit('step', component, 'up')"

@@ -31,7 +31,6 @@ export const sensorTypeIcon: Record<string, string> = {
   thermometer: thermometerIcon,
   airquality: airQualityIcon,
   outdoor_temperature: thermometerIcon,
-  outdoor_airquality: airQualityIcon,
   wind: wind,
 };
 

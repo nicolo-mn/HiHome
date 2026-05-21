@@ -6,7 +6,24 @@ import SensorCard from "@/components/cards/SensorCard.vue";
 
 const sensorStore = useSensorStore();
 const { readings, connected, error } = storeToRefs(sensorStore);
-const sensorReadings = computed(() => Array.from(readings.value.values()));
+const sensorOrder = [
+  "outdoor_temperature",
+  "airquality",
+  "thermometer",
+  "weather",
+  "wind",
+];
+
+const sensorReadings = computed(() =>
+  Array.from(readings.value.values()).sort((a, b) => {
+    const aIndex = sensorOrder.indexOf(a.type);
+    const bIndex = sensorOrder.indexOf(b.type);
+    const aRank = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+    const bRank = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.sensorId.localeCompare(b.sensorId);
+  }),
+);
 </script>
 
 <template>
@@ -24,11 +41,9 @@ const sensorReadings = computed(() => Array.from(readings.value.values()));
     </div>
 
     <p v-if="error" class="text-danger text-sm" role="alert">
-      Connessione in tempo reale non disponibile: {{ error }}
+      Real-time connection unavailable: {{ error }}
     </p>
-    <p v-else-if="!connected" class="text-muted text-sm">
-      Connessione in corso…
-    </p>
+    <p v-else-if="!connected" class="text-muted text-sm">Connecting…</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <SensorCard

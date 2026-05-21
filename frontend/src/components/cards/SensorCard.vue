@@ -8,11 +8,11 @@ const props = defineProps<{
 }>();
 
 const sensorTypeLabel: Record<string, string> = {
-  thermometer: "Thermometer",
-  airquality: "Air Quality",
-  outdoor_temperature: "Outdoor Temp",
-  outdoor_airquality: "Outdoor Air Quality",
+  thermometer: "Indoor Temperature",
+  airquality: "Outdoor Air Quality",
+  outdoor_temperature: "Outdoor Temperature",
   weather: "Weather",
+  wind: "Wind",
 };
 
 const icon = computed(() => resolveSensorIcon(props.reading));
@@ -23,12 +23,31 @@ const label = computed(
 
 const displayValue = computed(() => {
   const v = props.reading.value;
+  if (props.reading.type === "wind" && v && typeof v === "object") {
+    const speed = (v as { speed?: unknown }).speed;
+    const direction = (v as { direction?: unknown }).direction;
+    const speedValue = typeof speed === "number" ? speed.toFixed(1) : null;
+    const speedUnit = props.reading.measureUnit || "";
+    const directionValue =
+      typeof direction === "number"
+        ? `${Math.round(direction)}°`
+        : typeof direction === "string" && direction.trim()
+          ? direction
+          : null;
+
+    if (speedValue && directionValue) {
+      return `${speedValue} ${speedUnit} · ${directionValue}`.trim();
+    }
+    if (speedValue) return `${speedValue} ${speedUnit}`.trim();
+  }
+
   if (typeof v === "number") return v.toFixed(1);
   if (typeof v === "string") return v;
   return "—";
 });
 
 const unitSymbol = computed(() => {
+  if (props.reading.type === "wind") return "";
   const u = props.reading.measureUnit?.toLowerCase() ?? "";
   if (u === "celsius") return "°C";
   if (u === "fahrenheit") return "°F";

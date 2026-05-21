@@ -138,8 +138,8 @@ abstract class BoundedNumericCondition extends AbstractCondition {
 }
 
 export class ExternalTemperatureCondition extends BoundedNumericCondition {
-  static readonly MIN_TEMP = -20;
-  static readonly MAX_TEMP = 50;
+  static readonly MIN_TEMP = 5;
+  static readonly MAX_TEMP = 40;
 
   constructor(operator: NumericOperator) {
     super(
@@ -160,8 +160,8 @@ export class ExternalTemperatureCondition extends BoundedNumericCondition {
 }
 
 export class InternalTemperatureCondition extends BoundedNumericCondition {
-  static readonly MIN_TEMP = -20;
-  static readonly MAX_TEMP = 50;
+  static readonly MIN_TEMP = 5;
+  static readonly MAX_TEMP = 40;
 
   constructor(operator: NumericOperator) {
     super(
