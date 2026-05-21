@@ -8,7 +8,7 @@ const sensorStore = useSensorStore();
 const { readings, connected, error } = storeToRefs(sensorStore);
 const sensorOrder = [
   "outdoor_temperature",
-  "outdoor_airquality",
+  "airquality",
   "thermometer",
   "weather",
   "wind",

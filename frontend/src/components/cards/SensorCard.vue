@@ -8,11 +8,11 @@ const props = defineProps<{
 }>();
 
 const sensorTypeLabel: Record<string, string> = {
-  thermometer: "Thermometer",
-  airquality: "Air Quality",
-  outdoor_temperature: "Outdoor Temp",
-  outdoor_airquality: "Outdoor Air Quality",
+  thermometer: "Indoor Temperature",
+  airquality: "Outdoor Air Quality",
+  outdoor_temperature: "Outdoor Temperature",
   weather: "Weather",
+  wind: "Wind",
 };
 
 const icon = computed(() => resolveSensorIcon(props.reading));

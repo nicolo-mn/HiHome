@@ -42,7 +42,7 @@ const SENSOR_MAPPINGS: Record<string, ReadingBuilder> = {
     typeof p?.AQI === "number"
       ? {
           sensorId: "air-quality",
-          type: "outdoor_airquality",
+          type: "airquality",
           value: p.AQI,
           measureUnit: "eaqi",
         }
