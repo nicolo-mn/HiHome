@@ -1,0 +1,216 @@
+package infrastructure
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"ext-api-service/application"
+	"ext-api-service/domain"
+)
+
+type stubEnvironmentProvider struct {
+	weatherInfo    *domain.WeatherInfo
+	airQualityInfo *domain.AirQualityInfo
+	weeklyForecast *domain.WeeklyForecast
+	weatherErr     error
+	airQualityErr  error
+	forecastErr    error
+}
+
+func (s *stubEnvironmentProvider) FetchCurrentWeather(lat, lon float64) (*domain.WeatherInfo, error) {
+	return s.weatherInfo, s.weatherErr
+}
+
+func (s *stubEnvironmentProvider) FetchCurrentAirQuality(lat, lon float64) (*domain.AirQualityInfo, error) {
+	return s.airQualityInfo, s.airQualityErr
+}
+
+func (s *stubEnvironmentProvider) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+	return s.weeklyForecast, s.forecastErr
+}
+
+// error on post for /api/weather
+func TestEnvironmentControllerServeHTTPMethodNotAllowed(t *testing.T) {
+	provider := &stubEnvironmentProvider{}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/weather", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected status %d, got %d", http.StatusMethodNotAllowed, rec.Code)
+	}
+}
+
+// error on missing query params for /api/weather
+func TestEnvironmentControllerServeHTTPBadRequest(t *testing.T) {
+	provider := &stubEnvironmentProvider{}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/weather", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+}
+
+// error on weather provider failure for /api/weather
+func TestEnvironmentControllerServeHTTPBadGateway(t *testing.T) {
+	provider := &stubEnvironmentProvider{weatherErr: errors.New("weather failure")}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/weather?latitude=45&longitude=9", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected status %d, got %d", http.StatusBadGateway, rec.Code)
+	}
+}
+
+// test successful response for /api/weather
+func TestEnvironmentControllerServeHTTPSuccess(t *testing.T) {
+	weather := domain.NewWeatherInfo(18.5, 2, 5.1, 200, 0.0)
+	air := domain.NewAirQualityInfo(30)
+	provider := &stubEnvironmentProvider{
+		weatherInfo:    &weather,
+		airQualityInfo: &air,
+	}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/weather?latitude=45&longitude=9", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if contentType := rec.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Fatalf("expected content type application/json, got %s", contentType)
+	}
+
+	var resp environmentResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if resp.Temperature != 18.5 {
+		t.Fatalf("expected temperature 18.5, got %v", resp.Temperature)
+	}
+	if resp.WeatherType != int(domain.PartlyCloudy) {
+		t.Fatalf("expected weather type %d, got %d", int(domain.PartlyCloudy), resp.WeatherType)
+	}
+	if resp.EuropeanAQI != 30 {
+		t.Fatalf("expected AQI 30, got %d", resp.EuropeanAQI)
+	}
+}
+
+// error on post for /api/forecast
+func TestEnvironmentControllerServeForecastMethodNotAllowed(t *testing.T) {
+	provider := &stubEnvironmentProvider{}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/forecast", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeForecast(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected status %d, got %d", http.StatusMethodNotAllowed, rec.Code)
+	}
+}
+
+// error on missing query params for /api/forecast
+func TestEnvironmentControllerServeForecastBadRequest(t *testing.T) {
+	provider := &stubEnvironmentProvider{}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/forecast", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeForecast(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+}
+
+// error on forecast provider failure for /api/forecast
+func TestEnvironmentControllerServeForecastBadGateway(t *testing.T) {
+	provider := &stubEnvironmentProvider{forecastErr: errors.New("forecast failure")}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/forecast?latitude=45&longitude=9", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeForecast(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected status %d, got %d", http.StatusBadGateway, rec.Code)
+	}
+}
+
+// error on invalid forecast length for /api/forecast
+func TestEnvironmentControllerServeForecastInvalidLength(t *testing.T) {
+	days := []domain.DailyForecast{
+		domain.NewDailyForecast("2026-05-21", 1, 26.0, 16.0, 7.2, 0.0, 120, 36000, 0.5),
+	}
+	forecast := domain.NewWeeklyForecast(days)
+	provider := &stubEnvironmentProvider{weeklyForecast: &forecast}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/forecast?latitude=45&longitude=9", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeForecast(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected status %d, got %d", http.StatusBadGateway, rec.Code)
+	}
+}
+
+// test successful response for /api/forecast
+func TestEnvironmentControllerServeForecastSuccess(t *testing.T) {
+	days := make([]domain.DailyForecast, 0, 7)
+	for i := 0; i < 7; i++ {
+		days = append(days, domain.NewDailyForecast("2026-05-21", 1, 26.0, 16.0, 7.2, 0.0, 120, 36000, 0.5))
+	}
+	forecast := domain.NewWeeklyForecast(days)
+	provider := &stubEnvironmentProvider{weeklyForecast: &forecast}
+	service := application.NewEnvironmentService(provider)
+	controller := NewEnvironmentController(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/forecast?latitude=45&longitude=9", nil)
+	rec := httptest.NewRecorder()
+	controller.ServeForecast(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
+	}
+	if contentType := rec.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Fatalf("expected content type application/json, got %s", contentType)
+	}
+
+	var resp weeklyForecastResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	if len(resp.Days) != 7 {
+		t.Fatalf("expected 7 days, got %d", len(resp.Days))
+	}
+	if resp.Days[0].Date != "2026-05-21" {
+		t.Fatalf("expected first date 2026-05-21, got %s", resp.Days[0].Date)
+	}
+	if resp.Days[1].WeatherType != int(domain.ClearDay) {
+		t.Fatalf("expected second weather type %d, got %d", int(domain.ClearDay), resp.Days[1].WeatherType)
+	}
+}

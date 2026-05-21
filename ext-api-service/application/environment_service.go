@@ -1,6 +1,8 @@
 package application
 
 import (
+	"fmt"
+
 	"ext-api-service/domain"
 )
 
@@ -35,6 +37,10 @@ func (s *EnvironmentService) GetWeeklyForecast(lat, lon float64) (*domain.Weekly
 	weeklyForecast, err := s.environmentProvider.FetchWeeklyForecast(lat, lon)
 	if err != nil {
 		return nil, err
+	}
+	const expectedDays = 7
+	if len(weeklyForecast.Days()) != expectedDays {
+		return nil, fmt.Errorf("weekly forecast must have %d days", expectedDays)
 	}
 
 	return weeklyForecast, nil
