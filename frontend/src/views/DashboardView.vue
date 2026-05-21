@@ -24,11 +24,9 @@ const sensorReadings = computed(() => Array.from(readings.value.values()));
     </div>
 
     <p v-if="error" class="text-danger text-sm" role="alert">
-      Connessione in tempo reale non disponibile: {{ error }}
+      Real-time connection unavailable: {{ error }}
     </p>
-    <p v-else-if="!connected" class="text-muted text-sm">
-      Connessione in corso…
-    </p>
+    <p v-else-if="!connected" class="text-muted text-sm">Connecting…</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <SensorCard

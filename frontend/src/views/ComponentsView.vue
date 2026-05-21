@@ -25,7 +25,7 @@ onMounted(load);
   <div class="flex flex-col gap-6">
     <div v-if="error && components.length === 0" class="flex flex-col gap-2">
       <p class="text-danger text-sm">{{ error }}</p>
-      <BaseButton label="Riprova" @click="load" />
+      <BaseButton label="Retry" @click="load" />
     </div>
     <p v-else-if="error" class="text-danger text-sm">{{ error }}</p>
 
