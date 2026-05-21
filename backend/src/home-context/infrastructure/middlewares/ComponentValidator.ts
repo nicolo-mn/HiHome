@@ -1,18 +1,6 @@
 import { body, param } from "express-validator";
 import { validate } from "../../../shared/middlewares/Validate";
 
-export const sensorTemperatureValidator = [
-  body("temperature")
-    .notEmpty()
-    .withMessage("temperature is required")
-    .isNumeric()
-    .withMessage("temperature must be a number")
-    .isFloat({ min: 5, max: 40 })
-    .withMessage("temperature must be between 5 and 40"),
-
-  validate,
-];
-
 export const componentIdValidator = [
   param("componentId").notEmpty().withMessage("componentId is required"),
   validate,

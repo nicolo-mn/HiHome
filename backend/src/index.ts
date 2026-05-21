@@ -7,7 +7,6 @@ import cors from "cors";
 import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
-import { sensorTemperatureValidator } from "./home-context/infrastructure/middlewares/ComponentValidator";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { MongoHomeRepository } from "./home-context/infrastructure/MongoHomeRepository";
 import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/SocketIOSensorUpdateAdapter";
@@ -131,13 +130,9 @@ app.post("/api/login", (req, res) => authController.login(req, res));
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok", db: mongoose.connection.readyState });
 });
-app.post(
-  "/api/home/:id/sensors/internal-temperature",
-  ...sensorTemperatureValidator,
-  (req, res) => {
-    homeController.updateInternalTemperature(req, res);
-  },
-);
+app.post("/api/home/:id/sensors/internal-temperature", (req, res) => {
+  homeController.updateInternalTemperature(req, res);
+});
 
 // --- Authenticated routes ---
 app.use(authMiddleware);
