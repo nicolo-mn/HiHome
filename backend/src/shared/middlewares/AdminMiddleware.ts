@@ -27,7 +27,7 @@ export const adminMiddleware = (
     const decoded = verifyAuthToken(token) as JwtPayload;
     (req as any).user = decoded;
     if (decoded.role !== "Admin") {
-      res.status(401).json({ error: "Unauthorized: Admin access required" });
+      res.status(403).json({ error: "Forbidden: Admin access required" });
       return;
     }
     next();

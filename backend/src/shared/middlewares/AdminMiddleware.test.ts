@@ -92,9 +92,9 @@ describe("adminMiddleware", () => {
     adminMiddleware(req, res, next);
 
     expect(verifyAuthTokenMock).toHaveBeenCalledWith("token-123");
-    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Unauthorized: Admin access required",
+      error: "Forbidden: Admin access required",
     });
     expect(next).not.toHaveBeenCalled();
   });
