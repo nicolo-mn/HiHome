@@ -14,12 +14,8 @@ const { token, username, homeId } = storeToRefs(authStore);
 
 const { connected, error, sendMessage } = useChatSocket(homeId, token);
 
-const messages = ref<ChatMessage[]>([
-  {
-    role: "assistant",
-    content: "Welcome! How can I help you today?",
-  },
-]);
+const STORAGE_PREFIX = "hihome.chat.messages";
+const messages = ref<ChatMessage[]>([]);
 const draft = ref("");
 const sending = ref(false);
 const sendError = ref<string | null>(null);
@@ -29,6 +25,12 @@ const activeToolCalls = ref<ToolCallInfo[]>([]);
 const streamingHtml = computed(() =>
   streamingContent.value ? renderMarkdown(`${streamingContent.value}▌`) : "",
 );
+
+const storageKey = computed(() => {
+  const id = homeId.value ?? "anonymous";
+  const user = username.value ?? "guest";
+  return `${STORAGE_PREFIX}:${id}:${user}`;
+});
 
 const canSend = computed(() =>
   Boolean(draft.value.trim() && username.value && homeId.value),
@@ -98,6 +100,56 @@ function onSend() {
   );
 }
 
+function loadStoredMessages(key: string): ChatMessage[] | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const filtered = parsed.filter(
+      (entry) =>
+        entry &&
+        (entry.role === "user" || entry.role === "assistant") &&
+        typeof entry.content === "string",
+    );
+    return filtered.length > 0 ? filtered : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistMessages(key: string, value: ChatMessage[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+function resetChat() {
+  const welcomeMessage: ChatMessage = {
+    role: "assistant",
+    content: "Welcome! How can I help you today?",
+  };
+  messages.value = [welcomeMessage];
+  persistMessages(storageKey.value, [welcomeMessage]);
+  streamingContent.value = "";
+  activeToolCalls.value = [];
+  sendError.value = null;
+  sending.value = false;
+}
+
+function ensureWelcomeMessage() {
+  messages.value = [
+    {
+      role: "assistant",
+      content: "Welcome! How can I help you today?",
+    },
+  ];
+  streamingContent.value = "";
+  activeToolCalls.value = [];
+  sendError.value = null;
+  sending.value = false;
+}
+
 function onDraftKeydown(event: KeyboardEvent) {
   if (event.key !== "Enter" || event.shiftKey) return;
   event.preventDefault();
@@ -110,6 +162,31 @@ watch(
     await nextTick();
     scrollAnchor.value?.scrollIntoView({ behavior: "smooth" });
   },
+);
+
+watch(
+  storageKey,
+  (key) => {
+    const stored = loadStoredMessages(key);
+    if (stored !== null) {
+      messages.value = stored;
+      streamingContent.value = "";
+      activeToolCalls.value = [];
+      sendError.value = null;
+      sending.value = false;
+      return;
+    }
+    ensureWelcomeMessage();
+  },
+  { immediate: true },
+);
+
+watch(
+  [storageKey, messages],
+  ([key, current]) => {
+    persistMessages(key, current);
+  },
+  { deep: true },
 );
 </script>
 
@@ -125,6 +202,13 @@ watch(
         Live chat connection unavailable: {{ error }}
       </p>
       <p v-else-if="!connected" class="text-muted text-sm">Connecting…</p>
+      <button
+        type="button"
+        class="w-fit text-sm text-primary border border-primary/40 rounded-lg px-3 py-1 hover:bg-primary/10 transition"
+        @click="resetChat"
+      >
+        New chat
+      </button>
     </header>
 
     <section
