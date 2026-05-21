@@ -6,7 +6,24 @@ import SensorCard from "@/components/cards/SensorCard.vue";
 
 const sensorStore = useSensorStore();
 const { readings, connected, error } = storeToRefs(sensorStore);
-const sensorReadings = computed(() => Array.from(readings.value.values()));
+const sensorOrder = [
+  "outdoor_temperature",
+  "outdoor_airquality",
+  "thermometer",
+  "weather",
+  "wind",
+];
+
+const sensorReadings = computed(() =>
+  Array.from(readings.value.values()).sort((a, b) => {
+    const aIndex = sensorOrder.indexOf(a.type);
+    const bIndex = sensorOrder.indexOf(b.type);
+    const aRank = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+    const bRank = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.sensorId.localeCompare(b.sensorId);
+  }),
+);
 </script>
 
 <template>
