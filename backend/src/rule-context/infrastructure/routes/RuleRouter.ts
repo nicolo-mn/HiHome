@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { RuleController } from "../controllers/RuleController";
-import { reorderValidator } from "../middlewares/RuleValidator";
+import {
+  actionsValidator,
+  conditionValidator,
+  namingAndOwnershipValidator,
+  reorderValidator,
+} from "../middlewares/RuleValidator";
 import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
 
 export class RuleRouter {
@@ -15,8 +20,13 @@ export class RuleRouter {
       this.ruleController.getRules(req, res),
     );
 
-    this.router.post("/:id/rules", adminMiddleware, (req, res) =>
-      this.ruleController.addRule(req, res),
+    this.router.post(
+      "/:id/rules",
+      adminMiddleware,
+      ...namingAndOwnershipValidator,
+      ...conditionValidator,
+      ...actionsValidator,
+      (req, res) => this.ruleController.addRule(req, res),
     );
 
     this.router.put(

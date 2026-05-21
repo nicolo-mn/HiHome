@@ -1,5 +1,5 @@
 import { body, param } from "express-validator";
-import { validate } from "./Validate";
+import { validate } from "../../../shared/middlewares/Validate";
 
 const COMPONENT_TYPES = ["light", "window", "thermostat"] as const;
 
@@ -10,11 +10,11 @@ const COMMANDS_BY_TYPE: Record<string, string[]> = {
 };
 
 export const namingAndOwnershipValidator = [
-  param("homeId")
+  param("id")
     .notEmpty()
-    .withMessage("homeId must be present")
+    .withMessage("id must be present")
     .isInt()
-    .withMessage("homeId must be a number"),
+    .withMessage("id must be a number"),
 
   body("ruleName").notEmpty().withMessage("ruleName must be present"),
 
