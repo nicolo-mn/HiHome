@@ -1,13 +1,22 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import { useAuthStore } from "@/stores/auth";
 import componentsIcon from "@/assets/icons/components.svg?raw";
 import dashboardIcon from "@/assets/icons/dashboard.svg?raw";
 import rulesIcon from "@/assets/icons/rules.svg?raw";
 
-const navItems = [
-  { name: "Dashboard", to: "/dashboard", icon: dashboardIcon },
-  { name: "Components", to: "/components", icon: componentsIcon },
-  { name: "Rules", to: "/rules", icon: rulesIcon },
-];
+const auth = useAuthStore();
+
+const navItems = computed(() => {
+  const items = [
+    { name: "Dashboard", to: "/dashboard", icon: dashboardIcon },
+    { name: "Components", to: "/components", icon: componentsIcon },
+  ];
+  if (auth.isAdmin) {
+    items.push({ name: "Rules", to: "/rules", icon: rulesIcon });
+  }
+  return items;
+});
 </script>
 
 <template>
