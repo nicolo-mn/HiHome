@@ -6,7 +6,7 @@ import { HomeService } from "../../application/HomeService";
 import {
   componentIdValidator,
   temperatureValidator,
-} from "../middlewares/ComponentActionValidator";
+} from "../middlewares/ComponentValidator";
 
 export class HomeRouter {
   public router = Router();

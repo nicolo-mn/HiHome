@@ -128,6 +128,8 @@ export const actionsValidator = [
     .withMessage("targetTemp is required when command is setTemperature")
     .isNumeric()
     .withMessage("targetTemp must be a number")
+    .isFloat({ min: 5, max: 40 })
+    .withMessage("targetTemp must be between 5 and 40")
     .if((_value, { req, path }) => {
       const index = getActionIndex(path);
       return req.body?.actions?.[index]?.command !== "setTemperature";
