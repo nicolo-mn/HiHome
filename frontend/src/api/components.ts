@@ -5,6 +5,12 @@ export type ComponentType = "light" | "window" | "thermostat" | "unknown";
 // Types that have a simple boolean state (on/off, open/closed).
 export type ToggleableType = "light" | "window";
 
+export type CreateComponentInput = {
+  name: string;
+  type: ToggleableType;
+  roomId: string;
+};
+
 export interface BaseComponent {
   id: string;
   name: string;
@@ -70,6 +76,17 @@ export async function getComponents(homeId: string): Promise<HomeComponent[]> {
     `/api/home/${encodeURIComponent(homeId)}/components`,
   );
   return raw.map(normalizeComponent);
+}
+
+export async function createComponent(
+  homeId: string,
+  input: CreateComponentInput,
+): Promise<HomeComponent> {
+  const raw = await apiFetch<RawComponent>(
+    `/api/home/${encodeURIComponent(homeId)}/components`,
+    { method: "POST", body: input },
+  );
+  return normalizeComponent(raw);
 }
 
 export async function executeAction(

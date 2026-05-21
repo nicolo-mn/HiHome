@@ -20,6 +20,7 @@ export type {
   ToggleableType,
   BaseComponent,
   ComponentType,
+  CreateComponentInput,
 } from "./components";
 export * as notificationsApi from "./notifications";
 export type { NotificationDTO } from "./notifications";

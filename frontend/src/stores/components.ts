@@ -5,6 +5,7 @@ import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
+  CreateComponentInput,
 } from "@/api/components";
 import { useAuthStore } from "@/stores/auth";
 import { useBusyIds } from "@/composables/useBusyIds";
@@ -89,6 +90,19 @@ export const useComponentsStore = defineStore("components", () => {
     );
   }
 
+  async function addComponent(input: CreateComponentInput) {
+    if (!homeId.value) return;
+    error.value = null;
+    try {
+      const created = await componentsApi.createComponent(homeId.value, input);
+      components.value = [...components.value, created];
+      return created;
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : "Failed to add component";
+      throw e;
+    }
+  }
+
   function isBusy(componentId: string) {
     return busy.has(componentId);
   }
@@ -104,5 +118,6 @@ export const useComponentsStore = defineStore("components", () => {
     reset,
     toggle,
     step,
+    addComponent,
   };
 });
