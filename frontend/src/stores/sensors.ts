@@ -52,7 +52,10 @@ const SENSOR_MAPPINGS: Record<string, ReadingBuilder> = {
       ? {
           sensorId: "wind-speed",
           type: "wind",
-          value: p.windSpeed,
+          value: {
+            speed: p.windSpeed,
+            direction: p.windDirection ?? null,
+          },
           measureUnit: "km/h",
         }
       : null,
