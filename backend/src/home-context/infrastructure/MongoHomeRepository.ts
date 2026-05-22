@@ -31,6 +31,7 @@ type HomeRecord = {
   id: string;
   coordinates: Coordinates;
   rooms: RoomRecord[];
+  hourlyTemperatures?: number[];
 };
 
 export class MongoHomeRepository implements HomeRepository {
@@ -83,7 +84,12 @@ export class MongoHomeRepository implements HomeRepository {
         ),
     );
 
-    return new Home(record.id, record.coordinates, rooms);
+    return new Home(
+      record.id,
+      record.coordinates,
+      rooms,
+      record.hourlyTemperatures,
+    );
   }
 
   private toComponent(
@@ -134,6 +140,7 @@ export class MongoHomeRepository implements HomeRepository {
           this.toComponentRecord(component, room.id),
         ),
       })),
+      hourlyTemperatures: home.hourlyTemperatures,
     };
   }
 

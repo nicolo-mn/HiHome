@@ -40,6 +40,11 @@ const router = createRouter({
           meta: { requiresAdmin: true },
         },
         {
+          path: "/thermostat-plan",
+          name: "thermostat-plan",
+          component: () => import("@/views/ThermostatPlanView.vue"),
+        },
+        {
           path: "/notifications",
           name: "notifications",
           component: () => import("@/views/NotificationsView.vue"),

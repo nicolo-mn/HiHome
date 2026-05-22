@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/auth";
 import componentsIcon from "@/assets/icons/components.svg?raw";
 import dashboardIcon from "@/assets/icons/dashboard.svg?raw";
 import rulesIcon from "@/assets/icons/rules.svg?raw";
+import thermometerIcon from "@/assets/icons/thermometer.svg?raw";
 
 const auth = useAuthStore();
 
@@ -11,6 +12,7 @@ const navItems = computed(() => {
   const items = [
     { name: "Dashboard", to: "/dashboard", icon: dashboardIcon },
     { name: "Components", to: "/components", icon: componentsIcon },
+    { name: "Plan", to: "/thermostat-plan", icon: thermometerIcon },
   ];
   if (auth.isAdmin) {
     items.push({ name: "Rules", to: "/rules", icon: rulesIcon });

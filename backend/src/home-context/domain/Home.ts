@@ -7,6 +7,7 @@ export class Home {
     public id: string,
     public coordinates: Coordinates,
     public rooms: Room[] = [],
+    public hourlyTemperatures: number[] = new Array(24).fill(20),
   ) {}
 
   getAllComponents(): Component[] {
