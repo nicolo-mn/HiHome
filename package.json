@@ -26,10 +26,5 @@
     "lint-staged": "^17.0.0",
     "prettier": "^3.8.3",
     "vitest": "^4.1.5"
-  },
-  "pnpm": {
-    "overrides": {
-      "fast-uri": ">=3.1.2"
-    }
   }
 }
