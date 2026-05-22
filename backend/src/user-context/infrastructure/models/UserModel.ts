@@ -1,4 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
+import { Role } from "../../domain/Entities";
 
 const userSchema = new Schema(
   {
@@ -6,7 +7,11 @@ const userSchema = new Schema(
     homeId: { type: String, required: true, index: true },
     username: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, required: true },
+    role: {
+      type: String,
+      required: true,
+      enum: Object.values(Role),
+    },
     notificationPreferences: {
       type: [String],
       default: [

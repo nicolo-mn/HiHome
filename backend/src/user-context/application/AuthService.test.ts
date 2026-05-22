@@ -2,12 +2,18 @@ import "dotenv/config";
 import { describe, it, expect, vi } from "vitest";
 import { AuthService } from "./AuthService";
 import { UserRepository } from "../domain/UserRepository";
-import { StandardUser } from "../domain/Entities";
+import { Role, User } from "../domain/Entities";
 import jwt from "jsonwebtoken";
 
 describe("AuthService", () => {
   it("should successfully log in a valid user and return a JWT token", async () => {
-    const mockUser = new StandardUser("1", "1", "johndoe", "hashed_password");
+    const mockUser = new User(
+      "1",
+      "1",
+      "johndoe",
+      "hashed_password",
+      Role.Operator,
+    );
 
     const mockUserRepository: UserRepository = {
       findByUsernameAndHomeId: vi.fn().mockResolvedValue(mockUser),
@@ -21,6 +27,7 @@ describe("AuthService", () => {
     const decoded = jwt.decode(result) as any;
     expect(decoded.homeId).toBe("1");
     expect(decoded.username).toBe("johndoe");
+    expect(decoded.role).toBe(Role.Operator);
     expect(mockUserRepository.findByUsernameAndHomeId).toHaveBeenCalledWith(
       "1",
       "johndoe",

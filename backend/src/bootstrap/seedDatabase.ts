@@ -6,6 +6,7 @@ import {
   Thermostat,
   Window,
 } from "../home-context/domain";
+import { Role } from "../user-context/domain/Entities";
 import { UserModel } from "../user-context/infrastructure/models/UserModel";
 
 type SeedUser = {
@@ -13,7 +14,7 @@ type SeedUser = {
   homeId: string;
   username: string;
   password: string;
-  role: string;
+  role: Role;
 };
 
 const seedUsers: SeedUser[] = [
@@ -22,19 +23,27 @@ const seedUsers: SeedUser[] = [
     homeId: "1",
     username: "admin",
     password: "admin",
-    role: "Admin",
+    role: Role.Admin,
   },
   {
     id: "user-2",
     homeId: "1",
-    username: "standard",
-    password: "standard",
-    role: "StandardUser",
+    username: "operator",
+    password: "operator",
+    role: Role.Operator,
+  },
+  {
+    id: "user-3",
+    homeId: "1",
+    username: "viewer",
+    password: "viewer",
+    role: Role.Viewer,
   },
 ];
 
 export async function seedDatabase(homeRepo: HomeRepository): Promise<void> {
   await seedHome(homeRepo);
+  await migrateLegacyRoles();
   await seedUsersIfMissing();
 }
 
@@ -57,6 +66,18 @@ async function seedHome(homeRepo: HomeRepository): Promise<void> {
 
   await homeRepo.saveHome(seededHome);
   console.log("Seeded home with id 1");
+}
+
+async function migrateLegacyRoles(): Promise<void> {
+  const result = await UserModel.updateMany(
+    { role: "StandardUser" },
+    { $set: { role: Role.Operator } },
+  ).exec();
+  if (result.modifiedCount > 0) {
+    console.log(
+      `Migrated ${result.modifiedCount} StandardUser record(s) to ${Role.Operator}`,
+    );
+  }
 }
 
 async function seedUsersIfMissing(): Promise<void> {

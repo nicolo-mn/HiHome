@@ -1,4 +1,4 @@
-import { User } from "../domain/Entities";
+import { Role, User } from "../domain/Entities";
 import { UserRepository } from "../domain/UserRepository";
 import {
   PreferencesRepository,
@@ -10,22 +10,10 @@ export class InMemoryUserRepository
   implements UserRepository, PreferencesRepository
 {
   private users: User[] = [
-    {
-      id: "1",
-      username: "mockuser",
-      password: "mockpassword",
-      homeId: "1",
-      role: "StandardUser",
-      notificationPreferences: [...ALL_NOTIFICATION_TYPES],
-    },
-    {
-      id: "2",
-      username: "adminuser",
-      password: "mockpassword",
-      homeId: "1",
-      role: "Admin",
-      notificationPreferences: [...ALL_NOTIFICATION_TYPES],
-    },
+    // Your hardcoded mock user goes here
+    new User("1", "1", "mockuser", "mockpassword", Role.Operator, [...ALL_NOTIFICATION_TYPES]),
+    new User("2", "1", "adminuser", "mockpassword", Role.Admin, [...ALL_NOTIFICATION_TYPES]),
+    new User("3", "1", "vieweruser", "mockpassword", Role.Viewer, [...ALL_NOTIFICATION_TYPES]),
   ];
 
   async findByUsernameAndHomeId(

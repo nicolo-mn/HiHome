@@ -11,6 +11,7 @@ import { NotificationDeliveryPort } from "../domain/NotificationDeliveryPort";
 import { NotificationRepository } from "../domain/NotificationRepository";
 import { NotificationPolicy } from "./NotificationPolicy";
 import { UserPreferencesPort } from "./UserPreferencesPort";
+import { Role } from "../../user-context/domain/Entities";
 
 export class NotificationService implements NotificationInboundPort {
   constructor(
@@ -77,7 +78,7 @@ export class NotificationService implements NotificationInboundPort {
     homeId: string,
     event: ComponentActionEvent,
   ): Promise<void> {
-    if (event.actor.role === "Admin") return;
+    if (event.actor.role === Role.Admin) return;
     const componentLabel = event.componentName || event.componentId;
     await this.storeAndDeliver(
       homeId,
