@@ -79,6 +79,10 @@ const DEEPSEEK_API_BASE_URL =
 const EXT_API_BASE_URL =
   process.env.EXT_API_BASE_URL || "http://ext_api_service:8080";
 const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 20);
+const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
+  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
+);
+const HOUR_IN_MS = 60 * 60 * 1000;
 
 // --- Home Context Setup ---
 const sensorUpdatePort = new SocketIOSensorUpdateAdapter(
@@ -169,46 +173,10 @@ app.use("/api/home", homeRouter.router);
 app.use("/api/home", ruleRouter.router);
 app.use("/api/home", notificationRouter.router);
 app.use("/api/home", preferencesRouter.router);
-// --- Socket.IO for sensor updates ---
+
+// --- Socket.IO ---
 io.use(wsAuthMiddleware);
 io.use(wsHomeIdMiddleware);
-
-const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
-  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
-);
-
-homeService.pollAllHomesExternalSensorsData(); // Initial poll on startup to populate data immediately
-
-const HOUR_IN_MS = 60 * 60 * 1000;
-const runUpdate = () => {
-  void homeService.applyHourlyTemperaturePlan().catch((error) => {
-    console.error("Error applying hourly temperature plan:", error);
-  });
-};
-const scheduleHourlyPlanUpdates = () => {
-  runUpdate(); // run once on startup
-  const now = new Date();
-  const nextHour = new Date(now);
-  nextHour.setMinutes(0, 0, 0);
-  nextHour.setHours(now.getHours() + 1);
-  const delay = nextHour.getTime() - now.getTime();
-
-  setTimeout(() => {
-    // start execution at next hour mark
-    runUpdate();
-    setInterval(() => runUpdate(), HOUR_IN_MS);
-  }, delay);
-};
-
-scheduleHourlyPlanUpdates();
-
-setInterval(async () => {
-  try {
-    await homeService.pollAllHomesExternalSensorsData();
-  } catch (error) {
-    console.error("Error polling external sensors data:", error);
-  }
-}, EXTERNAL_SENSORS_POLL_INTERVAL_MS);
 
 io.on("connection", (socket) => {
   const homeId = socket.handshake.query.homeId as string;
@@ -314,10 +282,41 @@ app.get("/api/message", async (req: Request, res: Response) => {
   }
 });
 
+// --- Scheduling helpers (defined here, called only inside bootstrap) ---
+const runUpdate = () => {
+  void homeService.applyHourlyTemperaturePlan().catch((error) => {
+    console.error("Error applying hourly temperature plan:", error);
+  });
+};
+
+const scheduleHourlyPlanUpdates = () => {
+  runUpdate();
+  const now = new Date();
+  const nextHour = new Date(now);
+  nextHour.setMinutes(0, 0, 0);
+  nextHour.setHours(now.getHours() + 1);
+  const delay = nextHour.getTime() - now.getTime();
+  setTimeout(() => {
+    runUpdate();
+    setInterval(() => runUpdate(), HOUR_IN_MS);
+  }, delay);
+};
+
 export async function bootstrap() {
   try {
     await mongoose.connect(MONGO_URI);
     await seedDatabase(homeRepo);
+
+    await homeService.pollAllHomesExternalSensorsData();
+    await scheduleHourlyPlanUpdates();
+    setInterval(async () => {
+      try {
+        await homeService.pollAllHomesExternalSensorsData();
+      } catch (error) {
+        console.error("Error polling external sensors data:", error);
+      }
+    }, EXTERNAL_SENSORS_POLL_INTERVAL_MS);
+
     server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);
     });
