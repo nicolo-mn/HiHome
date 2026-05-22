@@ -1,3 +1,7 @@
 packages:
   - "frontend"
   - "backend"
+
+overrides:
+  fast-uri: ">=3.1.2"
+  js-cookie: ">=3.0.6"
