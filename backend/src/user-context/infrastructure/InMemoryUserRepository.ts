@@ -1,15 +1,22 @@
 import { User } from "../domain/Entities";
 import { UserRepository } from "../domain/UserRepository";
+import {
+  PreferencesRepository,
+  UserPrefsRecord,
+  ALL_NOTIFICATION_TYPES,
+} from "../domain/PreferencesRepository";
 
-export class InMemoryUserRepository implements UserRepository {
+export class InMemoryUserRepository
+  implements UserRepository, PreferencesRepository
+{
   private users: User[] = [
-    // Your hardcoded mock user goes here
     {
       id: "1",
       username: "mockuser",
       password: "mockpassword",
       homeId: "1",
       role: "StandardUser",
+      notificationPreferences: [...ALL_NOTIFICATION_TYPES],
     },
     {
       id: "2",
@@ -17,6 +24,7 @@ export class InMemoryUserRepository implements UserRepository {
       password: "mockpassword",
       homeId: "1",
       role: "Admin",
+      notificationPreferences: [...ALL_NOTIFICATION_TYPES],
     },
   ];
 
@@ -24,12 +32,44 @@ export class InMemoryUserRepository implements UserRepository {
     homeId: string,
     username: string,
   ): Promise<User | null> {
-    console.log(
-      `Searching for user with username: ${username} and homeId: ${homeId}`,
-    );
     return (
       this.users.find((u) => u.username === username && u.homeId === homeId) ||
       null
     );
+  }
+
+  async findAllByHome(homeId: string): Promise<UserPrefsRecord[]> {
+    return this.users
+      .filter((u) => u.homeId === homeId)
+      .map((u) => ({
+        username: u.username,
+        notificationPreferences: u.notificationPreferences ?? [
+          ...ALL_NOTIFICATION_TYPES,
+        ],
+      }));
+  }
+
+  async findPreferences(
+    homeId: string,
+    username: string,
+  ): Promise<string[] | null> {
+    const user = this.users.find(
+      (u) => u.homeId === homeId && u.username === username,
+    );
+    if (!user) return null;
+    return user.notificationPreferences ?? [...ALL_NOTIFICATION_TYPES];
+  }
+
+  async updatePreferences(
+    homeId: string,
+    username: string,
+    types: string[],
+  ): Promise<void> {
+    const user = this.users.find(
+      (u) => u.homeId === homeId && u.username === username,
+    );
+    if (user) {
+      (user as User).notificationPreferences = types;
+    }
   }
 }

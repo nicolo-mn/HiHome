@@ -19,20 +19,24 @@ const authValidators = [
   }),
 ];
 
-const homeIdValidators = [
-  param("id").custom((value, { req }) => {
-    if (!value) {
-      throw new Error("Bad Request: Missing homeId parameter");
-    }
+function makeHomeIdValidators(paramName: string) {
+  return [
+    param(paramName).custom((value, { req }) => {
+      if (!value) {
+        throw new Error("Bad Request: Missing homeId parameter");
+      }
 
-    const user = (req as any).user;
-    if (!user || user.homeId !== value) {
-      throw new Error("Forbidden: Access to this house is denied");
-    }
+      const user = (req as any).user;
+      if (!user || user.homeId !== value) {
+        throw new Error("Forbidden: Access to this house is denied");
+      }
 
-    return true;
-  }),
-];
+      return true;
+    }),
+  ];
+}
+
+const homeIdValidators = makeHomeIdValidators("id");
 
 function getValidationMessage(req: Request): string | null {
   const errors = validationResult(req).array({ onlyFirstError: true });
@@ -54,17 +58,19 @@ export const authMiddleware = async (
   next();
 };
 
-export const homeIdMiddleware = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  await Promise.all(homeIdValidators.map((validator) => validator.run(req)));
-  const message = getValidationMessage(req);
-  if (message) {
-    const status = message.startsWith("Forbidden:") ? 403 : 400;
-    res.status(status).json({ error: message });
-    return;
-  }
-  next();
-};
+function makeHomeIdMiddleware(paramName: string) {
+  const validators = makeHomeIdValidators(paramName);
+  return async (req: Request, res: Response, next: NextFunction) => {
+    await Promise.all(validators.map((validator) => validator.run(req)));
+    const message = getValidationMessage(req);
+    if (message) {
+      const status = message.startsWith("Forbidden:") ? 403 : 400;
+      res.status(status).json({ error: message });
+      return;
+    }
+    next();
+  };
+}
+
+export const homeIdMiddleware = makeHomeIdMiddleware("id");
+export const homeIdByHomeIdMiddleware = makeHomeIdMiddleware("homeId");

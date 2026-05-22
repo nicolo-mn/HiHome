@@ -10,24 +10,40 @@ import { Notification } from "../domain/Notification";
 import { NotificationDeliveryPort } from "../domain/NotificationDeliveryPort";
 import { NotificationRepository } from "../domain/NotificationRepository";
 import { NotificationPolicy } from "./NotificationPolicy";
+import { UserPreferencesPort } from "./UserPreferencesPort";
 
 export class NotificationService implements NotificationInboundPort {
   constructor(
     private repository: NotificationRepository,
     private deliveryPort: NotificationDeliveryPort,
     private policy: NotificationPolicy,
+    private userPreferencesPort: UserPreferencesPort,
   ) {}
 
   async listByHome(homeId: string): Promise<NotificationDTO[]> {
     const notifications = await this.repository.listByHome(homeId);
-    return notifications.map((n) => ({
+    return notifications.map((n) => this.toDTO(n));
+  }
+
+  async listByHomeFiltered(
+    homeId: string,
+    allowedTypes: string[],
+  ): Promise<NotificationDTO[]> {
+    const notifications = await this.repository.listByHome(homeId);
+    return notifications
+      .filter((n) => allowedTypes.includes(n.type))
+      .map((n) => this.toDTO(n));
+  }
+
+  private toDTO(n: Notification): NotificationDTO {
+    return {
       id: n.id,
       homeId: n.homeId,
       type: n.type,
       message: n.message,
       createdAt: n.createdAt.toISOString(),
       read: n.read,
-    }));
+    };
   }
 
   async notifySensorUpdate(
@@ -51,7 +67,12 @@ export class NotificationService implements NotificationInboundPort {
     );
 
     await this.repository.add(notification);
-    this.deliveryPort.send(notification);
+    const recipients =
+      await this.userPreferencesPort.getEnabledUsernamesForType(
+        homeId,
+        "AirQualityThresholdBreach",
+      );
+    this.deliveryPort.send(notification, recipients);
   }
 
   async notifyRuleExecuted(
@@ -66,7 +87,12 @@ export class NotificationService implements NotificationInboundPort {
     );
 
     await this.repository.add(notification);
-    this.deliveryPort.send(notification);
+    const recipients =
+      await this.userPreferencesPort.getEnabledUsernamesForType(
+        homeId,
+        "AutomationRuleExecuted",
+      );
+    this.deliveryPort.send(notification, recipients);
   }
 
   async notifyComponentAction(
@@ -83,7 +109,12 @@ export class NotificationService implements NotificationInboundPort {
     );
 
     await this.repository.add(notification);
-    this.deliveryPort.send(notification);
+    const recipients =
+      await this.userPreferencesPort.getEnabledUsernamesForType(
+        homeId,
+        "ComponentAction",
+      );
+    this.deliveryPort.send(notification, recipients);
   }
 
   private extractAirQualityValue(update: SensorUpdateEvent): number | null {

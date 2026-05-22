@@ -38,4 +38,8 @@ export interface NotificationInboundPort {
     event: ComponentActionEvent,
   ): Promise<void>;
   listByHome(homeId: string): Promise<NotificationDTO[]>;
+  listByHomeFiltered(
+    homeId: string,
+    allowedTypes: string[],
+  ): Promise<NotificationDTO[]>;
 }

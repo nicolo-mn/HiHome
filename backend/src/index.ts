@@ -13,6 +13,9 @@ import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/Socke
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
+import { UserPreferencesAdapter } from "./user-context/infrastructure/UserPreferencesAdapter";
+import { PreferencesController } from "./user-context/infrastructure/controllers/PreferencesController";
+import { PreferencesRouter } from "./user-context/infrastructure/routes/PreferencesRouter";
 import { ChatService } from "./home-context/application/ChatService";
 import { ChatController } from "./home-context/infrastructure/controllers/ChatController";
 import { HomeRouter } from "./home-context/infrastructure/routes/HomeRouter";
@@ -35,7 +38,6 @@ import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExec
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
-import { HomeRepository } from "./home-context/domain";
 import { NotificationContextAdapter } from "./home-context/infrastructure/NotificationPortAdapter";
 import { SocketIOChatStreamAdapter } from "./home-context/infrastructure/SocketIOChatStreamAdapter";
 import { ChatStreamEventType } from "./home-context/application/ChatStreamPort";
@@ -44,12 +46,27 @@ const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { cors: { origin: "*" } });
 
-const notificationContext = NotificationContextFactory.create(io);
+// --- User context setup (must happen before notification context) ---
+const authContext = UserContextFactory.create();
+const authController = new UserController(authContext.authPort);
+const userPreferencesAdapter = new UserPreferencesAdapter(
+  authContext.preferencesRepository,
+);
+const preferencesController = new PreferencesController(
+  authContext.preferencesRepository,
+);
+const preferencesRouter = new PreferencesRouter(preferencesController);
+
+const notificationContext = NotificationContextFactory.create(
+  io,
+  userPreferencesAdapter,
+);
 const homeNotificationPort = new NotificationContextAdapter(
   notificationContext.notificationPort,
 );
 const notificationController = new NotificationController(
   notificationContext.notificationPort,
+  authContext.preferencesRepository,
 );
 const notificationRouter = new NotificationRouter(notificationController);
 
@@ -98,10 +115,6 @@ export const ruleController = new RuleController(ruleService);
 const ruleRouter = new RuleRouter(ruleController);
 const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
 
-// --- User context setup ---
-const authContext = UserContextFactory.create();
-const authController = new UserController(authContext.authPort);
-
 const forecastPort = externalSensorsDataPort;
 const chatCompletionPort = new DeepSeekChatCompletionAdapter(
   {
@@ -139,6 +152,7 @@ app.use(authMiddleware);
 app.use("/api/home", homeRouter.router);
 app.use("/api/home", ruleRouter.router);
 app.use("/api/home", notificationRouter.router);
+app.use("/api/home", preferencesRouter.router);
 // --- Socket.IO for sensor updates ---
 io.use(wsAuthMiddleware);
 io.use(wsHomeIdMiddleware);
@@ -188,6 +202,10 @@ io.on("connection", (socket) => {
   }
 
   socket.join(`home-${homeId}`);
+  const socketUser = (socket as any).user as { username?: string } | undefined;
+  if (socketUser?.username) {
+    socket.join(`user-${socketUser.username}`);
+  }
   void sensorUpdatePort.registerClient(homeId, socket);
   void homeService.sendExternalSensorsUpdate(homeId).catch((error) => {
     console.error(

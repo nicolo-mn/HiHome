@@ -4,6 +4,7 @@ export interface User {
   readonly homeId: string;
   password: string;
   readonly role: string;
+  notificationPreferences?: string[];
 }
 
 export class StandardUser implements User {
