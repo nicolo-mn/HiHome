@@ -218,6 +218,10 @@ io.on("connection", (socket) => {
   }
 
   socket.join(`home-${homeId}`);
+  const username = (socket as any).user?.username;
+  if (typeof username === "string" && username.length > 0) {
+    socket.join(`user-${username}`);
+  }
   void homeService.sendExternalSensorsUpdate(homeId).catch((error) => {
     console.error(
       `Failed to send external sensors snapshot for home ${homeId}:`,
