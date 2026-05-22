@@ -28,6 +28,7 @@ export class ChatService {
     userMessage: string,
     history: ChatMessage[],
   ): Promise<string> {
+    console.log(`ChatService: chat called for house ${houseId} by ${username}`);
     if (!userMessage.trim()) {
       throw new Error("Message is required");
     }
@@ -50,6 +51,9 @@ export class ChatService {
     history: ChatMessage[],
     streamPort: ChatStreamPort,
   ): Promise<string> {
+    console.log(
+      `ChatService: streamChat called for house ${houseId} by ${username}`,
+    );
     if (!userMessage.trim()) {
       throw new Error("Message is required");
     }

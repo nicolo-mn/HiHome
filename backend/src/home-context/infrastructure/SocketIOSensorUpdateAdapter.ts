@@ -16,6 +16,9 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
   ) {}
 
   private broadcast(homeId: string, event: string, payload: object): void {
+    console.log(
+      `SocketIOSensorUpdateAdapter: Broadcasting ${event} to home-${homeId}`,
+    );
     this.io.to(`home-${homeId}`).emit(event, payload);
   }
 
