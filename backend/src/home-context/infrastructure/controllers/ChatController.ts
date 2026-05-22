@@ -17,22 +17,32 @@ export class ChatController {
     const user = (req as any).user as AuthedUser | undefined;
 
     if (!user?.houseId || !user.username) {
+      console.warn(
+        "ChatController: Unauthorized request, user not authenticated properly",
+      );
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     if (!message) {
+      console.warn("ChatController: Missing message in request body");
       res.status(400).json({ error: "Message is required" });
       return;
     }
 
     try {
+      console.log(
+        `ChatController: Chat requested for home ${user.houseId} by user ${user.username}`,
+      );
       const safeHistory = Array.isArray(history) ? history : [];
       const reply = await this.chatService.chat(
         user.houseId,
         user.username,
         message,
         safeHistory,
+      );
+      console.log(
+        `ChatController: Successfully generated reply for home ${user.houseId}`,
       );
       res.json({ reply });
     } catch (error: any) {

@@ -44,15 +44,18 @@ func NewEnvironmentController(service *application.EnvironmentService) *Environm
 
 func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
+		log.Printf("method not allowed for %s", r.URL.Path)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	lat, lon, err := parseCoordinates(r)
 	if err != nil {
+		log.Printf("invalid coordinates for %s: %v", r.URL.Path, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	log.Printf("environment request received for lat=%.4f lon=%.4f", lat, lon)
 
 	info, err := h.service.GetEnvironmentInfo(lat, lon)
 	if err != nil {
@@ -76,15 +79,18 @@ func (h *EnvironmentController) ServeHTTP(w http.ResponseWriter, r *http.Request
 
 func (h *EnvironmentController) ServeForecast(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
+		log.Printf("method not allowed for %s", r.URL.Path)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	lat, lon, err := parseCoordinates(r)
 	if err != nil {
+		log.Printf("invalid coordinates for %s: %v", r.URL.Path, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	log.Printf("weekly forecast request received for lat=%.4f lon=%.4f", lat, lon)
 
 	forecast, err := h.service.GetWeeklyForecast(lat, lon)
 	if err != nil {

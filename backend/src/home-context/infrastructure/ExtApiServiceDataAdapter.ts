@@ -46,16 +46,37 @@ export class ExtApiServiceDataAdapter
     url.searchParams.set("latitude", home.coordinates.latitude.toString());
     url.searchParams.set("longitude", home.coordinates.longitude.toString());
 
-    const response = await fetch(url.toString());
+    let response: Response;
+    try {
+      response = await fetch(url.toString());
+    } catch (error) {
+      console.error(
+        `Failed to reach ext-api-service for home ${home.id} at ${url.toString()}:`,
+        error,
+      );
+      throw error;
+    }
     if (!response.ok) {
+      console.error(
+        `ext-api-service responded with status ${response.status} for home ${home.id} at ${url.toString()}`,
+      );
       throw new Error(
         `Failed to fetch external sensors data: ${response.status}`,
       );
     }
 
-    const payload = (await response.json()) as ExtApiServiceResponse;
+    let payload: ExtApiServiceResponse;
+    try {
+      payload = (await response.json()) as ExtApiServiceResponse;
+    } catch (error) {
+      console.error(
+        `Failed to parse ext-api-service response for home ${home.id} at ${url.toString()}:`,
+        error,
+      );
+      throw error;
+    }
 
-    return {
+    const result = {
       externalTemperature: { temperature: payload.temperature },
       airQuality: { AQI: payload.europeanAqi },
       wind: {
@@ -67,6 +88,10 @@ export class ExtApiServiceDataAdapter
         precipitation: payload.precipitation,
       },
     };
+    console.log(
+      `Successfully received external sensors data for home ${home.id}: temp=${result.externalTemperature.temperature}, AQI=${result.airQuality.AQI}`,
+    );
+    return result;
   }
 
   async getForecastSummary(
@@ -76,14 +101,35 @@ export class ExtApiServiceDataAdapter
     url.searchParams.set("latitude", coords.latitude.toString());
     url.searchParams.set("longitude", coords.longitude.toString());
 
-    const response = await fetch(url.toString());
+    let response: Response;
+    try {
+      response = await fetch(url.toString());
+    } catch (error) {
+      console.error(
+        `Failed to reach ext-api-service for forecast at ${url.toString()}:`,
+        error,
+      );
+      return null;
+    }
     if (!response.ok) {
+      console.error(
+        `ext-api-service responded with status ${response.status} for forecast at ${url.toString()}`,
+      );
       return null;
     }
 
-    const payload = (await response.json()) as ExtApiServiceForecastResponse;
+    let payload: ExtApiServiceForecastResponse;
+    try {
+      payload = (await response.json()) as ExtApiServiceForecastResponse;
+    } catch (error) {
+      console.error(
+        `Failed to parse ext-api-service forecast response at ${url.toString()}:`,
+        error,
+      );
+      return null;
+    }
 
-    return {
+    const result = {
       days: payload.days.map((day) => ({
         date: day.date,
         weatherForecast: this.mapWeatherTypeToForecast(day.weatherType),
@@ -96,6 +142,10 @@ export class ExtApiServiceDataAdapter
         precipitationSum: day.precipitationSum,
       })),
     };
+    console.log(
+      `Successfully received forecast summary for coordinates (${coords.latitude}, ${coords.longitude})`,
+    );
+    return result;
   }
 
   private mapWeatherTypeToForecast(weatherType: number): WeatherForecast {

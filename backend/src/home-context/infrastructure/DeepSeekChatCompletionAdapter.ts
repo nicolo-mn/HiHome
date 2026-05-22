@@ -283,6 +283,9 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(
+        `DeepSeekChatCompletionAdapter: DeepSeek API error during requestChat: ${response.status} ${errorText}`,
+      );
       throw new Error(`DeepSeek error: ${response.status} ${errorText}`);
     }
 
@@ -320,6 +323,9 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(
+        `DeepSeekChatCompletionAdapter: DeepSeek API error during requestStreamChat: ${response.status} ${errorText}`,
+      );
       throw new Error(`DeepSeek error: ${response.status} ${errorText}`);
     }
 

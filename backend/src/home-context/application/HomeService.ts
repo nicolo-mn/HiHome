@@ -80,12 +80,23 @@ export class HomeService implements ActionService {
     const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentById(componentId);
-    if (!component) throw new Error("Component not found");
+    if (!component) {
+      console.error(
+        `Failed to execute action ${action}: Component ${componentId} not found in home ${homeId}`,
+      );
+      throw new Error("Component not found");
+    }
 
     if (typeof (component as any)[action] !== "function") {
+      console.error(
+        `Failed to execute action ${action}: Action not supported on component ${componentId}`,
+      );
       throw new Error("Action not supported");
     }
 
+    console.log(
+      `Executing component action ${action} for home ${homeId} on component ${componentId}`,
+    );
     await this.persistAndBroadcast(home, component);
     const event = (component as any)[action](param) as ComponentEvent;
     if (event) {
@@ -171,11 +182,16 @@ export class HomeService implements ActionService {
     const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(lightId, componentType);
-    if (!component)
+    if (!component) {
+      console.error(
+        `Failed to execute lightTurnOn: Component ${lightId} of type ${componentType} not found in home ${homeId}`,
+      );
       throw new Error(
         `Component ${lightId} of type ${componentType} not found`,
       );
+    }
 
+    console.log(`Executing lightTurnOn for home ${homeId} on light ${lightId}`);
     const light = component as Light;
     const event = light.turnOn();
     home.addComponentEvent(event);
@@ -189,11 +205,18 @@ export class HomeService implements ActionService {
     const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(lightId, componentType);
-    if (!component)
+    if (!component) {
+      console.error(
+        `Failed to execute lightTurnOff: Component ${lightId} of type ${componentType} not found in home ${homeId}`,
+      );
       throw new Error(
         `Component ${lightId} of type ${componentType} not found`,
       );
+    }
 
+    console.log(
+      `Executing lightTurnOff for home ${homeId} on light ${lightId}`,
+    );
     const light = component as Light;
     const event = light.turnOff();
     home.addComponentEvent(event);
@@ -207,11 +230,18 @@ export class HomeService implements ActionService {
     const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(windowId, componentType);
-    if (!component)
+    if (!component) {
+      console.error(
+        `Failed to execute windowOpen: Component ${windowId} of type ${componentType} not found in home ${homeId}`,
+      );
       throw new Error(
         `Component ${windowId} of type ${componentType} not found`,
       );
+    }
 
+    console.log(
+      `Executing windowOpen for home ${homeId} on window ${windowId}`,
+    );
     const window = component as Window;
     const event = window.open();
     home.addComponentEvent(event);
@@ -225,11 +255,18 @@ export class HomeService implements ActionService {
     const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentByIdAndType(windowId, componentType);
-    if (!component)
+    if (!component) {
+      console.error(
+        `Failed to execute windowClose: Component ${windowId} of type ${componentType} not found in home ${homeId}`,
+      );
       throw new Error(
         `Component ${windowId} of type ${componentType} not found`,
       );
+    }
 
+    console.log(
+      `Executing windowClose for home ${homeId} on window ${windowId}`,
+    );
     const window = component as Window;
     const event = window.close();
     home.addComponentEvent(event);
@@ -246,11 +283,18 @@ export class HomeService implements ActionService {
 
     const home = await this.ensureHomeExists(homeId);
     const component = home.getComponentByIdAndType(thermostatId, componentType);
-    if (!component)
+    if (!component) {
+      console.error(
+        `Failed to execute thermostatSetTemperature: Component ${thermostatId} of type ${componentType} not found in home ${homeId}`,
+      );
       throw new Error(
         `Component ${thermostatId} of type ${componentType} not found`,
       );
+    }
 
+    console.log(
+      `Executing thermostatSetTemperature for home ${homeId} on thermostat ${thermostatId} to ${temperature}`,
+    );
     const thermostat = component as Thermostat;
     const event = thermostat.setTemperature(temperature);
     home.addComponentEvent(event);
@@ -286,6 +330,10 @@ export class HomeService implements ActionService {
         try {
           const extSensorsData =
             await this.externalSensorsDataPort.getExternalSensorsData(home);
+
+          console.log(
+            `External sensors update received for home ${home.id}: temp=${extSensorsData.externalTemperature.temperature} AQI=${extSensorsData.airQuality.AQI}`,
+          );
 
           this.sensorRegistry.setExternalSensorsUpdate(home.id, extSensorsData);
 
@@ -329,6 +377,9 @@ export class HomeService implements ActionService {
     update: TemperatureState,
   ): Promise<void> {
     this.sensorRegistry.setInternalTemperature(homeId, update);
+    console.log(
+      `Internal temperature update received for home ${homeId}: temp=${update.temperature}`,
+    );
     await this.sendInternalSensorsUpdate(homeId);
   }
 
