@@ -18,6 +18,7 @@ function formatRoomLabel(roomId: string): string {
 
 export function useRoomGroups(
   components: Ref<HomeComponent[]>,
+  roomNameMap?: ComputedRef<Map<string, string>> | Ref<Map<string, string>>,
 ): ComputedRef<RoomGroup[]> {
   return computed(() => {
     const map = new Map<string, HomeComponent[]>();
@@ -27,10 +28,16 @@ export function useRoomGroups(
       list.push(comp);
       map.set(key, list);
     }
-    return Array.from(map.entries()).map(([roomId, items]) => ({
-      roomId,
-      label: roomId === UNASSIGNED ? "Other" : formatRoomLabel(roomId),
-      items,
-    }));
+    return Array.from(map.entries()).map(([roomId, items]) => {
+      let label: string;
+      if (roomId === UNASSIGNED) {
+        label = "Other";
+      } else if (roomNameMap) {
+        label = roomNameMap.value.get(roomId) || formatRoomLabel(roomId);
+      } else {
+        label = formatRoomLabel(roomId);
+      }
+      return { roomId, label, items };
+    });
   });
 }

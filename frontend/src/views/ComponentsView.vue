@@ -7,6 +7,7 @@ import { useRoomGroups } from "@/composables/useRoomGroups";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import { ApiError } from "@/api/errors";
 import type { ToggleableType } from "@/api/components";
+import { getRooms } from "@/api/rooms";
 import ComponentCard from "@/components/cards/ComponentCard.vue";
 import AddComponentCard from "@/components/cards/AddComponentCard.vue";
 import BaseButton from "@/components/BaseButton.vue";
@@ -17,7 +18,18 @@ const store = useComponentsStore();
 const { components, isLoading, error } = storeToRefs(store);
 const { load, toggle, step, isBusy, addComponent } = store;
 
-const roomGroups = useRoomGroups(components);
+const rooms = ref<{ id: string; name: string }[]>([]);
+const roomsLoading = ref(false);
+
+const roomNameMap = computed(() => {
+  const map = new Map<string, string>();
+  for (const room of rooms.value) {
+    map.set(room.id, room.name);
+  }
+  return map;
+});
+
+const roomGroups = useRoomGroups(components, roomNameMap);
 
 const fieldClass =
   "bg-elevated rounded-lg px-4 py-3 text-body placeholder:text-muted outline-none border border-border focus:border-primary transition";
@@ -43,7 +55,9 @@ const roomOptions = computed(() => {
   const map = new Map<string, string>();
   for (const comp of components.value) {
     if (comp.roomId) {
-      map.set(comp.roomId, formatRoomLabel(comp.roomId));
+      const roomName = roomNameMap.value.get(comp.roomId);
+      const label = roomName || formatRoomLabel(comp.roomId);
+      map.set(comp.roomId, label);
     }
   }
   return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
@@ -124,7 +138,22 @@ function onAddComponentClick(roomId: string) {
   openAddComponent(roomId);
 }
 
-onMounted(load);
+async function loadRooms() {
+  if (!auth.homeId) return;
+  roomsLoading.value = true;
+  try {
+    rooms.value = await getRooms(auth.homeId);
+  } catch (e) {
+    console.error("Failed to load rooms:", e);
+  } finally {
+    roomsLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  load();
+  loadRooms();
+});
 </script>
 
 <template>
