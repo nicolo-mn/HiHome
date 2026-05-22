@@ -123,6 +123,35 @@ export class HomeService implements ActionService {
     await this.homeRepo.saveHome(home);
   }
 
+  async applyHourlyTemperaturePlan(date = new Date()): Promise<void> {
+    const hour = date.getHours();
+    const homes = await this.homeRepo.getAllHomes();
+
+    await Promise.all(
+      homes.map(async (home) => {
+        const plan = Array.isArray(home.hourlyTemperatures)
+          ? home.hourlyTemperatures
+          : [];
+        if (plan.length !== 24) {
+          console.warn(
+            `Hourly temperature plan invalid for home ${home.id}, skipping update`,
+          );
+          return;
+        }
+
+        const temperature = plan[hour];
+        if (typeof temperature !== "number") {
+          console.warn(
+            `Hourly temperature missing for home ${home.id} at hour ${hour}, skipping update`,
+          );
+          return;
+        }
+
+        await this.updateInternalTemperature(home.id, { temperature });
+      }),
+    );
+  }
+
   async lightTurnOn(homeId: string, lightId: string): Promise<void> {
     const componentType = ComponentTypes.LIGHT;
 

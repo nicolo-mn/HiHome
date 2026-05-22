@@ -149,6 +149,29 @@ const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
 
 homeService.pollAllHomesExternalSensorsData(); // Initial poll on startup to populate data immediately
 
+const HOUR_IN_MS = 60 * 60 * 1000;
+const runUpdate = () => {
+  void homeService.applyHourlyTemperaturePlan().catch((error) => {
+    console.error("Error applying hourly temperature plan:", error);
+  });
+};
+const scheduleHourlyPlanUpdates = () => {
+  runUpdate(); // run once on startup
+  const now = new Date();
+  const nextHour = new Date(now);
+  nextHour.setMinutes(0, 0, 0);
+  nextHour.setHours(now.getHours() + 1);
+  const delay = nextHour.getTime() - now.getTime();
+
+  setTimeout(() => {
+    // start execution at next hour mark
+    runUpdate();
+    setInterval(() => runUpdate(), HOUR_IN_MS);
+  }, delay);
+};
+
+scheduleHourlyPlanUpdates();
+
 setInterval(async () => {
   try {
     await homeService.pollAllHomesExternalSensorsData();
