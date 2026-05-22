@@ -1,6 +1,7 @@
 import { Coordinates } from "./Coordinates";
 import { Room } from "./Room";
 import { Component, ComponentTypes } from "./Component";
+import { ComponentEvent } from "./EventLog";
 
 export class Home {
   constructor(
@@ -8,6 +9,7 @@ export class Home {
     public coordinates: Coordinates,
     public rooms: Room[] = [],
     public hourlyTemperatures: number[] = new Array(24).fill(20),
+    public eventLog: ComponentEvent[] = [],
   ) {}
 
   getAllComponents(): Component[] {
@@ -25,5 +27,9 @@ export class Home {
     return this.getAllComponents().find(
       (c) => c.id === componentId && c.getType() === type,
     );
+  }
+
+  addComponentEvent(event: ComponentEvent) {
+    this.eventLog.push(event);
   }
 }

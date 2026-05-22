@@ -8,6 +8,7 @@ import {
   Room,
   Thermostat,
   Window,
+  ComponentEvent,
 } from "../domain";
 import { HomeModel } from "./models/HomeModel";
 
@@ -32,6 +33,23 @@ type HomeRecord = {
   coordinates: Coordinates;
   rooms: RoomRecord[];
   hourlyTemperatures?: number[];
+  eventLog: ComponentEventRecord[];
+};
+
+type ComponentEventRecord = {
+  id: string;
+  componentId: string;
+  componentName?: string;
+  componentType: ComponentTypes;
+  eventType?: string;
+  targetTemperature?: number;
+  action?: string;
+  value?: number;
+  actor?: {
+    username: string;
+    role: string;
+  };
+  createdAt: Date | string;
 };
 
 export class MongoHomeRepository implements HomeRepository {
@@ -84,11 +102,15 @@ export class MongoHomeRepository implements HomeRepository {
         ),
     );
 
+    const eventLog = (record.eventLog || []).map((event) =>
+      this.toComponentEvent(event),
+    );
     return new Home(
       record.id,
       record.coordinates,
       rooms,
       record.hourlyTemperatures,
+      eventLog,
     );
   }
 
@@ -141,7 +163,106 @@ export class MongoHomeRepository implements HomeRepository {
         ),
       })),
       hourlyTemperatures: home.hourlyTemperatures,
+      eventLog: home.eventLog.map((event) =>
+        this.toComponentEventRecord(event),
+      ),
     };
+  }
+
+  private toComponentEvent(record: ComponentEventRecord): ComponentEvent {
+    const base = {
+      id: record.id,
+      componentId: record.componentId,
+      componentName: record.componentName,
+      componentType: record.componentType,
+      actor: record.actor,
+      createdAt: new Date(record.createdAt),
+    };
+
+    const eventType = this.resolveEventType(record);
+    switch (eventType) {
+      case "LightTurnedOn":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.LIGHT,
+        };
+      case "LightTurnedOff":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.LIGHT,
+        };
+      case "WindowOpened":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.WINDOW,
+        };
+      case "WindowClosed":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.WINDOW,
+        };
+      case "ThermostatSet":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.THERMOSTAT,
+          targetTemperature: record.targetTemperature ?? record.value ?? 0,
+        };
+      default:
+        return {
+          ...base,
+          eventType: "LightTurnedOn",
+          componentType: ComponentTypes.LIGHT,
+        };
+    }
+  }
+
+  private toComponentEventRecord(event: ComponentEvent): ComponentEventRecord {
+    switch (event.eventType) {
+      case "ThermostatSet":
+        return {
+          id: event.id,
+          componentId: event.componentId,
+          componentName: event.componentName,
+          componentType: event.componentType,
+          eventType: event.eventType,
+          targetTemperature: event.targetTemperature,
+          actor: event.actor,
+          createdAt: event.createdAt,
+        };
+      default:
+        return {
+          id: event.id,
+          componentId: event.componentId,
+          componentName: event.componentName,
+          componentType: event.componentType,
+          eventType: event.eventType,
+          actor: event.actor,
+          createdAt: event.createdAt,
+        };
+    }
+  }
+
+  private resolveEventType(record: ComponentEventRecord): string {
+    if (record.eventType) return record.eventType;
+    switch (record.action) {
+      case "turnOn":
+        return "LightTurnedOn";
+      case "turnOff":
+        return "LightTurnedOff";
+      case "open":
+        return "WindowOpened";
+      case "close":
+        return "WindowClosed";
+      case "setTemperature":
+        return "ThermostatSet";
+      default:
+        return "LightTurnedOn";
+    }
   }
 
   private toComponentRecord(

@@ -109,15 +109,19 @@ export class HomeController {
       const action = req.params.action as string;
       const param = this.parseActionParams(action, req.body);
 
+      const user = (req as AuthenticatedRequest).user;
+
       const component = await this.homeService.executeAction(
         req.params.id as string,
         req.params.componentId as string,
         req.params.action as string,
         param,
+        user?.username && user.role
+          ? { username: user.username, role: user.role }
+          : undefined,
       );
 
-      const user = (req as AuthenticatedRequest).user;
-
+      // Generate an event for the notification system
       if (user?.username && user.role && this.notificationPort) {
         this.notificationPort
           .notifyComponentAction(req.params.id as string, {
@@ -135,6 +139,22 @@ export class HomeController {
       }
 
       res.json(component.accept(this.stateSerializer));
+    } catch (e: any) {
+      res.status(400).json({ error: e.message });
+    }
+  }
+
+  async getComponentEvents(req: Request, res: Response) {
+    try {
+      const events = await this.homeService.getComponentEvents(
+        req.params.id as string,
+      );
+      res.json({
+        events: events.map((event) => ({
+          ...event,
+          createdAt: event.createdAt.toISOString(),
+        })),
+      });
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }

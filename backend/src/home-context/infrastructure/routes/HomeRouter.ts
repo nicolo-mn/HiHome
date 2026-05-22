@@ -28,6 +28,12 @@ export class HomeRouter {
     this.router.get("/:id/components", (req: Request, res: Response) =>
       this.homeController.getComponents(req, res),
     );
+    this.router.get(
+      "/:id/components/events",
+      adminMiddleware,
+      (req: Request, res: Response) =>
+        this.homeController.getComponentEvents(req, res),
+    );
     this.router.post(
       "/:id/components",
       adminMiddleware,

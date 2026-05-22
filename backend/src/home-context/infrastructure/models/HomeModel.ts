@@ -26,6 +26,42 @@ const componentSchema = new Schema(
   { _id: false },
 );
 
+const componentEventActorSchema = new Schema(
+  {
+    username: { type: String, required: true },
+    role: { type: String, required: true },
+  },
+  { _id: false },
+);
+
+const componentEventSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    componentId: { type: String, required: true },
+    componentName: { type: String },
+    componentType: {
+      type: String,
+      required: true,
+      enum: Object.values(ComponentTypes),
+    },
+    eventType: {
+      type: String,
+      required: true,
+      enum: [
+        "LightTurnedOn",
+        "LightTurnedOff",
+        "WindowOpened",
+        "WindowClosed",
+        "ThermostatSet",
+      ],
+    },
+    targetTemperature: { type: Number },
+    actor: { type: componentEventActorSchema },
+    createdAt: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
 const roomSchema = new Schema(
   {
     id: { type: String, required: true },
@@ -44,6 +80,7 @@ const homeSchema = new Schema(
       type: [Number],
       default: () => new Array(24).fill(20),
     },
+    eventLog: { type: [componentEventSchema], default: [] },
   },
   { timestamps: true },
 );
