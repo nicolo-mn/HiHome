@@ -59,10 +59,10 @@ const unitSymbol = computed(() => {
 
 <template>
   <div
-    class="flex items-center gap-5 px-5 py-5 rounded-2xl bg-elevated border border-primary"
+    class="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5 px-5 py-5 rounded-2xl bg-elevated border border-primary"
   >
     <span class="w-14 h-14 block text-primary shrink-0" v-html="icon" />
-    <p class="flex-1 text-body text-xl font-semibold truncate">
+    <p class="flex-1 text-body text-xl font-semibold lg:truncate">
       {{ label }}
     </p>
     <p
