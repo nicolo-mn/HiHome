@@ -24,54 +24,42 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
     }
   }
 
-  async sendInternalTemperatureUpdate(
-    home: Home,
-    update: TemperatureState,
-  ): Promise<void> {
+  sendInternalTemperatureUpdate(home: Home, update: TemperatureState): void {
     this.broadcast(home.id, "sensor:internal-temperature", {
       temperature: update.temperature,
     });
   }
 
-  async sendExternalTemperatureUpdate(
-    home: Home,
-    update: TemperatureState,
-  ): Promise<void> {
+  sendExternalTemperatureUpdate(home: Home, update: TemperatureState): void {
     this.broadcast(home.id, "sensor:external-temperature", {
       temperature: update.temperature,
     });
   }
 
-  async sendAirQualityUpdate(
-    home: Home,
-    update: AirQualityState,
-    notify = true,
-  ): Promise<void> {
+  sendAirQualityUpdate(home: Home, update: AirQualityState): void {
     this.broadcast(home.id, "sensor:air-quality", {
       AQI: update.AQI,
     });
 
-    if (!this.notificationPort || !notify) return;
+    if (!this.notificationPort) return;
 
-    try {
-      await this.notificationPort.notifySensorUpdate(home.id, {
+    this.notificationPort
+      .notifySensorUpdate(home.id, {
         sensorType: "air-quality",
         value: update.AQI,
         measureUnit: "AQI",
-      });
-    } catch (error) {
-      console.error("Notification delivery failed", error);
-    }
+      })
+      .catch((error) => console.error("Notification delivery failed", error));
   }
 
-  async sendWindUpdate(home: Home, update: WindState): Promise<void> {
+  sendWindUpdate(home: Home, update: WindState): void {
     this.broadcast(home.id, "sensor:wind", {
       windDirection: update.windDirection,
       windSpeed: update.windSpeed,
     });
   }
 
-  async sendWeatherUpdate(home: Home, update: WeatherState): Promise<void> {
+  sendWeatherUpdate(home: Home, update: WeatherState): void {
     this.broadcast(home.id, "sensor:weather", {
       forecast: update.forecast,
       precipitation: update.precipitation,

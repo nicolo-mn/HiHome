@@ -16,9 +16,8 @@ export interface ComponentActionEvent {
   actor: NotificationActor;
 }
 
-export interface RuleExecutionEvent {
-  ruleName: string;
-  triggeredBy?: string;
+export interface RulesExecutedEvent {
+  executions: { ruleName: string; actions: string[] }[];
 }
 
 export interface NotificationDTO {
@@ -28,14 +27,15 @@ export interface NotificationDTO {
   message: string;
   createdAt: string;
   read: boolean;
+  details?: { executions: { ruleName: string; actions: string[] }[] };
 }
 
 export interface NotificationInboundPort {
   notifySensorUpdate(homeId: string, update: SensorUpdateEvent): Promise<void>;
-  notifyRuleExecuted(homeId: string, event: RuleExecutionEvent): Promise<void>;
+  notifyRulesExecuted(homeId: string, event: RulesExecutedEvent): Promise<void>;
   notifyComponentAction(
     homeId: string,
     event: ComponentActionEvent,
   ): Promise<void>;
-  listByHome(homeId: string): Promise<NotificationDTO[]>;
+  listByUser(homeId: string, username: string): Promise<NotificationDTO[]>;
 }

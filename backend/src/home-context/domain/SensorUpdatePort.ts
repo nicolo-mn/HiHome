@@ -12,11 +12,7 @@ export interface SensorUpdatePort {
 
   sendExternalTemperatureUpdate(home: Home, update: TemperatureState): void;
 
-  sendAirQualityUpdate(
-    home: Home,
-    update: AirQualityState,
-    notify?: boolean,
-  ): void;
+  sendAirQualityUpdate(home: Home, update: AirQualityState): void;
 
   sendWindUpdate(home: Home, update: WindState): void;
 

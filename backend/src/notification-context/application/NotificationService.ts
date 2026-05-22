@@ -3,31 +3,41 @@ import {
   ComponentActionEvent,
   NotificationDTO,
   NotificationInboundPort,
-  RuleExecutionEvent,
+  RulesExecutedEvent,
   SensorUpdateEvent,
 } from "./NotificationInboundPort";
-import { Notification } from "../domain/Notification";
+import { Notification, NotificationDetails } from "../domain/Notification";
 import { NotificationDeliveryPort } from "../domain/NotificationDeliveryPort";
 import { NotificationRepository } from "../domain/NotificationRepository";
 import { NotificationPolicy } from "./NotificationPolicy";
+import { UserPreferencesPort } from "./UserPreferencesPort";
 
 export class NotificationService implements NotificationInboundPort {
   constructor(
     private repository: NotificationRepository,
     private deliveryPort: NotificationDeliveryPort,
     private policy: NotificationPolicy,
+    private userPreferencesPort: UserPreferencesPort,
   ) {}
 
-  async listByHome(homeId: string): Promise<NotificationDTO[]> {
-    const notifications = await this.repository.listByHome(homeId);
-    return notifications.map((n) => ({
+  async listByUser(
+    homeId: string,
+    username: string,
+  ): Promise<NotificationDTO[]> {
+    const notifications = await this.repository.listByUser(homeId, username);
+    return notifications.map((n) => this.toDTO(n));
+  }
+
+  private toDTO(n: Notification): NotificationDTO {
+    return {
       id: n.id,
       homeId: n.homeId,
       type: n.type,
       message: n.message,
       createdAt: n.createdAt.toISOString(),
       read: n.read,
-    }));
+      details: n.details,
+    };
   }
 
   async notifySensorUpdate(
@@ -40,33 +50,27 @@ export class NotificationService implements NotificationInboundPort {
     const threshold = this.policy.getAirQualityThreshold(homeId);
     if (airQuality <= threshold) return;
 
-    const shouldNotify = await this.shouldNotifyAirQuality(homeId, airQuality);
+    const shouldNotify = await this.shouldNotifyAirQuality(homeId);
     if (!shouldNotify) return;
 
-    const notification = new Notification(
-      randomUUID(),
+    await this.storeAndDeliver(
       homeId,
       "AirQualityThresholdBreach",
       `Air quality exceeded the threshold (${threshold}).`,
     );
-
-    await this.repository.add(notification);
-    this.deliveryPort.send(notification);
   }
 
-  async notifyRuleExecuted(
+  async notifyRulesExecuted(
     homeId: string,
-    event: RuleExecutionEvent,
+    event: RulesExecutedEvent,
   ): Promise<void> {
-    const notification = new Notification(
-      randomUUID(),
+    if (event.executions.length === 0) return;
+    await this.storeAndDeliver(
       homeId,
       "AutomationRuleExecuted",
-      `Automation rule executed: ${event.ruleName}.`,
+      "Rules executed",
+      { executions: event.executions },
     );
-
-    await this.repository.add(notification);
-    this.deliveryPort.send(notification);
   }
 
   async notifyComponentAction(
@@ -75,15 +79,35 @@ export class NotificationService implements NotificationInboundPort {
   ): Promise<void> {
     if (event.actor.role === "Admin") return;
     const componentLabel = event.componentName || event.componentId;
-    const notification = new Notification(
-      randomUUID(),
+    await this.storeAndDeliver(
       homeId,
       "ComponentAction",
       `${event.actor.username} performed ${event.action} on ${componentLabel}.`,
     );
+  }
 
-    await this.repository.add(notification);
-    this.deliveryPort.send(notification);
+  private async storeAndDeliver(
+    homeId: string,
+    type: Notification["type"],
+    message: string,
+    details?: NotificationDetails,
+  ): Promise<void> {
+    const recipients =
+      await this.userPreferencesPort.getEnabledUsernamesForType(homeId, type);
+    for (const username of recipients) {
+      const notification = new Notification(
+        randomUUID(),
+        homeId,
+        type,
+        message,
+        username,
+        new Date(),
+        false,
+        details,
+      );
+      await this.repository.add(notification);
+      this.deliveryPort.send(notification, [username]);
+    }
   }
 
   private extractAirQualityValue(update: SensorUpdateEvent): number | null {
@@ -104,21 +128,12 @@ export class NotificationService implements NotificationInboundPort {
     return typeof value === "object" && value !== null;
   }
 
-  private async shouldNotifyAirQuality(
-    homeId: string,
-    airQuality: number,
-  ): Promise<boolean> {
-    // Check when the last air quality notification was sent to avoid spamming
-    const recentNotifications = await this.repository.listByHome(homeId);
-    const lastAirQualityNotification = recentNotifications
-      .filter((n) => n.type === "AirQualityThresholdBreach")
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
-
-    if (
-      lastAirQualityNotification &&
-      Date.now() - lastAirQualityNotification.createdAt.getTime() <
-        60 * 60 * 1000 // 1 hour
-    ) {
+  private async shouldNotifyAirQuality(homeId: string): Promise<boolean> {
+    const last = await this.repository.findLatestByHomeAndType(
+      homeId,
+      "AirQualityThresholdBreach",
+    );
+    if (last && Date.now() - last.createdAt.getTime() < 60 * 60 * 1000) {
       return false;
     }
     return true;

@@ -4,6 +4,7 @@ const notificationSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true },
     homeId: { type: String, required: true, index: true },
+    username: { type: String, required: true, index: true },
     type: {
       type: String,
       required: true,
@@ -16,11 +17,12 @@ const notificationSchema = new Schema(
     message: { type: String, required: true },
     createdAt: { type: Date, required: true },
     read: { type: Boolean, required: true, default: false },
+    details: { type: Schema.Types.Mixed, required: false },
   },
   { timestamps: false },
 );
 
-notificationSchema.index({ homeId: 1, createdAt: -1 });
+notificationSchema.index({ homeId: 1, username: 1, createdAt: -1 });
 
 export type NotificationDocument = mongoose.HydratedDocument<
   mongoose.InferSchemaType<typeof notificationSchema>

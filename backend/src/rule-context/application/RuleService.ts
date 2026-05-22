@@ -24,6 +24,9 @@ import { RuleRepository } from "./RuleRepository";
 import { Rule } from "../domain/Rule";
 import { ComponentActionExecutionVisitor } from "./ComponentActionExecutionVisitor";
 import { ActionExecutionPort } from "../domain/ActionExecutionPort";
+import { RuleNotificationPort } from "./RuleNotificationPort";
+import { ActionDescriptionVisitor } from "./ActionDescriptionVisitor";
+import { ComponentNameResolverPort } from "./ComponentNameResolverPort";
 
 export type RuleActionDto = {
   componentType: "light" | "window" | "thermostat";
@@ -52,6 +55,8 @@ export class RuleService {
   constructor(
     private ruleRepo: RuleRepository,
     private actionExecutionPort: ActionExecutionPort,
+    private ruleNotificationPort?: RuleNotificationPort,
+    private componentNameResolver?: ComponentNameResolverPort,
   ) {}
 
   async getRulesForHome(homeId: string): Promise<Rule[]> {
@@ -92,6 +97,7 @@ export class RuleService {
     console.log(`Executing rules for home ${homeId} with update:`, update);
     const rulesByPriority = await this.ruleRepo.getHomeRules(homeId);
     const actionPerComponent = new Map<string, ComponentAction>();
+    const ruleNameByAction = new Map<ComponentAction, string>();
     for (const rule of rulesByPriority) {
       const currentMatch = rule.condition.verify(update);
       const prevMatch = this.lastMatchByRuleId.get(rule.id) ?? false;
@@ -99,11 +105,11 @@ export class RuleService {
       this.lastMatchByRuleId.set(rule.id, currentMatch);
 
       if (shouldFire) {
-        rule.actions
-          .filter((action) => !actionPerComponent.has(action.getComponentId()))
-          .forEach((action) =>
-            actionPerComponent.set(action.getComponentId(), action),
-          );
+        for (const action of rule.actions) {
+          if (actionPerComponent.has(action.getComponentId())) continue;
+          actionPerComponent.set(action.getComponentId(), action);
+          ruleNameByAction.set(action, rule.name);
+        }
       }
     }
 
@@ -112,6 +118,51 @@ export class RuleService {
     );
     const actions = Array.from(actionPerComponent.values());
     await Promise.all(actions.map((a) => a.accept(actionExecutor)));
+
+    if (actions.length === 0) {
+      console.log(`No actions executed for home ${homeId}`);
+      return;
+    }
+
+    console.log(
+      `Executed actions for home ${homeId}:`,
+      actions.map((a) => ({
+        componentId: a.getComponentId(),
+        actionType: a.constructor.name,
+      })),
+    );
+
+    if (!this.ruleNotificationPort) return;
+
+    const componentIds = Array.from(
+      new Set(actions.map((a) => a.getComponentId())),
+    );
+    const nameEntries = await Promise.all(
+      componentIds.map(
+        async (id): Promise<[string, string]> => [
+          id,
+          (await this.componentNameResolver?.getComponentName(id)) ?? id,
+        ],
+      ),
+    );
+    const componentNameById = new Map<string, string>(nameEntries);
+
+    const descriptionVisitor = new ActionDescriptionVisitor(componentNameById);
+    const actionsByRule = new Map<string, string[]>();
+    for (const action of actions) {
+      const ruleName = ruleNameByAction.get(action)!;
+      const description = action.accept(descriptionVisitor);
+      const list = actionsByRule.get(ruleName) ?? [];
+      list.push(description);
+      actionsByRule.set(ruleName, list);
+    }
+    const executions = Array.from(actionsByRule.entries()).map(
+      ([ruleName, actionDescriptions]) => ({
+        ruleName,
+        actions: actionDescriptions,
+      }),
+    );
+    await this.ruleNotificationPort.notifyRulesExecuted(homeId, { executions });
   }
 
   private buildCondition(dto: AddRuleDto): ObservableCondition {

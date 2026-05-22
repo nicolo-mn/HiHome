@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useNotificationsStore } from "@/stores/notifications";
 import bellIcon from "@/assets/icons/bell.svg?raw";
 import BaseButton from "@/components/BaseButton.vue";
+import RuleExecutionRecapModal from "@/components/RuleExecutionRecapModal.vue";
+import type { NotificationDTO } from "@/api/notifications";
 
 const store = useNotificationsStore();
 const { notifications, isLoading, error } = storeToRefs(store);
@@ -14,12 +16,22 @@ const TYPE_LABELS: Record<string, string> = {
   ComponentAction: "Component Action",
 };
 
+const recapNotification = ref<NotificationDTO | null>(null);
+
 function typeLabel(type: string): string {
   return TYPE_LABELS[type] ?? type;
 }
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString();
+}
+
+function isClickable(n: NotificationDTO): boolean {
+  return n.type === "AutomationRuleExecuted" && !!n.details;
+}
+
+function onNotificationClick(n: NotificationDTO) {
+  if (isClickable(n)) recapNotification.value = n;
 }
 
 onMounted(() => store.fetchAll());
@@ -54,6 +66,8 @@ onMounted(() => store.fetchAll());
         v-for="n in notifications"
         :key="n.id"
         class="flex items-start gap-3 px-4 py-3 rounded-xl bg-elevated border border-border"
+        :class="{ 'cursor-pointer hover:border-primary': isClickable(n) }"
+        @click="onNotificationClick(n)"
       >
         <span
           class="w-5 h-5 block shrink-0 text-primary mt-0.5"
@@ -68,5 +82,11 @@ onMounted(() => store.fetchAll());
         </div>
       </div>
     </div>
+
+    <RuleExecutionRecapModal
+      v-if="recapNotification"
+      :notification="recapNotification"
+      @close="recapNotification = null"
+    />
   </div>
 </template>

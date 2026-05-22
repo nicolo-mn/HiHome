@@ -6,8 +6,11 @@ export class NotificationController {
 
   async getNotifications(req: Request, res: Response) {
     try {
-      const notifications = await this.notificationPort.listByHome(
-        req.params.id as string,
+      const homeId = req.params.id as string;
+      const username = (req as any).user?.username as string;
+      const notifications = await this.notificationPort.listByUser(
+        homeId,
+        username,
       );
       res.json({ notifications });
     } catch (e: any) {

@@ -12,6 +12,7 @@ import {
 import { ComponentAction, LightTurnOnAction } from "../domain/Actions";
 import { AddRuleDto } from "./RuleService";
 import { ActionExecutionPort } from "../domain/ActionExecutionPort";
+import { RuleNotificationPort } from "./RuleNotificationPort";
 
 function makeRule(partial: Partial<Rule> & Pick<Rule, "id" | "order">): Rule {
   return {
@@ -27,6 +28,7 @@ describe("RuleService", () => {
   let ruleService: RuleService;
   let mockRuleRepository: RuleRepository;
   let mockActionExecutionPort: ActionExecutionPort;
+  let mockRuleNotificationPort: RuleNotificationPort;
 
   beforeEach(() => {
     mockRuleRepository = {
@@ -46,7 +48,15 @@ describe("RuleService", () => {
       executeLightTurnOff: vi.fn(),
     } as unknown as ActionExecutionPort;
 
-    ruleService = new RuleService(mockRuleRepository, mockActionExecutionPort);
+    mockRuleNotificationPort = {
+      notifyRulesExecuted: vi.fn().mockResolvedValue(undefined),
+    };
+
+    ruleService = new RuleService(
+      mockRuleRepository,
+      mockActionExecutionPort,
+      mockRuleNotificationPort,
+    );
   });
 
   it("should get rules for a home", async () => {
@@ -230,6 +240,7 @@ describe("RuleService", () => {
   });
 
   it("should execute actions only on false-to-true transitions", async () => {
+    ruleService = new RuleService(mockRuleRepository, mockActionExecutionPort);
     const update: ObservablesUpdatedDomainEvent = {
       externalTemperature: 20,
       internalTemperature: 22,
@@ -264,6 +275,7 @@ describe("RuleService", () => {
   });
 
   it("should re-arm when condition becomes false", async () => {
+    ruleService = new RuleService(mockRuleRepository, mockActionExecutionPort);
     const update: ObservablesUpdatedDomainEvent = {
       externalTemperature: 20,
       internalTemperature: 22,
@@ -380,5 +392,80 @@ describe("RuleService", () => {
     expect(mockAction3Comp1.accept).not.toHaveBeenCalled();
     expect(mockAction4Comp2.accept).toHaveBeenCalled();
     expect(mockAction5Comp2.accept).not.toHaveBeenCalled();
+  });
+
+  it("should notify rules executed with only actually executed actions per rule", async () => {
+    const update: ObservablesUpdatedDomainEvent = {
+      externalTemperature: 20,
+      internalTemperature: 22,
+      airQuality: 50,
+      windSpeed: 10,
+      weatherForecast: WeatherForecast.Clear,
+    };
+
+    const mockConditionTrue = {
+      verify: vi.fn().mockReturnValue(true),
+    } as unknown as ObservableCondition;
+
+    const ruleAAction = new LightTurnOnAction("home-1", "light-1");
+    const ruleBActionShadowed = new LightTurnOnAction("home-1", "light-1");
+    const ruleBActionExecuted = new LightTurnOnAction("home-1", "light-2");
+
+    const rules: Rule[] = [
+      makeRule({
+        id: "rule-a",
+        order: 0,
+        condition: mockConditionTrue,
+        name: "Rule A",
+        actions: [ruleAAction],
+      }),
+      makeRule({
+        id: "rule-b",
+        order: 1,
+        condition: mockConditionTrue,
+        name: "Rule B",
+        actions: [ruleBActionShadowed, ruleBActionExecuted],
+      }),
+    ];
+    vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue(rules);
+
+    await ruleService.executeRulesForHome("home-1", update);
+
+    expect(mockRuleNotificationPort.notifyRulesExecuted).toHaveBeenCalledWith(
+      "home-1",
+      {
+        executions: [
+          { ruleName: "Rule A", actions: ["Turn on light light-1"] },
+          { ruleName: "Rule B", actions: ["Turn on light light-2"] },
+        ],
+      },
+    );
+  });
+
+  it("should not notify when no actions executed", async () => {
+    const update: ObservablesUpdatedDomainEvent = {
+      externalTemperature: 20,
+      internalTemperature: 22,
+      airQuality: 50,
+      windSpeed: 10,
+      weatherForecast: WeatherForecast.Clear,
+    };
+
+    const mockConditionFalse = {
+      verify: vi.fn().mockReturnValue(false),
+    } as unknown as ObservableCondition;
+
+    vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue([
+      makeRule({
+        id: "rule-1",
+        order: 0,
+        condition: mockConditionFalse,
+        actions: [],
+      }),
+    ]);
+
+    await ruleService.executeRulesForHome("home-1", update);
+
+    expect(mockRuleNotificationPort.notifyRulesExecuted).not.toHaveBeenCalled();
   });
 });
