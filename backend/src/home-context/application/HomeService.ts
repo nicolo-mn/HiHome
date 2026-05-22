@@ -9,9 +9,6 @@ import {
   HomeRepository,
   ComponentTypes,
   TemperatureState,
-  AirQualityState,
-  WindState,
-  WeatherState,
   SensorUpdatePort,
   ExternalSensorsUpdate,
   Room,
@@ -247,13 +244,7 @@ export class HomeService implements ActionService {
       this.sensorRegistry.getState(homeId)?.externalSensors;
     if (!resolvedUpdate) return;
 
-    const resolvedNotify = this.shouldNotifyAirQuality(home.id);
-
-    await this.sendExternalSensorsUpdateToClients(
-      home,
-      resolvedUpdate,
-      resolvedNotify,
-    );
+    await this.sendExternalSensorsUpdateToClients(home, resolvedUpdate);
   }
 
   async sendInternalSensorsUpdate(homeId: string): Promise<void> {
@@ -263,7 +254,7 @@ export class HomeService implements ActionService {
       this.sensorRegistry.getState(homeId)?.internalTemperature;
     if (resolvedTemperature === undefined) return;
 
-    await this.sendInternalSensorsUpdateToClients(home, resolvedTemperature);
+    this.sendInternalSensorsUpdateToClients(home, resolvedTemperature);
   }
 
   async pollAllHomesExternalSensorsData(): Promise<void> {
@@ -292,7 +283,7 @@ export class HomeService implements ActionService {
           const internalTemperature: TemperatureState =
             internalTemperatureValue;
 
-          await this.sendInternalSensorsUpdateToClients(
+          this.sendInternalSensorsUpdateToClients(
             home,
             internalTemperatureValue,
           );
@@ -323,36 +314,26 @@ export class HomeService implements ActionService {
   private async sendExternalSensorsUpdateToClients(
     home: Home,
     update: ExternalSensorsUpdate,
-    notify = true,
   ): Promise<void> {
-    await this.sensorUpdatePort.sendExternalTemperatureUpdate(
+    this.sensorUpdatePort.sendExternalTemperatureUpdate(
       home,
       update.externalTemperature,
     );
-    await this.sensorUpdatePort.sendAirQualityUpdate(
-      home,
-      update.airQuality,
-      notify,
-    );
-    await this.sensorUpdatePort.sendWindUpdate(home, update.wind);
-    await this.sensorUpdatePort.sendWeatherUpdate(home, update.weather);
+    await this.sensorUpdatePort.sendAirQualityUpdate(home, update.airQuality);
+    this.sensorUpdatePort.sendWindUpdate(home, update.wind);
+    this.sensorUpdatePort.sendWeatherUpdate(home, update.weather);
   }
 
-  private async sendInternalSensorsUpdateToClients(
+  private sendInternalSensorsUpdateToClients(
     home: Home,
     update: TemperatureState,
-  ): Promise<void> {
-    await this.sensorUpdatePort.sendInternalTemperatureUpdate(home, update);
+  ): void {
+    this.sensorUpdatePort.sendInternalTemperatureUpdate(home, update);
   }
 
   private async ensureHomeExists(homeId: string) {
     const home = await this.homeRepo.getHome(homeId);
     if (!home) throw new Error(`Home ${homeId} not found`);
     return home;
-  }
-
-  private shouldNotifyAirQuality(homeId: string): boolean {
-    // TODO: read notification preferences once they are available.
-    return true;
   }
 }

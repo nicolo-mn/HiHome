@@ -2,15 +2,26 @@ import { Notification } from "../domain/Notification";
 import { NotificationRepository } from "../domain/NotificationRepository";
 
 export class InMemoryNotificationRepository implements NotificationRepository {
-  private store: Map<string, Notification[]> = new Map();
+  private store: Notification[] = [];
 
   async add(notification: Notification): Promise<void> {
-    const list = this.store.get(notification.homeId) || [];
-    list.push(notification);
-    this.store.set(notification.homeId, list);
+    this.store.push(notification);
   }
 
-  async listByHome(homeId: string): Promise<Notification[]> {
-    return [...(this.store.get(homeId) || [])];
+  async listByUser(homeId: string, username: string): Promise<Notification[]> {
+    return this.store
+      .filter((n) => n.homeId === homeId && n.username === username)
+      .slice()
+      .reverse();
+  }
+
+  async findLatestByHomeAndType(
+    homeId: string,
+    type: string,
+  ): Promise<Notification | null> {
+    const matches = this.store
+      .filter((n) => n.homeId === homeId && n.type === type)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return matches[0] ?? null;
   }
 }

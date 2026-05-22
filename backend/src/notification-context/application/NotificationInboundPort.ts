@@ -37,9 +37,5 @@ export interface NotificationInboundPort {
     homeId: string,
     event: ComponentActionEvent,
   ): Promise<void>;
-  listByHome(homeId: string): Promise<NotificationDTO[]>;
-  listByHomeFiltered(
-    homeId: string,
-    allowedTypes: string[],
-  ): Promise<NotificationDTO[]>;
+  listByUser(homeId: string, username: string): Promise<NotificationDTO[]>;
 }

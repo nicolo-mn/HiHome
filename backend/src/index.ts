@@ -66,7 +66,6 @@ const homeNotificationPort = new NotificationContextAdapter(
 );
 const notificationController = new NotificationController(
   notificationContext.notificationPort,
-  authContext.preferencesRepository,
 );
 const notificationRouter = new NotificationRouter(notificationController);
 

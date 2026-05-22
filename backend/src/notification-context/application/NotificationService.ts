@@ -20,19 +20,12 @@ export class NotificationService implements NotificationInboundPort {
     private userPreferencesPort: UserPreferencesPort,
   ) {}
 
-  async listByHome(homeId: string): Promise<NotificationDTO[]> {
-    const notifications = await this.repository.listByHome(homeId);
-    return notifications.map((n) => this.toDTO(n));
-  }
-
-  async listByHomeFiltered(
+  async listByUser(
     homeId: string,
-    allowedTypes: string[],
+    username: string,
   ): Promise<NotificationDTO[]> {
-    const notifications = await this.repository.listByHome(homeId);
-    return notifications
-      .filter((n) => allowedTypes.includes(n.type))
-      .map((n) => this.toDTO(n));
+    const notifications = await this.repository.listByUser(homeId, username);
+    return notifications.map((n) => this.toDTO(n));
   }
 
   private toDTO(n: Notification): NotificationDTO {
@@ -56,43 +49,25 @@ export class NotificationService implements NotificationInboundPort {
     const threshold = this.policy.getAirQualityThreshold(homeId);
     if (airQuality <= threshold) return;
 
-    const shouldNotify = await this.shouldNotifyAirQuality(homeId, airQuality);
+    const shouldNotify = await this.shouldNotifyAirQuality(homeId);
     if (!shouldNotify) return;
 
-    const notification = new Notification(
-      randomUUID(),
+    await this.storeAndDeliver(
       homeId,
       "AirQualityThresholdBreach",
       `Air quality exceeded the threshold (${threshold}).`,
     );
-
-    await this.repository.add(notification);
-    const recipients =
-      await this.userPreferencesPort.getEnabledUsernamesForType(
-        homeId,
-        "AirQualityThresholdBreach",
-      );
-    this.deliveryPort.send(notification, recipients);
   }
 
   async notifyRuleExecuted(
     homeId: string,
     event: RuleExecutionEvent,
   ): Promise<void> {
-    const notification = new Notification(
-      randomUUID(),
+    await this.storeAndDeliver(
       homeId,
       "AutomationRuleExecuted",
       `Automation rule executed: ${event.ruleName}.`,
     );
-
-    await this.repository.add(notification);
-    const recipients =
-      await this.userPreferencesPort.getEnabledUsernamesForType(
-        homeId,
-        "AutomationRuleExecuted",
-      );
-    this.deliveryPort.send(notification, recipients);
   }
 
   async notifyComponentAction(
@@ -101,20 +76,31 @@ export class NotificationService implements NotificationInboundPort {
   ): Promise<void> {
     if (event.actor.role === "Admin") return;
     const componentLabel = event.componentName || event.componentId;
-    const notification = new Notification(
-      randomUUID(),
+    await this.storeAndDeliver(
       homeId,
       "ComponentAction",
       `${event.actor.username} performed ${event.action} on ${componentLabel}.`,
     );
+  }
 
-    await this.repository.add(notification);
+  private async storeAndDeliver(
+    homeId: string,
+    type: Notification["type"],
+    message: string,
+  ): Promise<void> {
     const recipients =
-      await this.userPreferencesPort.getEnabledUsernamesForType(
+      await this.userPreferencesPort.getEnabledUsernamesForType(homeId, type);
+    for (const username of recipients) {
+      const notification = new Notification(
+        randomUUID(),
         homeId,
-        "ComponentAction",
+        type,
+        message,
+        username,
       );
-    this.deliveryPort.send(notification, recipients);
+      await this.repository.add(notification);
+      this.deliveryPort.send(notification, [username]);
+    }
   }
 
   private extractAirQualityValue(update: SensorUpdateEvent): number | null {
@@ -135,21 +121,12 @@ export class NotificationService implements NotificationInboundPort {
     return typeof value === "object" && value !== null;
   }
 
-  private async shouldNotifyAirQuality(
-    homeId: string,
-    airQuality: number,
-  ): Promise<boolean> {
-    // Check when the last air quality notification was sent to avoid spamming
-    const recentNotifications = await this.repository.listByHome(homeId);
-    const lastAirQualityNotification = recentNotifications
-      .filter((n) => n.type === "AirQualityThresholdBreach")
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
-
-    if (
-      lastAirQualityNotification &&
-      Date.now() - lastAirQualityNotification.createdAt.getTime() <
-        60 * 60 * 1000 // 1 hour
-    ) {
+  private async shouldNotifyAirQuality(homeId: string): Promise<boolean> {
+    const last = await this.repository.findLatestByHomeAndType(
+      homeId,
+      "AirQualityThresholdBreach",
+    );
+    if (last && Date.now() - last.createdAt.getTime() < 60 * 60 * 1000) {
       return false;
     }
     return true;

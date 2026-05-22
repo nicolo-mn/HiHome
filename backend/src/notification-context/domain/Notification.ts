@@ -9,6 +9,7 @@ export class Notification {
     public homeId: string,
     public type: NotificationType,
     public message: string,
+    public username: string,
     public createdAt: Date = new Date(),
     public read: boolean = false,
   ) {}
