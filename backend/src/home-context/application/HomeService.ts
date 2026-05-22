@@ -244,7 +244,7 @@ export class HomeService implements ActionService {
       this.sensorRegistry.getState(homeId)?.externalSensors;
     if (!resolvedUpdate) return;
 
-    await this.sendExternalSensorsUpdateToClients(home, resolvedUpdate);
+    this.sendExternalSensorsUpdateToClients(home, resolvedUpdate);
   }
 
   async sendInternalSensorsUpdate(homeId: string): Promise<void> {
@@ -311,15 +311,15 @@ export class HomeService implements ActionService {
     await this.sendInternalSensorsUpdate(homeId);
   }
 
-  private async sendExternalSensorsUpdateToClients(
+  private sendExternalSensorsUpdateToClients(
     home: Home,
     update: ExternalSensorsUpdate,
-  ): Promise<void> {
+  ): void {
     this.sensorUpdatePort.sendExternalTemperatureUpdate(
       home,
       update.externalTemperature,
     );
-    await this.sensorUpdatePort.sendAirQualityUpdate(home, update.airQuality);
+    this.sensorUpdatePort.sendAirQualityUpdate(home, update.airQuality);
     this.sensorUpdatePort.sendWindUpdate(home, update.wind);
     this.sensorUpdatePort.sendWeatherUpdate(home, update.weather);
   }

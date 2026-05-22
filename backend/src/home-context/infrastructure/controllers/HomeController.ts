@@ -118,24 +118,20 @@ export class HomeController {
 
       const user = (req as AuthenticatedRequest).user;
 
-      // Generate an event for the notification system
       if (user?.username && user.role && this.notificationPort) {
-        try {
-          await this.notificationPort.notifyComponentAction(
-            req.params.id as string,
-            {
-              componentId: component.id,
-              componentName: component.name,
-              action: req.params.action as string,
-              actor: {
-                username: user.username,
-                role: user.role,
-              },
+        this.notificationPort
+          .notifyComponentAction(req.params.id as string, {
+            componentId: component.id,
+            componentName: component.name,
+            action: req.params.action as string,
+            actor: {
+              username: user.username,
+              role: user.role,
             },
+          })
+          .catch((error) =>
+            console.error("Notification delivery failed", error),
           );
-        } catch (error) {
-          console.error("Notification delivery failed", error);
-        }
       }
 
       res.json(component.accept(this.stateSerializer));

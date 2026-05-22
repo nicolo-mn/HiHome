@@ -36,25 +36,20 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
     });
   }
 
-  async sendAirQualityUpdate(
-    home: Home,
-    update: AirQualityState,
-  ): Promise<void> {
+  sendAirQualityUpdate(home: Home, update: AirQualityState): void {
     this.broadcast(home.id, "sensor:air-quality", {
       AQI: update.AQI,
     });
 
     if (!this.notificationPort) return;
 
-    try {
-      await this.notificationPort.notifySensorUpdate(home.id, {
+    this.notificationPort
+      .notifySensorUpdate(home.id, {
         sensorType: "air-quality",
         value: update.AQI,
         measureUnit: "AQI",
-      });
-    } catch (error) {
-      console.error("Notification delivery failed", error);
-    }
+      })
+      .catch((error) => console.error("Notification delivery failed", error));
   }
 
   sendWindUpdate(home: Home, update: WindState): void {
