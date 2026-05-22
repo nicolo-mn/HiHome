@@ -106,6 +106,23 @@ export class HomeService implements ActionService {
     return home.coordinates;
   }
 
+  async getHourlyTemperatures(homeId: string): Promise<number[]> {
+    const home = await this.ensureHomeExists(homeId);
+    return home.hourlyTemperatures;
+  }
+
+  async setHourlyTemperatures(
+    homeId: string,
+    temperatures: number[],
+  ): Promise<void> {
+    const home = await this.ensureHomeExists(homeId);
+    if (temperatures.length !== 24) {
+      throw new Error("Hourly temperatures must have exactly 24 values");
+    }
+    home.hourlyTemperatures = temperatures;
+    await this.homeRepo.saveHome(home);
+  }
+
   async lightTurnOn(homeId: string, lightId: string): Promise<void> {
     const componentType = ComponentTypes.LIGHT;
 

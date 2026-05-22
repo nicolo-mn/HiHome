@@ -40,6 +40,10 @@ const homeSchema = new Schema(
     id: { type: String, required: true, unique: true, index: true },
     coordinates: { type: coordinatesSchema, required: true },
     rooms: { type: [roomSchema], default: [] },
+    hourlyTemperatures: {
+      type: [Number],
+      default: () => new Array(24).fill(20),
+    },
   },
   { timestamps: true },
 );

@@ -48,5 +48,11 @@ export class HomeRouter {
         this.homeController.executeAction(req, res);
       },
     );
+    this.router.get("/:id/hourly-temperatures", (req, res) =>
+      this.homeController.getHourlyTemperatures(req, res),
+    );
+    this.router.put("/:id/hourly-temperatures", (req, res) =>
+      this.homeController.setHourlyTemperatures(req, res),
+    );
   }
 }

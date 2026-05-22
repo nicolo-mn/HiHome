@@ -162,6 +162,33 @@ export class HomeController {
     }
   }
 
+  async getHourlyTemperatures(req: Request, res: Response) {
+    try {
+      const temps = await this.homeService.getHourlyTemperatures(
+        req.params.id as string,
+      );
+      res.json(temps);
+    } catch (e: any) {
+      res.status(404).json({ error: e.message });
+    }
+  }
+
+  async setHourlyTemperatures(req: Request, res: Response) {
+    try {
+      const { temperatures } = req.body;
+      if (!Array.isArray(temperatures)) {
+        return res.status(400).json({ error: "Temperatures must be an array" });
+      }
+      await this.homeService.setHourlyTemperatures(
+        req.params.id as string,
+        temperatures,
+      );
+      res.status(200).json({ message: "Hourly temperatures updated" });
+    } catch (e: any) {
+      res.status(400).json({ error: e.message });
+    }
+  }
+
   private parseActionParams(action: string, body: any): number | undefined {
     if (action === "setTemperature") {
       const { temperature } = body;
