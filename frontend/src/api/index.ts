@@ -24,6 +24,9 @@ export type {
 } from "./components";
 export * as notificationsApi from "./notifications";
 export type { NotificationDTO } from "./notifications";
+export * as preferencesApi from "./preferences";
+export type { NotificationType } from "./preferences";
+export { ALL_NOTIFICATION_TYPES, TYPE_LABELS } from "./preferences";
 export type { SensorReading } from "./sensors";
 export * as rulesApi from "./rules";
 export type {

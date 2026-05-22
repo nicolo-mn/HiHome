@@ -2,6 +2,7 @@ import { ref, onMounted, onBeforeUnmount, watch, type Ref } from "vue";
 import { io, type Socket } from "socket.io-client";
 import type { NotificationDTO } from "@/api/notifications";
 import { useNotificationsStore } from "@/stores/notifications";
+import { usePreferencesStore } from "@/stores/preferences";
 
 const AUTO_DISMISS_MS = 5000;
 
@@ -10,13 +11,16 @@ export function useNotificationSocket(
   token: Ref<string | null>,
 ) {
   const store = useNotificationsStore();
+  const prefsStore = usePreferencesStore();
   const toasts = ref<NotificationDTO[]>([]);
   let socket: Socket | null = null;
 
   function onNotification(data: NotificationDTO) {
     store.addRealtime(data);
-    toasts.value = [...toasts.value, data];
-    setTimeout(() => dismiss(data.id), AUTO_DISMISS_MS);
+    if (prefsStore.preferences.includes(data.type as any)) {
+      toasts.value = [...toasts.value, data];
+      setTimeout(() => dismiss(data.id), AUTO_DISMISS_MS);
+    }
   }
 
   function dismiss(id: string) {
