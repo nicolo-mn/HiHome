@@ -26,6 +26,7 @@ import { ComponentActionExecutionVisitor } from "./ComponentActionExecutionVisit
 import { ActionExecutionPort } from "../domain/ActionExecutionPort";
 import { RuleNotificationPort } from "./RuleNotificationPort";
 import { ActionDescriptionVisitor } from "./ActionDescriptionVisitor";
+import { ComponentNameResolverPort } from "./ComponentNameResolverPort";
 
 export type RuleActionDto = {
   componentType: "light" | "window" | "thermostat";
@@ -55,6 +56,7 @@ export class RuleService {
     private ruleRepo: RuleRepository,
     private actionExecutionPort: ActionExecutionPort,
     private ruleNotificationPort?: RuleNotificationPort,
+    private componentNameResolver?: ComponentNameResolverPort,
   ) {}
 
   async getRulesForHome(homeId: string): Promise<Rule[]> {
@@ -132,7 +134,20 @@ export class RuleService {
 
     if (!this.ruleNotificationPort) return;
 
-    const descriptionVisitor = new ActionDescriptionVisitor();
+    const componentIds = Array.from(
+      new Set(actions.map((a) => a.getComponentId())),
+    );
+    const nameEntries = await Promise.all(
+      componentIds.map(
+        async (id): Promise<[string, string]> => [
+          id,
+          (await this.componentNameResolver?.getComponentName(id)) ?? id,
+        ],
+      ),
+    );
+    const componentNameById = new Map<string, string>(nameEntries);
+
+    const descriptionVisitor = new ActionDescriptionVisitor(componentNameById);
     const actionsByRule = new Map<string, string[]>();
     for (const action of actions) {
       const ruleName = ruleNameByAction.get(action)!;

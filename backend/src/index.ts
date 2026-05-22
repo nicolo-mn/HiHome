@@ -36,6 +36,7 @@ import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
 import { NotificationContextAdapter as RuleNotificationContextAdapter } from "./rule-context/infrastructure/NotificationContextAdapter";
+import { HomeServiceComponentNameResolver } from "./rule-context/infrastructure/HomeServiceComponentNameResolver";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
@@ -113,10 +114,12 @@ const actionExecutor = new ActionExecutionAdapter(homeService);
 const ruleNotificationAdapter = new RuleNotificationContextAdapter(
   notificationContext.notificationPort,
 );
+const componentNameResolver = new HomeServiceComponentNameResolver(homeService);
 const ruleService = new RuleService(
   ruleRepo,
   actionExecutor,
   ruleNotificationAdapter,
+  componentNameResolver,
 );
 export const ruleController = new RuleController(ruleService);
 const ruleRouter = new RuleRouter(ruleController);
