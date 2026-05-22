@@ -14,6 +14,11 @@ func main() {
 	controller := infrastructure.NewEnvironmentController(service)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	})
 	mux.HandleFunc("/api/weather", controller.ServeHTTP)
 	mux.HandleFunc("/api/forecast", controller.ServeForecast)
 

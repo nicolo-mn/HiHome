@@ -6,6 +6,11 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.runCommand('ping').ok" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build:
@@ -20,8 +25,16 @@ services:
     volumes:
       - ./backend:/app/backend
       - /app/backend/node_modules
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+      ext-api-service:
+        condition: service_healthy
 
   ext-api-service:
     build:
@@ -32,6 +45,11 @@ services:
       - "8081:8080"
     volumes:
       - ./ext-api-service:/app
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:8080/health" ]
+      interval: 5s
+      timeout: 2s
+      retries: 10
 
   frontend:
     build:
@@ -46,7 +64,8 @@ services:
       - ./frontend:/app/frontend
       - /app/frontend/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   mongodb_data:
