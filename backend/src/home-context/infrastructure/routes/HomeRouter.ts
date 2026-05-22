@@ -1,7 +1,10 @@
 import { Request, Response, Router } from "express";
 import { HomeController } from "../controllers/HomeController";
 import { homeIdMiddleware } from "../middlewares/RoutesMiddlewares";
-import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
+import {
+  canActuateComponents,
+  canManageComponents,
+} from "../middlewares/HomeAuthorization";
 import { HomeService } from "../../application/HomeService";
 import {
   componentIdValidator,
@@ -30,7 +33,7 @@ export class HomeRouter {
     );
     this.router.post(
       "/:id/components",
-      adminMiddleware,
+      canManageComponents,
       (req: Request, res: Response) =>
         this.homeController.addComponent(req, res),
     );
@@ -42,6 +45,7 @@ export class HomeRouter {
     );
     this.router.post(
       "/:id/components/:componentId/:action",
+      canActuateComponents,
       componentIdValidator,
       temperatureValidator,
       (req: Request, res: Response) => {
