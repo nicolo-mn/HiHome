@@ -6,7 +6,7 @@ import {
   namingAndOwnershipValidator,
   reorderValidator,
 } from "../middlewares/RuleValidator";
-import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
+import { canManageRules } from "../middlewares/RuleAuthorization";
 
 export class RuleRouter {
   public router = Router();
@@ -16,13 +16,13 @@ export class RuleRouter {
   }
 
   registerRoutes() {
-    this.router.get("/:id/rules", adminMiddleware, (req, res) =>
+    this.router.get("/:id/rules", canManageRules, (req, res) =>
       this.ruleController.getRules(req, res),
     );
 
     this.router.post(
       "/:id/rules",
-      adminMiddleware,
+      canManageRules,
       ...namingAndOwnershipValidator,
       ...conditionValidator,
       ...actionsValidator,
@@ -31,12 +31,12 @@ export class RuleRouter {
 
     this.router.put(
       "/:id/rules/order",
-      adminMiddleware,
+      canManageRules,
       ...reorderValidator,
       (req, res) => this.ruleController.reorderRules(req, res),
     );
 
-    this.router.delete("/:id/rules/:ruleId", adminMiddleware, (req, res) =>
+    this.router.delete("/:id/rules/:ruleId", canManageRules, (req, res) =>
       this.ruleController.deleteRule(req, res),
     );
   }
