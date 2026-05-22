@@ -43,6 +43,7 @@ export class InMemoryUserRepository
       .filter((u) => u.homeId === homeId)
       .map((u) => ({
         username: u.username,
+        role: u.role,
         notificationPreferences: u.notificationPreferences ?? [
           ...ALL_NOTIFICATION_TYPES,
         ],

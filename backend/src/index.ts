@@ -35,6 +35,7 @@ import { NotificationRouter } from "./notification-context/infrastructure/routes
 import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
+import { NotificationContextAdapter as RuleNotificationContextAdapter } from "./rule-context/infrastructure/NotificationContextAdapter";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
@@ -109,7 +110,14 @@ const ruleRepo =
     ? new InMemoryRuleRepository()
     : new MongoRuleRepository();
 const actionExecutor = new ActionExecutionAdapter(homeService);
-const ruleService = new RuleService(ruleRepo, actionExecutor);
+const ruleNotificationAdapter = new RuleNotificationContextAdapter(
+  notificationContext.notificationPort,
+);
+const ruleService = new RuleService(
+  ruleRepo,
+  actionExecutor,
+  ruleNotificationAdapter,
+);
 export const ruleController = new RuleController(ruleService);
 const ruleRouter = new RuleRouter(ruleController);
 const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);

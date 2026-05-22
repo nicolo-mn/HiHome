@@ -3,10 +3,10 @@ import {
   ComponentActionEvent,
   NotificationDTO,
   NotificationInboundPort,
-  RuleExecutionEvent,
+  RulesExecutedEvent,
   SensorUpdateEvent,
 } from "./NotificationInboundPort";
-import { Notification } from "../domain/Notification";
+import { Notification, NotificationDetails } from "../domain/Notification";
 import { NotificationDeliveryPort } from "../domain/NotificationDeliveryPort";
 import { NotificationRepository } from "../domain/NotificationRepository";
 import { NotificationPolicy } from "./NotificationPolicy";
@@ -36,6 +36,7 @@ export class NotificationService implements NotificationInboundPort {
       message: n.message,
       createdAt: n.createdAt.toISOString(),
       read: n.read,
+      details: n.details,
     };
   }
 
@@ -59,14 +60,16 @@ export class NotificationService implements NotificationInboundPort {
     );
   }
 
-  async notifyRuleExecuted(
+  async notifyRulesExecuted(
     homeId: string,
-    event: RuleExecutionEvent,
+    event: RulesExecutedEvent,
   ): Promise<void> {
+    if (event.executions.length === 0) return;
     await this.storeAndDeliver(
       homeId,
       "AutomationRuleExecuted",
-      `Automation rule executed: ${event.ruleName}.`,
+      "Rules executed",
+      { executions: event.executions },
     );
   }
 
@@ -87,6 +90,7 @@ export class NotificationService implements NotificationInboundPort {
     homeId: string,
     type: Notification["type"],
     message: string,
+    details?: NotificationDetails,
   ): Promise<void> {
     const recipients =
       await this.userPreferencesPort.getEnabledUsernamesForType(homeId, type);
@@ -97,6 +101,9 @@ export class NotificationService implements NotificationInboundPort {
         type,
         message,
         username,
+        new Date(),
+        false,
+        details,
       );
       await this.repository.add(notification);
       this.deliveryPort.send(notification, [username]);

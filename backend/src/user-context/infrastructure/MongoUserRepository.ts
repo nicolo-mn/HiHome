@@ -40,11 +40,14 @@ export class MongoUserRepository
 
   async findAllByHome(homeId: string): Promise<UserPrefsRecord[]> {
     const docs = await UserModel.find({ homeId })
-      .select("username notificationPreferences")
-      .lean<Pick<UserRecord, "username" | "notificationPreferences">[]>()
+      .select("username role notificationPreferences")
+      .lean<
+        Pick<UserRecord, "username" | "role" | "notificationPreferences">[]
+      >()
       .exec();
     return docs.map((d) => ({
       username: d.username,
+      role: d.role,
       notificationPreferences: d.notificationPreferences ?? [
         ...ALL_NOTIFICATION_TYPES,
       ],

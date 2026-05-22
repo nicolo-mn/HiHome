@@ -13,11 +13,17 @@ export class UserPreferencesAdapter implements UserPreferencesPort {
   ): Promise<string[]> {
     const users = await this.prefsRepo.findAllByHome(homeId);
     return users
-      .filter((u) =>
-        (u.notificationPreferences ?? [...ALL_NOTIFICATION_TYPES]).includes(
-          notificationType,
-        ),
-      )
+      .filter((u) => {
+        if (
+          notificationType === "AutomationRuleExecuted" &&
+          u.role !== "Admin"
+        ) {
+          return false;
+        }
+        return (
+          u.notificationPreferences ?? [...ALL_NOTIFICATION_TYPES]
+        ).includes(notificationType);
+      })
       .map((u) => u.username);
   }
 }

@@ -17,6 +17,7 @@ const notificationSchema = new Schema(
     message: { type: String, required: true },
     createdAt: { type: Date, required: true },
     read: { type: Boolean, required: true, default: false },
+    details: { type: Schema.Types.Mixed, required: false },
   },
   { timestamps: false },
 );

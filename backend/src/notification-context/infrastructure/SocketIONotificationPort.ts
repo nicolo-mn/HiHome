@@ -13,6 +13,7 @@ export class SocketIONotificationPort implements NotificationDeliveryPort {
       message: notification.message,
       createdAt: notification.createdAt.toISOString(),
       read: notification.read,
+      details: notification.details,
     };
     if (recipientUsernames) {
       for (const username of recipientUsernames) {

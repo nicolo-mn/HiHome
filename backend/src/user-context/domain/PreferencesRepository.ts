@@ -8,6 +8,7 @@ export type NotificationType = (typeof ALL_NOTIFICATION_TYPES)[number];
 
 export interface UserPrefsRecord {
   username: string;
+  role: string;
   notificationPreferences: string[];
 }
 

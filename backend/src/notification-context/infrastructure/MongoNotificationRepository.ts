@@ -1,4 +1,8 @@
-import { Notification, NotificationType } from "../domain/Notification";
+import {
+  Notification,
+  NotificationDetails,
+  NotificationType,
+} from "../domain/Notification";
 import { NotificationRepository } from "../domain/NotificationRepository";
 import { NotificationModel } from "./models/NotificationModel";
 
@@ -10,6 +14,7 @@ type NotificationRecord = {
   message: string;
   createdAt: Date;
   read: boolean;
+  details?: NotificationDetails;
 };
 
 export class MongoNotificationRepository implements NotificationRepository {
@@ -22,6 +27,7 @@ export class MongoNotificationRepository implements NotificationRepository {
       message: notification.message,
       createdAt: notification.createdAt,
       read: notification.read,
+      details: notification.details,
     };
 
     await NotificationModel.create(record);
@@ -57,6 +63,7 @@ export class MongoNotificationRepository implements NotificationRepository {
       doc.username,
       doc.createdAt instanceof Date ? doc.createdAt : new Date(doc.createdAt),
       doc.read,
+      doc.details,
     );
   }
 }
