@@ -13,6 +13,7 @@ import {
   ExternalSensorsUpdate,
   Room,
   createComponent,
+  ComponentUpdatePort,
 } from "../domain";
 import { ActionService } from "./ActionService";
 import { SensorRegistry } from "./SensorRegistry";
@@ -27,6 +28,7 @@ export class HomeService implements ActionService {
     private sensorUpdatePort: SensorUpdatePort,
     private ruleServicePort: RuleServicePort,
     private externalSensorsDataPort: ExternalSensorsDataPort,
+    private componentUpdatePort?: ComponentUpdatePort,
   ) {}
 
   async getComponents(homeId: string): Promise<Component[]> {
@@ -76,7 +78,7 @@ export class HomeService implements ActionService {
       throw new Error("Action not supported");
     }
 
-    await this.homeRepo.saveHome(home);
+    await this.persistAndBroadcast(home, component);
     return component;
   }
 
@@ -163,7 +165,7 @@ export class HomeService implements ActionService {
     const light = component as Light;
     light.turnOn();
 
-    await this.homeRepo.saveHome(home);
+    await this.persistAndBroadcast(home, light);
   }
 
   async lightTurnOff(homeId: string, lightId: string): Promise<void> {
@@ -180,7 +182,7 @@ export class HomeService implements ActionService {
     const light = component as Light;
     light.turnOff();
 
-    await this.homeRepo.saveHome(home);
+    await this.persistAndBroadcast(home, light);
   }
 
   async windowOpen(homeId: string, windowId: string): Promise<void> {
@@ -197,7 +199,7 @@ export class HomeService implements ActionService {
     const window = component as Window;
     window.open();
 
-    await this.homeRepo.saveHome(home);
+    await this.persistAndBroadcast(home, window);
   }
 
   async windowClose(homeId: string, windowId: string): Promise<void> {
@@ -214,7 +216,7 @@ export class HomeService implements ActionService {
     const window = component as Window;
     window.close();
 
-    await this.homeRepo.saveHome(home);
+    await this.persistAndBroadcast(home, window);
   }
 
   async thermostatSetTemperature(
@@ -234,7 +236,7 @@ export class HomeService implements ActionService {
     const thermostat = component as Thermostat;
     thermostat.setTemperature(temperature);
 
-    await this.homeRepo.saveHome(home);
+    await this.persistAndBroadcast(home, thermostat);
   }
 
   async sendExternalSensorsUpdate(homeId: string): Promise<void> {
@@ -329,6 +331,14 @@ export class HomeService implements ActionService {
     update: TemperatureState,
   ): void {
     this.sensorUpdatePort.sendInternalTemperatureUpdate(home, update);
+  }
+
+  private async persistAndBroadcast(
+    home: Home,
+    component: Component,
+  ): Promise<void> {
+    await this.homeRepo.saveHome(home);
+    this.componentUpdatePort?.sendComponentUpdate(home, component);
   }
 
   private async ensureHomeExists(homeId: string) {

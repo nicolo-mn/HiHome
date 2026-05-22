@@ -10,6 +10,7 @@ import { authMiddleware } from "./home-context/infrastructure/middlewares/Routes
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
 import { MongoHomeRepository } from "./home-context/infrastructure/MongoHomeRepository";
 import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/SocketIOSensorUpdateAdapter";
+import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/SocketIOComponentUpdateAdapter";
 import { HomeService } from "./home-context/application/HomeService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
@@ -80,7 +81,11 @@ const EXT_API_BASE_URL =
 const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 20);
 
 // --- Home Context Setup ---
-const sensorUpdatePort = new SocketIOSensorUpdateAdapter(homeNotificationPort);
+const sensorUpdatePort = new SocketIOSensorUpdateAdapter(
+  io,
+  homeNotificationPort,
+);
+const componentUpdatePort = new SocketIOComponentUpdateAdapter(io);
 const eventEmitter = new EventEmitter();
 const ruleServicePort = new AsyncBusRuleServiceAdapter(
   eventEmitter,
@@ -98,6 +103,7 @@ const homeService = new HomeService(
   sensorUpdatePort,
   ruleServicePort,
   externalSensorsDataPort,
+  componentUpdatePort,
 );
 export const homeController = new HomeController(
   homeService,
@@ -212,11 +218,10 @@ io.on("connection", (socket) => {
   }
 
   socket.join(`home-${homeId}`);
-  const socketUser = (socket as any).user as { username?: string } | undefined;
-  if (socketUser?.username) {
-    socket.join(`user-${socketUser.username}`);
+  const username = (socket as any).user?.username;
+  if (typeof username === "string" && username.length > 0) {
+    socket.join(`user-${username}`);
   }
-  void sensorUpdatePort.registerClient(homeId, socket);
   void homeService.sendExternalSensorsUpdate(homeId).catch((error) => {
     console.error(
       `Failed to send external sensors snapshot for home ${homeId}:`,

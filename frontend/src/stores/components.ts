@@ -1,12 +1,15 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { io, type Socket } from "socket.io-client";
 import { componentsApi } from "@/api";
 import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
   CreateComponentInput,
+  RawComponent,
 } from "@/api/components";
+import { normalizeComponent } from "@/api/components";
 import { useAuthStore } from "@/stores/auth";
 import { useBusyIds } from "@/composables/useBusyIds";
 
@@ -18,6 +21,7 @@ export const useComponentsStore = defineStore("components", () => {
   const error = ref<string | null>(null);
   const loadedHomeId = ref<string | null>(null);
   const busy = useBusyIds();
+  let socket: Socket | null = null;
 
   const homeId = computed(() => authStore.homeId);
   const isLoaded = computed(
@@ -52,6 +56,48 @@ export const useComponentsStore = defineStore("components", () => {
     components.value = [];
     error.value = null;
     loadedHomeId.value = null;
+  }
+
+  function applyRemoteUpdate(raw: RawComponent) {
+    if (!raw?.id) return;
+    const updated = normalizeComponent(raw);
+    const index = components.value.findIndex((c) => c.id === updated.id);
+    if (index === -1) {
+      components.value = [...components.value, updated];
+    } else {
+      components.value = components.value.map((c) =>
+        c.id === updated.id ? updated : c,
+      );
+    }
+  }
+
+  function connect() {
+    if (socket) return;
+    const homeId = authStore.homeId;
+    if (!homeId) return;
+
+    socket = io({
+      query: { homeId },
+      auth: (cb) => {
+        const t = authStore.token;
+        cb(t ? { token: t } : {});
+      },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+    });
+
+    socket.on("component:updated", (payload: RawComponent) => {
+      applyRemoteUpdate(payload);
+    });
+  }
+
+  function disconnect() {
+    socket?.removeAllListeners();
+    socket?.disconnect();
+    socket = null;
   }
 
   async function executeAction(
@@ -119,5 +165,7 @@ export const useComponentsStore = defineStore("components", () => {
     toggle,
     step,
     addComponent,
+    connect,
+    disconnect,
   };
 });

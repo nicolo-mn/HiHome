@@ -36,7 +36,7 @@ export type HomeComponent =
   | ThermostatComponent
   | (BaseComponent & { type: "unknown" });
 
-interface RawComponent {
+export interface RawComponent {
   id: string;
   name: string;
   roomId?: string;
@@ -46,7 +46,7 @@ interface RawComponent {
   temperature?: number;
   unit?: string;
 }
-function normalizeComponent(raw: RawComponent): HomeComponent {
+export function normalizeComponent(raw: RawComponent): HomeComponent {
   const base = {
     id: raw.id,
     name: raw.name,
