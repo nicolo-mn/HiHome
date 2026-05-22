@@ -1,5 +1,14 @@
 import { apiFetch } from "./client";
 
+export interface RuleExecutionRecap {
+  ruleName: string;
+  actions: string[];
+}
+
+export interface NotificationDetails {
+  executions: RuleExecutionRecap[];
+}
+
 export interface NotificationDTO {
   id: string;
   homeId: string;
@@ -7,6 +16,7 @@ export interface NotificationDTO {
   message: string;
   createdAt: string;
   read: boolean;
+  details?: NotificationDetails;
 }
 
 export async function getNotifications(

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { usePreferencesStore } from "@/stores/preferences";
@@ -12,6 +12,12 @@ import {
 const authStore = useAuthStore();
 const prefsStore = usePreferencesStore();
 const router = useRouter();
+
+const visibleNotificationTypes = computed<readonly NotificationType[]>(() =>
+  authStore.isAdmin
+    ? ALL_NOTIFICATION_TYPES
+    : ALL_NOTIFICATION_TYPES.filter((t) => t !== "AutomationRuleExecuted"),
+);
 
 onMounted(() => {
   prefsStore.load();
@@ -44,7 +50,7 @@ function onToggle(type: NotificationType, checked: boolean) {
       </p>
 
       <div
-        v-for="type in ALL_NOTIFICATION_TYPES"
+        v-for="type in visibleNotificationTypes"
         :key="type"
         class="flex items-center justify-between py-2 border-t border-border first:border-t-0"
       >
