@@ -8,6 +8,8 @@ import {
   Home,
   HomeRepository,
   ComponentTypes,
+  ComponentEvent,
+  ComponentEventActor,
   TemperatureState,
   SensorUpdatePort,
   ExternalSensorsUpdate,
@@ -47,6 +49,13 @@ export class HomeService implements ActionService {
     return component;
   }
 
+  async getComponentEvents(homeId: string): Promise<ComponentEvent[]> {
+    const home = await this.ensureHomeExists(homeId);
+    return [...home.eventLog].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  }
+
   async addComponent(
     homeId: string,
     input: CreateComponentInput,
@@ -66,19 +75,24 @@ export class HomeService implements ActionService {
     componentId: string,
     action: string,
     param?: number,
+    actor?: ComponentEventActor,
   ): Promise<Component> {
     const home = await this.ensureHomeExists(homeId);
 
     const component = home.getComponentById(componentId);
     if (!component) throw new Error("Component not found");
 
-    if (typeof (component as any)[action] === "function") {
-      (component as any)[action](param);
-    } else {
+    if (typeof (component as any)[action] !== "function") {
       throw new Error("Action not supported");
     }
 
     await this.persistAndBroadcast(home, component);
+    const event = (component as any)[action](param) as ComponentEvent;
+    if (event) {
+      home.addComponentEvent({ ...event, actor });
+    }
+
+    await this.homeRepo.saveHome(home);
     return component;
   }
 
@@ -163,7 +177,8 @@ export class HomeService implements ActionService {
       );
 
     const light = component as Light;
-    light.turnOn();
+    const event = light.turnOn();
+    home.addComponentEvent(event);
 
     await this.persistAndBroadcast(home, light);
   }
@@ -180,7 +195,8 @@ export class HomeService implements ActionService {
       );
 
     const light = component as Light;
-    light.turnOff();
+    const event = light.turnOff();
+    home.addComponentEvent(event);
 
     await this.persistAndBroadcast(home, light);
   }
@@ -197,7 +213,8 @@ export class HomeService implements ActionService {
       );
 
     const window = component as Window;
-    window.open();
+    const event = window.open();
+    home.addComponentEvent(event);
 
     await this.persistAndBroadcast(home, window);
   }
@@ -214,7 +231,8 @@ export class HomeService implements ActionService {
       );
 
     const window = component as Window;
-    window.close();
+    const event = window.close();
+    home.addComponentEvent(event);
 
     await this.persistAndBroadcast(home, window);
   }
@@ -234,7 +252,8 @@ export class HomeService implements ActionService {
       );
 
     const thermostat = component as Thermostat;
-    thermostat.setTemperature(temperature);
+    const event = thermostat.setTemperature(temperature);
+    home.addComponentEvent(event);
 
     await this.persistAndBroadcast(home, thermostat);
   }

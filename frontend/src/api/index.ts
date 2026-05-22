@@ -35,3 +35,5 @@ export type {
   ActionDto,
   CreateRulePayload,
 } from "./rules";
+export * as eventLogApi from "./event-log";
+export type { ComponentEventDTO } from "./event-log";

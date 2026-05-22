@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import componentsIcon from "@/assets/icons/components.svg?raw";
 import dashboardIcon from "@/assets/icons/dashboard.svg?raw";
+import bellIcon from "@/assets/icons/bell.svg?raw";
 import rulesIcon from "@/assets/icons/rules.svg?raw";
 import thermometerIcon from "@/assets/icons/thermometer.svg?raw";
 
@@ -15,7 +16,10 @@ const navItems = computed(() => {
     { name: "Plan", to: "/thermostat-plan", icon: thermometerIcon },
   ];
   if (auth.isAdmin) {
-    items.push({ name: "Rules", to: "/rules", icon: rulesIcon });
+    items.push(
+      { name: "Rules", to: "/rules", icon: rulesIcon },
+      { name: "Event Log", to: "/event-log", icon: bellIcon },
+    );
   }
   return items;
 });

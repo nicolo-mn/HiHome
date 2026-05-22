@@ -1,4 +1,14 @@
+import { randomUUID } from "crypto";
 import { ComponentVisitor } from "./ComponentVisitor";
+import {
+  ComponentEventActor,
+  ComponentEventBase,
+  LightTurnedOffEvent,
+  LightTurnedOnEvent,
+  ThermostatSetEvent,
+  WindowClosedEvent,
+  WindowOpenedEvent,
+} from "./EventLog";
 
 export enum ComponentTypes {
   LIGHT = "light",
@@ -30,6 +40,20 @@ export interface Component {
   accept<T>(visitor: ComponentVisitor<T>): T;
 }
 
+function buildEventBase(
+  component: Component,
+  actor?: ComponentEventActor,
+): ComponentEventBase {
+  return {
+    id: randomUUID(),
+    componentId: component.id,
+    componentName: component.name,
+    componentType: component.getType(),
+    actor,
+    createdAt: new Date(),
+  };
+}
+
 export class Light implements Component {
   private type: ComponentTypes = ComponentTypes.LIGHT;
   constructor(
@@ -47,12 +71,22 @@ export class Light implements Component {
     return visitor.visitLight(this);
   }
 
-  turnOn() {
+  turnOn(actor?: ComponentEventActor): LightTurnedOnEvent {
     this.isOn = true;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "LightTurnedOn",
+      componentType: ComponentTypes.LIGHT,
+    };
   }
 
-  turnOff() {
+  turnOff(actor?: ComponentEventActor): LightTurnedOffEvent {
     this.isOn = false;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "LightTurnedOff",
+      componentType: ComponentTypes.LIGHT,
+    };
   }
 }
 
@@ -73,12 +107,22 @@ export class Window implements Component {
     return visitor.visitWindow(this);
   }
 
-  open() {
+  open(actor?: ComponentEventActor): WindowOpenedEvent {
     this.isOpen = true;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "WindowOpened",
+      componentType: ComponentTypes.WINDOW,
+    };
   }
 
-  close() {
+  close(actor?: ComponentEventActor): WindowClosedEvent {
     this.isOpen = false;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "WindowClosed",
+      componentType: ComponentTypes.WINDOW,
+    };
   }
 }
 
@@ -99,7 +143,16 @@ export class Thermostat implements Component {
     return visitor.visitThermostat(this);
   }
 
-  setTemperature(temp: number) {
+  setTemperature(
+    temp: number,
+    actor?: ComponentEventActor,
+  ): ThermostatSetEvent {
     this.temperature = temp;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "ThermostatSet",
+      componentType: ComponentTypes.THERMOSTAT,
+      targetTemperature: temp,
+    };
   }
 }

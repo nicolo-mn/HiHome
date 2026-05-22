@@ -50,6 +50,12 @@ const router = createRouter({
           component: () => import("@/views/NotificationsView.vue"),
         },
         {
+          path: "/event-log",
+          name: "event-log",
+          component: () => import("@/views/EventLogView.vue"),
+          meta: { requiresAdmin: true },
+        },
+        {
           path: "/chat",
           name: "chat",
           component: () => import("@/views/ChatView.vue"),
