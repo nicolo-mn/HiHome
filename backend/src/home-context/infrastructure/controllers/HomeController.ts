@@ -32,6 +32,15 @@ export class HomeController {
     }
   }
 
+  async getRooms(req: Request, res: Response) {
+    try {
+      const rooms = await this.homeService.getRooms(req.params.id as string);
+      res.json(rooms.map((r) => ({ id: r.id, name: r.name })));
+    } catch (e: any) {
+      res.status(404).json({ error: e.message });
+    }
+  }
+
   async addComponent(req: Request, res: Response) {
     const input = this.parseCreateComponentInput(req.body);
     if ("error" in input) {

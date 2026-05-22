@@ -17,6 +17,9 @@ export class HomeRouter {
 
   registerRoutes() {
     this.router.use("/:id", homeIdMiddleware);
+    this.router.get("/:id/rooms", (req: Request, res: Response) =>
+      this.homeController.getRooms(req, res),
+    );
     this.router.get("/:id/components/types", (req: Request, res: Response) =>
       this.homeController.getComponentTypes(req, res),
     );
