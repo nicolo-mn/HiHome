@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ChatService, type ChatMessage } from "../../application/ChatService";
 
 type AuthedUser = {
-  houseId: string;
+  homeId: string;
   username: string;
 };
 
@@ -16,7 +16,7 @@ export class ChatController {
     };
     const user = (req as any).user as AuthedUser | undefined;
 
-    if (!user?.houseId || !user.username) {
+    if (!user?.homeId || !user.username) {
       console.warn(
         "ChatController: Unauthorized request, user not authenticated properly",
       );
@@ -32,17 +32,17 @@ export class ChatController {
 
     try {
       console.log(
-        `ChatController: Chat requested for home ${user.houseId} by user ${user.username}`,
+        `ChatController: Chat requested for home ${user.homeId} by user ${user.username}`,
       );
       const safeHistory = Array.isArray(history) ? history : [];
       const reply = await this.chatService.chat(
-        user.houseId,
+        user.homeId,
         user.username,
         message,
         safeHistory,
       );
       console.log(
-        `ChatController: Successfully generated reply for home ${user.houseId}`,
+        `ChatController: Successfully generated reply for home ${user.homeId}`,
       );
       res.json({ reply });
     } catch (error: any) {

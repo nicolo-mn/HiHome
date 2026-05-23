@@ -99,7 +99,7 @@ describe("wsHomeIdMiddleware", () => {
 
     const error = next.mock.calls[0]?.[0] as Error;
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toBe("Forbidden: Access to this house is denied");
+    expect(error.message).toBe("Forbidden: Access to this home is denied");
   });
 
   it("accepts matching homeId", async () => {

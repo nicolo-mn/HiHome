@@ -34,7 +34,7 @@ const wsHomeIdValidators = [
 
     const user = (req as SocketRequest).user as { homeId?: string } | undefined;
     if (!user || user.homeId !== homeId) {
-      throw new Error("Forbidden: Access to this house is denied");
+      throw new Error("Forbidden: Access to this home is denied");
     }
 
     return true;

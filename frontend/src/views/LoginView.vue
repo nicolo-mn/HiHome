@@ -10,7 +10,7 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
-const houseId = ref("");
+const homeId = ref("");
 const username = ref("");
 const password = ref("");
 
@@ -20,7 +20,7 @@ const {
   error,
 } = useAsyncAction(
   async () => {
-    await authStore.login(houseId.value, username.value, password.value);
+    await authStore.login(homeId.value, username.value, password.value);
     const redirect = route.query.redirect;
     router.push(
       typeof redirect === "string" ? redirect : { name: "dashboard" },
@@ -49,11 +49,7 @@ function handleLogin() {
         @submit.prevent="handleLogin"
         class="w-full max-w-xs flex flex-col gap-5"
       >
-        <BaseInput
-          label="House ID"
-          v-model="houseId"
-          placeholder="house-id..."
-        />
+        <BaseInput label="Home ID" v-model="homeId" placeholder="home-id..." />
         <BaseInput
           label="Username"
           v-model="username"
