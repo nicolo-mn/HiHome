@@ -93,7 +93,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       content: message.content,
     }));
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       const reply = await this.requestChat(model, chatMessages, tools);
       const toolCalls = reply.tool_calls ?? [];
 
@@ -138,7 +138,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       content: message.content,
     }));
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       const reply = await this.requestStreamChat(
         model,
         chatMessages,
