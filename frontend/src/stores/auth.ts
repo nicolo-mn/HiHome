@@ -31,12 +31,12 @@ export const useAuthStore = defineStore("auth", () => {
   });
 
   async function login(
-    inputHouseId: string,
+    inputHomeId: string,
     inputUsername: string,
     inputPassword: string,
   ) {
     const { token: newToken } = await authApi.login({
-      homeId: inputHouseId,
+      homeId: inputHomeId,
       username: inputUsername,
       password: inputPassword,
     });

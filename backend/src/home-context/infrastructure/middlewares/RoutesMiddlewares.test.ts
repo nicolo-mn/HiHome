@@ -125,7 +125,7 @@ describe("homeIdMiddleware", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      error: "Forbidden: Access to this house is denied",
+      error: "Forbidden: Access to this home is denied",
     });
     expect(next).not.toHaveBeenCalled();
   });

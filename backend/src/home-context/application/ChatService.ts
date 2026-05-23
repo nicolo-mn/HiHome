@@ -23,57 +23,57 @@ export class ChatService {
 
   // TODO: consider to remove keeping only streaming version
   async chat(
-    houseId: string,
+    homeId: string,
     username: string,
     userMessage: string,
     history: ChatMessage[],
   ): Promise<string> {
-    console.log(`ChatService: chat called for house ${houseId} by ${username}`);
+    console.log(`ChatService: chat called for home ${homeId} by ${username}`);
     if (!userMessage.trim()) {
       throw new Error("Message is required");
     }
 
-    const messages = await this.buildMessages(houseId, userMessage, history);
+    const messages = await this.buildMessages(homeId, userMessage, history);
 
     const reply = await this.chatCompletionPort.completeChat(
       messages,
       this.options.model,
-      houseId,
+      homeId,
     );
 
     return reply;
   }
 
   async streamChat(
-    houseId: string,
+    homeId: string,
     username: string,
     userMessage: string,
     history: ChatMessage[],
     streamPort: ChatStreamPort,
   ): Promise<string> {
     console.log(
-      `ChatService: streamChat called for house ${houseId} by ${username}`,
+      `ChatService: streamChat called for home ${homeId} by ${username}`,
     );
     if (!userMessage.trim()) {
       throw new Error("Message is required");
     }
 
-    const messages = await this.buildMessages(houseId, userMessage, history);
+    const messages = await this.buildMessages(homeId, userMessage, history);
 
     return this.chatCompletionPort.streamChat(
       messages,
       this.options.model,
-      houseId,
+      homeId,
       streamPort,
     );
   }
 
   private async buildMessages(
-    houseId: string,
+    homeId: string,
     userMessage: string,
     history: ChatMessage[],
   ): Promise<ChatMessage[]> {
-    const systemPrompt = await this.buildSystemPrompt(houseId);
+    const systemPrompt = await this.buildSystemPrompt(homeId);
     const existing = this.normalizeHistory(history);
     return [
       { role: "system", content: systemPrompt },

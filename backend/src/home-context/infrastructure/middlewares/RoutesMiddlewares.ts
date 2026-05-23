@@ -28,7 +28,7 @@ function makeHomeIdValidators(paramName: string) {
 
       const user = (req as any).user;
       if (!user || user.homeId !== value) {
-        throw new Error("Forbidden: Access to this house is denied");
+        throw new Error("Forbidden: Access to this home is denied");
       }
 
       return true;
