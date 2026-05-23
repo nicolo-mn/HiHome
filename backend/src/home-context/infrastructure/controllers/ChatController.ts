@@ -34,12 +34,14 @@ export class ChatController {
       console.log(
         `ChatController: Chat requested for home ${user.homeId} by user ${user.username}`,
       );
+      const isAdmin = ((req as any).user as any)?.role === "Admin";
       const safeHistory = Array.isArray(history) ? history : [];
       const reply = await this.chatService.chat(
         user.homeId,
         user.username,
         message,
         safeHistory,
+        isAdmin,
       );
       console.log(
         `ChatController: Successfully generated reply for home ${user.homeId}`,

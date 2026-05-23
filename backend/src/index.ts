@@ -78,7 +78,7 @@ const DEEPSEEK_API_BASE_URL =
   process.env.DEEPSEEK_API_BASE_URL || "https://api.deepseek.com";
 const EXT_API_BASE_URL =
   process.env.EXT_API_BASE_URL || "http://ext_api_service:8080";
-const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 20);
+const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 30);
 const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
   process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
 );
@@ -228,6 +228,8 @@ io.on("connection", (socket) => {
 
       const chatStreamPort = new SocketIOChatStreamAdapter(socket);
 
+      const isAdmin = ((socket as any).user as any)?.role === "Admin";
+
       try {
         const safeHistory = Array.isArray(payload.history)
           ? payload.history
@@ -238,6 +240,7 @@ io.on("connection", (socket) => {
           payload.message,
           safeHistory,
           chatStreamPort,
+          isAdmin,
         );
         chatStreamPort.emit({
           type: ChatStreamEventType.Done,

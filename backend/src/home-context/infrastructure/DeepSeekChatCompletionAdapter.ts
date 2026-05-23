@@ -81,22 +81,19 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     messages: ChatMessage[],
     model: string,
     homeId: string,
+    isAdmin: boolean,
   ): Promise<string> {
     if (!this.options.apiKey) {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = [
-      this.buildForecastTool(),
-      this.buildAddRuleTool(),
-      this.buildAddComponentTool(),
-    ];
+    const tools = this.buildTools(isAdmin);
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
     }));
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       const reply = await this.requestChat(model, chatMessages, tools);
       const toolCalls = reply.tool_calls ?? [];
 
@@ -129,22 +126,19 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     model: string,
     homeId: string,
     streamPort: ChatStreamPort,
+    isAdmin: boolean,
   ): Promise<string> {
     if (!this.options.apiKey) {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = [
-      this.buildForecastTool(),
-      this.buildAddRuleTool(),
-      this.buildAddComponentTool(),
-    ];
+    const tools = this.buildTools(isAdmin);
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
     }));
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       const reply = await this.requestStreamChat(
         model,
         chatMessages,
@@ -183,6 +177,14 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     }
 
     throw new Error("DeepSeek did not return a final response");
+  }
+
+  private buildTools(isAdmin: boolean): DeepSeekTool[] {
+    const tools = [this.buildForecastTool()];
+    if (isAdmin) {
+      tools.push(this.buildAddRuleTool(), this.buildAddComponentTool());
+    }
+    return tools;
   }
 
   private buildForecastTool(): DeepSeekTool {
