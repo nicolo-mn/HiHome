@@ -32,6 +32,10 @@ func (s *stubEnvironmentProvider) FetchWeeklyForecast(lat, lon float64) (*domain
 	return s.weeklyForecast, s.forecastErr
 }
 
+func (s *stubEnvironmentProvider) FetchHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+	return s.weeklyForecast, s.forecastErr
+}
+
 // error on post for /api/weather
 func TestEnvironmentControllerServeHTTPMethodNotAllowed(t *testing.T) {
 	provider := &stubEnvironmentProvider{}

@@ -34,6 +34,11 @@ func (s *stubProvider) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyFore
 	return s.weeklyForecast, s.forecastErr
 }
 
+func (s *stubProvider) FetchHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+	s.forecastCalls++
+	return s.weeklyForecast, s.forecastErr
+}
+
 // Test that if the weather provider returns an error, the service returns that error and does not call the air quality provider
 func TestEnvironmentServiceGetEnvironmentInfoWeatherError(t *testing.T) {
 	provider := &stubProvider{weatherErr: errors.New("weather failure")}

@@ -156,3 +156,57 @@ func (c *OpenMeteoClient) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyF
 	weekly := domain.NewWeeklyForecast(days)
 	return &weekly, nil
 }
+
+func (c *OpenMeteoClient) FetchHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+	url := fmt.Sprintf(
+		"%s?latitude=%.4f&longitude=%.4f&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_hours,wind_direction_10m_dominant,daylight_duration,precipitation_sum&timezone=auto&past_days=7&forecast_days=0",
+		weatherURL, lat, lon,
+	)
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("historical forecast request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("historical forecast API returned status %d", resp.StatusCode)
+	}
+
+	var apiResp openMeteoWeeklyResponse
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return nil, fmt.Errorf("failed to decode historical forecast response: %w", err)
+	}
+
+	daily := apiResp.Daily
+	count := len(daily.Time)
+	if count == 0 ||
+		len(daily.WeatherCode) != count ||
+		len(daily.TemperatureMax) != count ||
+		len(daily.TemperatureMin) != count ||
+		len(daily.WindSpeedMax) != count ||
+		len(daily.PrecipitationHours) != count ||
+		len(daily.WindDirectionDominant) != count ||
+		len(daily.DaylightDuration) != count ||
+		len(daily.PrecipitationSum) != count {
+		return nil, fmt.Errorf("historical forecast response has inconsistent daily lengths")
+	}
+
+	days := make([]domain.DailyForecast, 0, count)
+	for i := 0; i < count; i++ {
+		day := domain.NewDailyForecast(
+			daily.Time[i],
+			daily.WeatherCode[i],
+			daily.TemperatureMax[i],
+			daily.TemperatureMin[i],
+			daily.WindSpeedMax[i],
+			daily.PrecipitationHours[i],
+			daily.WindDirectionDominant[i],
+			daily.DaylightDuration[i],
+			daily.PrecipitationSum[i],
+		)
+		days = append(days, day)
+	}
+
+	weekly := domain.NewWeeklyForecast(days)
+	return &weekly, nil
+}

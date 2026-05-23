@@ -21,6 +21,7 @@ func main() {
 	})
 	mux.HandleFunc("/api/weather", controller.ServeHTTP)
 	mux.HandleFunc("/api/forecast", controller.ServeForecast)
+	mux.HandleFunc("/api/historical", controller.ServeHistorical)
 
 	log.Println("ext-api-service listening on port 8080...")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
