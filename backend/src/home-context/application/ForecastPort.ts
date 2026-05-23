@@ -10,6 +10,10 @@ export type ForecastDaySummary = {
   precipitationHours: number;
   daylightDuration: number;
   precipitationSum: number;
+  hourlyAirQuality: {
+    time: string;
+    europeanAqi: number;
+  }[];
 };
 
 export type ForecastSummary = {

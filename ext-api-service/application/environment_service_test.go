@@ -86,8 +86,12 @@ func TestEnvironmentServiceGetEnvironmentInfoSuccess(t *testing.T) {
 
 func TestEnvironmentServiceGetWeeklyForecast(t *testing.T) {
 	days := make([]domain.DailyForecast, 0, 7)
+	aqi := make([]domain.HourlyAirQuality, 0, 24)
+	for h := 0; h < 24; h++ {
+		aqi = append(aqi, domain.NewHourlyAirQuality("2026-05-21T00:00", 25))
+	}
 	for i := 0; i < 7; i++ {
-		days = append(days, domain.NewDailyForecast("2026-05-21", 1, 25.0, 15.0, 6.5, 0.2, 90, 36000, 1.0))
+		days = append(days, domain.NewDailyForecast("2026-05-21", 1, 25.0, 15.0, 6.5, 0.2, 90, 36000, 1.0, aqi))
 	}
 	forecast := domain.NewWeeklyForecast(days)
 	provider := &stubProvider{weeklyForecast: &forecast}
@@ -103,11 +107,21 @@ func TestEnvironmentServiceGetWeeklyForecast(t *testing.T) {
 	if len(result.Days()) != 7 {
 		t.Fatalf("expected 7 days, got %d", len(result.Days()))
 	}
+	if len(result.Days()[0].HourlyAirQuality()) != 24 {
+		t.Fatalf("expected 24 hourly AQI, got %d", len(result.Days()[0].HourlyAirQuality()))
+	}
+	if result.Days()[0].HourlyAirQuality()[0].EuropeanAQI() != 25 {
+		t.Fatalf("expected AQI 25, got %d", result.Days()[0].HourlyAirQuality()[0].EuropeanAQI())
+	}
 }
 
 func TestEnvironmentServiceGetWeeklyForecastUnexpectedLength(t *testing.T) {
+	aqi := make([]domain.HourlyAirQuality, 0, 24)
+	for h := 0; h < 24; h++ {
+		aqi = append(aqi, domain.NewHourlyAirQuality("2026-05-21T00:00", 25))
+	}
 	days := []domain.DailyForecast{
-		domain.NewDailyForecast("2026-05-21", 1, 25.0, 15.0, 6.5, 0.2, 90, 36000, 1.0),
+		domain.NewDailyForecast("2026-05-21", 1, 25.0, 15.0, 6.5, 0.2, 90, 36000, 1.0, aqi),
 	}
 	forecast := domain.NewWeeklyForecast(days)
 	provider := &stubProvider{weeklyForecast: &forecast}

@@ -29,6 +29,15 @@ type openMeteoAirQualityResponse struct {
 	} `json:"current"`
 }
 
+type openMeteoAirQualityHourlyResponse struct {
+	Hourly struct {
+		Time        []string `json:"time"`
+		EuropeanAQI []int    `json:"european_aqi"`
+	} `json:"hourly"`
+}
+
+
+
 type openMeteoWeeklyResponse struct {
 	Daily struct {
 		Time                  []string  `json:"time"`
@@ -137,8 +146,41 @@ func (c *OpenMeteoClient) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyF
 		return nil, fmt.Errorf("weekly forecast response has inconsistent daily lengths")
 	}
 
+	aqiUrl := fmt.Sprintf(
+		"%s?latitude=%.4f&longitude=%.4f&hourly=european_aqi&timezone=auto&forecast_days=7",
+		airQualityURL, lat, lon,
+	)
+	aqiRespObj, err := c.httpClient.Get(aqiUrl)
+	if err != nil {
+		return nil, fmt.Errorf("weekly aqi request failed: %w", err)
+	}
+	defer aqiRespObj.Body.Close()
+
+	if aqiRespObj.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("weekly aqi API returned status %d", aqiRespObj.StatusCode)
+	}
+
+	var aqiApiResp openMeteoAirQualityHourlyResponse
+	if err := json.NewDecoder(aqiRespObj.Body).Decode(&aqiApiResp); err != nil {
+		return nil, fmt.Errorf("failed to decode weekly aqi response: %w", err)
+	}
+
+	hourly := aqiApiResp.Hourly
+	aqiCount := len(hourly.Time)
+	if aqiCount == 0 || len(hourly.EuropeanAQI) != aqiCount {
+		return nil, fmt.Errorf("weekly aqi response has inconsistent hourly lengths")
+	}
+	aqiHours := make([]domain.HourlyAirQuality, 0, aqiCount)
+	for i := 0; i < aqiCount; i++ {
+		aqiHours = append(aqiHours, domain.NewHourlyAirQuality(hourly.Time[i], hourly.EuropeanAQI[i]))
+	}
+
 	days := make([]domain.DailyForecast, 0, count)
 	for i := 0; i < count; i++ {
+		var dailyAqi []domain.HourlyAirQuality
+		if (i+1)*24 <= len(aqiHours) {
+			dailyAqi = aqiHours[i*24 : (i+1)*24]
+		}
 		day := domain.NewDailyForecast(
 			daily.Time[i],
 			daily.WeatherCode[i],
@@ -149,6 +191,7 @@ func (c *OpenMeteoClient) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyF
 			daily.WindDirectionDominant[i],
 			daily.DaylightDuration[i],
 			daily.PrecipitationSum[i],
+			dailyAqi,
 		)
 		days = append(days, day)
 	}
@@ -191,8 +234,41 @@ func (c *OpenMeteoClient) FetchHistoricalForecast(lat, lon float64) (*domain.Wee
 		return nil, fmt.Errorf("historical forecast response has inconsistent daily lengths")
 	}
 
+	aqiUrl := fmt.Sprintf(
+		"%s?latitude=%.4f&longitude=%.4f&hourly=european_aqi&timezone=auto&past_days=7&forecast_days=0",
+		airQualityURL, lat, lon,
+	)
+	aqiRespObj, err := c.httpClient.Get(aqiUrl)
+	if err != nil {
+		return nil, fmt.Errorf("historical aqi request failed: %w", err)
+	}
+	defer aqiRespObj.Body.Close()
+
+	if aqiRespObj.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("historical aqi API returned status %d", aqiRespObj.StatusCode)
+	}
+
+	var aqiApiResp openMeteoAirQualityHourlyResponse
+	if err := json.NewDecoder(aqiRespObj.Body).Decode(&aqiApiResp); err != nil {
+		return nil, fmt.Errorf("failed to decode historical aqi response: %w", err)
+	}
+
+	hourly := aqiApiResp.Hourly
+	aqiCount := len(hourly.Time)
+	if aqiCount == 0 || len(hourly.EuropeanAQI) != aqiCount {
+		return nil, fmt.Errorf("historical aqi response has inconsistent hourly lengths")
+	}
+	aqiHours := make([]domain.HourlyAirQuality, 0, aqiCount)
+	for i := 0; i < aqiCount; i++ {
+		aqiHours = append(aqiHours, domain.NewHourlyAirQuality(hourly.Time[i], hourly.EuropeanAQI[i]))
+	}
+
 	days := make([]domain.DailyForecast, 0, count)
 	for i := 0; i < count; i++ {
+		var dailyAqi []domain.HourlyAirQuality
+		if (i+1)*24 <= len(aqiHours) {
+			dailyAqi = aqiHours[i*24 : (i+1)*24]
+		}
 		day := domain.NewDailyForecast(
 			daily.Time[i],
 			daily.WeatherCode[i],
@@ -203,6 +279,7 @@ func (c *OpenMeteoClient) FetchHistoricalForecast(lat, lon float64) (*domain.Wee
 			daily.WindDirectionDominant[i],
 			daily.DaylightDuration[i],
 			daily.PrecipitationSum[i],
+			dailyAqi,
 		)
 		days = append(days, day)
 	}

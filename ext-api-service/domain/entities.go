@@ -27,6 +27,12 @@ type DailyForecast struct {
 	windDirectionDominant float64
 	daylightDuration      float64
 	precipitationSum      float64
+	hourlyAirQuality      []HourlyAirQuality
+}
+
+type HourlyAirQuality struct {
+	time        string
+	europeanAQI int
 }
 
 type WeeklyForecast struct {
@@ -56,7 +62,7 @@ func NewEnvironmentInfo(weather WeatherInfo, airQuality AirQualityInfo) Environm
 	}
 }
 
-func NewDailyForecast(date string, weatherCode int, tempMax float64, tempMin float64, windSpeedMax float64, precipHours float64, windDirDominant float64, daylightDuration float64, precipSum float64) DailyForecast {
+func NewDailyForecast(date string, weatherCode int, tempMax float64, tempMin float64, windSpeedMax float64, precipHours float64, windDirDominant float64, daylightDuration float64, precipSum float64, aqi []HourlyAirQuality) DailyForecast {
 	return DailyForecast{
 		date:                  date,
 		weatherType:           FromWMOCode(weatherCode),
@@ -67,6 +73,14 @@ func NewDailyForecast(date string, weatherCode int, tempMax float64, tempMin flo
 		windDirectionDominant: windDirDominant,
 		daylightDuration:      daylightDuration,
 		precipitationSum:      precipSum,
+		hourlyAirQuality:      aqi,
+	}
+}
+
+func NewHourlyAirQuality(time string, aqi int) HourlyAirQuality {
+	return HourlyAirQuality{
+		time:        time,
+		europeanAQI: aqi,
 	}
 }
 
@@ -136,4 +150,16 @@ func (d DailyForecast) PrecipitationSum() float64 {
 
 func (w WeeklyForecast) Days() []DailyForecast {
 	return w.days
+}
+
+func (h HourlyAirQuality) Time() string {
+	return h.time
+}
+
+func (h HourlyAirQuality) EuropeanAQI() int {
+	return h.europeanAQI
+}
+
+func (d DailyForecast) HourlyAirQuality() []HourlyAirQuality {
+	return d.hourlyAirQuality
 }

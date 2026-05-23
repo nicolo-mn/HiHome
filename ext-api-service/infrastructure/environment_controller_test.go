@@ -165,8 +165,12 @@ func TestEnvironmentControllerServeForecastBadGateway(t *testing.T) {
 
 // error on invalid forecast length for /api/forecast
 func TestEnvironmentControllerServeForecastInvalidLength(t *testing.T) {
+	aqi := make([]domain.HourlyAirQuality, 0, 24)
+	for h := 0; h < 24; h++ {
+		aqi = append(aqi, domain.NewHourlyAirQuality("2026-05-21T00:00", 30))
+	}
 	days := []domain.DailyForecast{
-		domain.NewDailyForecast("2026-05-21", 1, 26.0, 16.0, 7.2, 0.0, 120, 36000, 0.5),
+		domain.NewDailyForecast("2026-05-21", 1, 26.0, 16.0, 7.2, 0.0, 120, 36000, 0.5, aqi),
 	}
 	forecast := domain.NewWeeklyForecast(days)
 	provider := &stubEnvironmentProvider{weeklyForecast: &forecast}
@@ -185,8 +189,12 @@ func TestEnvironmentControllerServeForecastInvalidLength(t *testing.T) {
 // test successful response for /api/forecast
 func TestEnvironmentControllerServeForecastSuccess(t *testing.T) {
 	days := make([]domain.DailyForecast, 0, 7)
+	aqi := make([]domain.HourlyAirQuality, 0, 24)
+	for h := 0; h < 24; h++ {
+		aqi = append(aqi, domain.NewHourlyAirQuality("2026-05-21T00:00", 30))
+	}
 	for i := 0; i < 7; i++ {
-		days = append(days, domain.NewDailyForecast("2026-05-21", 1, 26.0, 16.0, 7.2, 0.0, 120, 36000, 0.5))
+		days = append(days, domain.NewDailyForecast("2026-05-21", 1, 26.0, 16.0, 7.2, 0.0, 120, 36000, 0.5, aqi))
 	}
 	forecast := domain.NewWeeklyForecast(days)
 	provider := &stubEnvironmentProvider{weeklyForecast: &forecast}
@@ -216,5 +224,14 @@ func TestEnvironmentControllerServeForecastSuccess(t *testing.T) {
 	}
 	if resp.Days[1].WeatherType != int(domain.ClearDay) {
 		t.Fatalf("expected second weather type %d, got %d", int(domain.ClearDay), resp.Days[1].WeatherType)
+	}
+	if len(resp.Days[0].HourlyAirQuality) != 24 {
+		t.Fatalf("expected 24 hourly AQI, got %d", len(resp.Days[0].HourlyAirQuality))
+	}
+	if resp.Days[0].HourlyAirQuality[0].EuropeanAQI != 30 {
+		t.Fatalf("expected AQI 30, got %d", resp.Days[0].HourlyAirQuality[0].EuropeanAQI)
+	}
+	if resp.Days[0].HourlyAirQuality[0].Time != "2026-05-21T00:00" {
+		t.Fatalf("expected AQI time 2026-05-21T00:00, got %s", resp.Days[0].HourlyAirQuality[0].Time)
 	}
 }

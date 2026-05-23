@@ -590,6 +590,12 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     return summary.days
       .map((day) => {
         const daylightHours = day.daylightDuration / 3600;
+        const aqiStr = day.hourlyAirQuality
+          .map(
+            (h) => `${h.time.split("T")[1].substring(0, 5)}=${h.europeanAqi}`,
+          )
+          .join(" ");
+
         return [
           `${day.date}:`,
           `${day.weatherForecast},`,
@@ -597,6 +603,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           `wind ${day.windSpeedMax.toFixed(1)} m/s ${day.windDirectionDominant.toFixed(0)} deg,`,
           `precip ${day.precipitationSum.toFixed(1)} mm (${day.precipitationHours.toFixed(1)}h),`,
           `daylight ${daylightHours.toFixed(1)}h.`,
+          `Hourly AQI: ${aqiStr}`,
         ].join(" ");
       })
       .join("\n");

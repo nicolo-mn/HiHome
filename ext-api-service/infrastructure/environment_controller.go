@@ -26,8 +26,14 @@ type dailyForecastResponse struct {
 	WindSpeedMax          float64 `json:"windSpeedMax"`
 	WindDirectionDominant float64 `json:"windDirectionDominant"`
 	PrecipitationHours    float64 `json:"precipitationHours"`
-	DaylightDuration      float64 `json:"daylightDuration"`
-	PrecipitationSum      float64 `json:"precipitationSum"`
+	DaylightDuration      float64                    `json:"daylightDuration"`
+	PrecipitationSum      float64                    `json:"precipitationSum"`
+	HourlyAirQuality      []hourlyAirQualityResponse `json:"hourlyAirQuality"`
+}
+
+type hourlyAirQualityResponse struct {
+	Time        string `json:"time"`
+	EuropeanAQI int    `json:"europeanAqi"`
 }
 
 type weeklyForecastResponse struct {
@@ -102,6 +108,14 @@ func (h *EnvironmentController) ServeForecast(w http.ResponseWriter, r *http.Req
 	days := forecast.Days()
 	respDays := make([]dailyForecastResponse, 0, len(days))
 	for _, day := range days {
+		aqiHours := day.HourlyAirQuality()
+		respAqi := make([]hourlyAirQualityResponse, 0, len(aqiHours))
+		for _, h := range aqiHours {
+			respAqi = append(respAqi, hourlyAirQualityResponse{
+				Time:        h.Time(),
+				EuropeanAQI: h.EuropeanAQI(),
+			})
+		}
 		respDays = append(respDays, dailyForecastResponse{
 			Date:                  day.Date(),
 			WeatherType:           int(day.WeatherType()),
@@ -112,6 +126,7 @@ func (h *EnvironmentController) ServeForecast(w http.ResponseWriter, r *http.Req
 			PrecipitationHours:    day.PrecipitationHours(),
 			DaylightDuration:      day.DaylightDuration(),
 			PrecipitationSum:      day.PrecipitationSum(),
+			HourlyAirQuality:      respAqi,
 		})
 	}
 
@@ -145,6 +160,14 @@ func (h *EnvironmentController) ServeHistorical(w http.ResponseWriter, r *http.R
 	days := forecast.Days()
 	respDays := make([]dailyForecastResponse, 0, len(days))
 	for _, day := range days {
+		aqiHours := day.HourlyAirQuality()
+		respAqi := make([]hourlyAirQualityResponse, 0, len(aqiHours))
+		for _, h := range aqiHours {
+			respAqi = append(respAqi, hourlyAirQualityResponse{
+				Time:        h.Time(),
+				EuropeanAQI: h.EuropeanAQI(),
+			})
+		}
 		respDays = append(respDays, dailyForecastResponse{
 			Date:                  day.Date(),
 			WeatherType:           int(day.WeatherType()),
@@ -155,6 +178,7 @@ func (h *EnvironmentController) ServeHistorical(w http.ResponseWriter, r *http.R
 			PrecipitationHours:    day.PrecipitationHours(),
 			DaylightDuration:      day.DaylightDuration(),
 			PrecipitationSum:      day.PrecipitationSum(),
+			HourlyAirQuality:      respAqi,
 		})
 	}
 

@@ -30,6 +30,10 @@ type ExtApiServiceForecastResponse = {
     precipitationHours: number;
     daylightDuration: number;
     precipitationSum: number;
+    hourlyAirQuality: Array<{
+      time: string;
+      europeanAqi: number;
+    }>;
   }>;
 };
 
@@ -140,6 +144,7 @@ export class ExtApiServiceDataAdapter
         precipitationHours: day.precipitationHours,
         daylightDuration: day.daylightDuration,
         precipitationSum: day.precipitationSum,
+        hourlyAirQuality: day.hourlyAirQuality,
       })),
     };
     console.log(
