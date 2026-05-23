@@ -77,50 +77,6 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     private ruleService: RuleService,
   ) {}
 
-  async completeChat(
-    messages: ChatMessage[],
-    model: string,
-    homeId: string,
-    isAdmin: boolean,
-  ): Promise<string> {
-    if (!this.options.apiKey) {
-      throw new Error("DeepSeek API key is missing");
-    }
-
-    const tools = this.buildTools(isAdmin);
-    let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
-      role: message.role,
-      content: message.content,
-    }));
-
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const reply = await this.requestChat(model, chatMessages, tools);
-      const toolCalls = reply.tool_calls ?? [];
-
-      if (toolCalls.length === 0) {
-        const content = reply.content?.trim();
-        if (!content) {
-          throw new Error("DeepSeek returned an empty response");
-        }
-        return content;
-      }
-
-      const toolResponses = await this.handleToolCalls(toolCalls, homeId);
-      chatMessages = [
-        ...chatMessages,
-        {
-          role: "assistant",
-          content: reply.content ?? null,
-          reasoning_content: reply.reasoning_content ?? null,
-          tool_calls: toolCalls,
-        },
-        ...toolResponses,
-      ];
-    }
-
-    throw new Error("DeepSeek did not return a final response");
-  }
-
   async streamChat(
     messages: ChatMessage[],
     model: string,
@@ -300,39 +256,6 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         },
       },
     };
-  }
-
-  private async requestChat(
-    model: string,
-    messages: DeepSeekMessage[],
-    tools: DeepSeekTool[],
-  ): Promise<DeepSeekResponseDTO> {
-    const url = new URL("/chat/completions", this.options.apiBaseUrl);
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.options.apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        tools,
-        tool_choice: "auto",
-        temperature: 0,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        `DeepSeekChatCompletionAdapter: DeepSeek API error during requestChat: ${response.status} ${errorText}`,
-      );
-      throw new Error(`DeepSeek error: ${response.status} ${errorText}`);
-    }
-
-    const data = (await response.json()) as unknown;
-    return this.parseChatResponse(data);
   }
 
   // Format sent by DeepSeek:
@@ -546,14 +469,6 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     }
 
     return responses;
-  }
-
-  private parseChatResponse(data: unknown): DeepSeekResponseDTO {
-    const raw = data as {
-      message?: DeepSeekResponseDTO;
-      choices?: Array<{ message?: DeepSeekResponseDTO }>;
-    };
-    return raw.message ?? raw.choices?.[0]?.message ?? {};
   }
 
   private parseStreamChunk(data: string): StreamChunk | null {

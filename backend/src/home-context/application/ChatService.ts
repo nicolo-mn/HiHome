@@ -21,31 +21,6 @@ export class ChatService {
     private options: ChatServiceOptions,
   ) {}
 
-  // TODO: consider to remove keeping only streaming version
-  async chat(
-    homeId: string,
-    username: string,
-    userMessage: string,
-    history: ChatMessage[],
-    isAdmin: boolean,
-  ): Promise<string> {
-    console.log(`ChatService: chat called for home ${homeId} by ${username}`);
-    if (!userMessage.trim()) {
-      throw new Error("Message is required");
-    }
-
-    const messages = await this.buildMessages(homeId, userMessage, history);
-
-    const reply = await this.chatCompletionPort.completeChat(
-      messages,
-      this.options.model,
-      homeId,
-      isAdmin,
-    );
-
-    return reply;
-  }
-
   async streamChat(
     homeId: string,
     username: string,
