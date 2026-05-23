@@ -27,4 +27,4 @@ go test -C ext-api-service -coverprofile=coverage.out -v ./... # for Go service
 ```
 
 ## Code Formatting
-[`Prettier`](https://prettier.io/) is used for formatting the code of the MEVN application (by running `pmpm run format`), while `go-fmt` is used to format Go code (by running `go fmt -C ext-api-service`).
+[`Prettier`](https://prettier.io/) is used for formatting the code of the MEVN application (by running `pmpm run format`), while `go-fmt` is used to format Go code (by running `gofmt -s -w ./ext-api-service`).

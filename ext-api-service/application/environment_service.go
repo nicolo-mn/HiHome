@@ -54,3 +54,22 @@ func (s *EnvironmentService) GetWeeklyForecast(lat, lon float64) (*domain.Weekly
 	log.Printf("successfully fetched weekly forecast for lat=%.4f lon=%.4f", lat, lon)
 	return weeklyForecast, nil
 }
+
+func (s *EnvironmentService) GetHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+	log.Printf("fetching historical forecast for lat=%.4f lon=%.4f", lat, lon)
+
+	historicalForecast, err := s.environmentProvider.FetchHistoricalForecast(lat, lon)
+	if err != nil {
+		log.Printf("failed to fetch historical forecast: %v", err)
+		return nil, err
+	}
+
+	const expectedDays = 7
+	if len(historicalForecast.Days()) != expectedDays {
+		log.Printf("historical forecast has %d days, expected %d", len(historicalForecast.Days()), expectedDays)
+		return nil, fmt.Errorf("historical forecast must have %d days", expectedDays)
+	}
+
+	log.Printf("successfully fetched historical forecast for lat=%.4f lon=%.4f", lat, lon)
+	return historicalForecast, nil
+}
