@@ -228,6 +228,8 @@ io.on("connection", (socket) => {
 
       const chatStreamPort = new SocketIOChatStreamAdapter(socket);
 
+      const isAdmin = ((socket as any).user as any)?.role === "Admin";
+
       try {
         const safeHistory = Array.isArray(payload.history)
           ? payload.history
@@ -238,6 +240,7 @@ io.on("connection", (socket) => {
           payload.message,
           safeHistory,
           chatStreamPort,
+          isAdmin,
         );
         chatStreamPort.emit({
           type: ChatStreamEventType.Done,

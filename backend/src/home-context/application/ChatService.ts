@@ -27,6 +27,7 @@ export class ChatService {
     username: string,
     userMessage: string,
     history: ChatMessage[],
+    isAdmin: boolean,
   ): Promise<string> {
     console.log(`ChatService: chat called for home ${homeId} by ${username}`);
     if (!userMessage.trim()) {
@@ -39,6 +40,7 @@ export class ChatService {
       messages,
       this.options.model,
       homeId,
+      isAdmin,
     );
 
     return reply;
@@ -50,6 +52,7 @@ export class ChatService {
     userMessage: string,
     history: ChatMessage[],
     streamPort: ChatStreamPort,
+    isAdmin: boolean,
   ): Promise<string> {
     console.log(
       `ChatService: streamChat called for home ${homeId} by ${username}`,
@@ -65,6 +68,7 @@ export class ChatService {
       this.options.model,
       homeId,
       streamPort,
+      isAdmin,
     );
   }
 

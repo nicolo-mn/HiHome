@@ -81,16 +81,13 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     messages: ChatMessage[],
     model: string,
     homeId: string,
+    isAdmin: boolean,
   ): Promise<string> {
     if (!this.options.apiKey) {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = [
-      this.buildForecastTool(),
-      this.buildAddRuleTool(),
-      this.buildAddComponentTool(),
-    ];
+    const tools = this.buildTools(isAdmin);
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -129,16 +126,13 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     model: string,
     homeId: string,
     streamPort: ChatStreamPort,
+    isAdmin: boolean,
   ): Promise<string> {
     if (!this.options.apiKey) {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = [
-      this.buildForecastTool(),
-      this.buildAddRuleTool(),
-      this.buildAddComponentTool(),
-    ];
+    const tools = this.buildTools(isAdmin);
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -183,6 +177,14 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     }
 
     throw new Error("DeepSeek did not return a final response");
+  }
+
+  private buildTools(isAdmin: boolean): DeepSeekTool[] {
+    const tools = [this.buildForecastTool()];
+    if (isAdmin) {
+      tools.push(this.buildAddRuleTool(), this.buildAddComponentTool());
+    }
+    return tools;
   }
 
   private buildForecastTool(): DeepSeekTool {

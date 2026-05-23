@@ -6,6 +6,7 @@ export interface ChatCompletionPort {
     messages: ChatMessage[],
     model: string,
     homeId: string,
+    isAdmin: boolean,
   ): Promise<string>;
 
   streamChat(
@@ -13,5 +14,6 @@ export interface ChatCompletionPort {
     model: string,
     homeId: string,
     streamPort: ChatStreamPort,
+    isAdmin: boolean,
   ): Promise<string>;
 }
