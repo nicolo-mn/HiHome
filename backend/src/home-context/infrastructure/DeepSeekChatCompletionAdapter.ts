@@ -7,6 +7,7 @@ import type {
   ForecastSummary,
 } from "../application/ForecastPort";
 import { HomeService } from "../application/HomeService";
+import { ComponentTypes } from "../domain";
 import type { AddRuleDto } from "../../rule-context/application/RuleService";
 import { RuleService } from "../../rule-context/application/RuleService";
 type DeepSeekOptions = {
@@ -85,7 +86,11 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = [this.buildForecastTool(), this.buildAddRuleTool()];
+    const tools = [
+      this.buildForecastTool(),
+      this.buildAddRuleTool(),
+      this.buildAddComponentTool(),
+    ];
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -129,7 +134,11 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = [this.buildForecastTool(), this.buildAddRuleTool()];
+    const tools = [
+      this.buildForecastTool(),
+      this.buildAddRuleTool(),
+      this.buildAddComponentTool(),
+    ];
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -255,6 +264,37 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
             },
           },
           required: ["ruleName", "observableId", "operatorTarget", "actions"],
+        },
+      },
+    };
+  }
+
+  private buildAddComponentTool(): DeepSeekTool {
+    return {
+      type: "function",
+      function: {
+        name: "add_component",
+        description:
+          "Add a new smart device to a room in the current home. " +
+          "Fields: name (human-friendly label), type (light|window|thermostat), roomId (the ID of the room to place the component in).",
+        parameters: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: "Human-friendly label for the device.",
+            },
+            type: {
+              type: "string",
+              enum: ["light", "window", "thermostat"],
+              description: "The type of smart device to add.",
+            },
+            roomId: {
+              type: "string",
+              description: "The ID of the room to place the component in.",
+            },
+          },
+          required: ["name", "type", "roomId"],
         },
       },
     };
@@ -466,6 +506,25 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
             role: "tool",
             tool_call_id: toolCall.id,
             content: `Rule created with id ${newRule.id}.`,
+          });
+          continue;
+        }
+
+        if (toolCall.function.name === "add_component") {
+          const args = JSON.parse(toolCall.function.arguments) as {
+            name: string;
+            type: string;
+            roomId: string;
+          };
+          const component = await this.homeService.addComponent(homeId, {
+            name: args.name,
+            type: args.type as ComponentTypes,
+            roomId: args.roomId,
+          });
+          responses.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: `Component "${component.name}" (${component.getType()}) added with id ${component.id}.`,
           });
           continue;
         }
