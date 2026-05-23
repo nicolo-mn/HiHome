@@ -2,13 +2,6 @@ import type { ChatMessage } from "./ChatService";
 import type { ChatStreamPort } from "./ChatStreamPort";
 
 export interface ChatCompletionPort {
-  completeChat(
-    messages: ChatMessage[],
-    model: string,
-    homeId: string,
-    isAdmin: boolean,
-  ): Promise<string>;
-
   streamChat(
     messages: ChatMessage[],
     model: string,

@@ -18,7 +18,7 @@ import { UserPreferencesAdapter } from "./user-context/infrastructure/UserPrefer
 import { PreferencesController } from "./user-context/infrastructure/controllers/PreferencesController";
 import { PreferencesRouter } from "./user-context/infrastructure/routes/PreferencesRouter";
 import { ChatService } from "./home-context/application/ChatService";
-import { ChatController } from "./home-context/infrastructure/controllers/ChatController";
+
 import { HomeRouter } from "./home-context/infrastructure/routes/HomeRouter";
 import { ExtApiServiceDataAdapter } from "./home-context/infrastructure/ExtApiServiceDataAdapter";
 import { DeepSeekChatCompletionAdapter } from "./home-context/infrastructure/DeepSeekChatCompletionAdapter";
@@ -149,7 +149,6 @@ const chatService = new ChatService(chatCompletionPort, homeService, {
   model: DEEPSEEK_MODEL,
   maxHistory: CHAT_MAX_HISTORY,
 });
-const chatController = new ChatController(chatService);
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/test-db";
@@ -259,10 +258,6 @@ io.on("connection", (socket) => {
 
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Protected: Hello from MEVN backend!" });
-});
-
-app.post("/api/chat", (req: Request, res: Response) => {
-  chatController.chat(req, res);
 });
 
 app.get("/api/message", async (req: Request, res: Response) => {
