@@ -19,13 +19,13 @@ type environmentResponse struct {
 }
 
 type dailyForecastResponse struct {
-	Date                  string  `json:"date"`
-	WeatherType           int     `json:"weatherType"`
-	TemperatureMax        float64 `json:"temperatureMax"`
-	TemperatureMin        float64 `json:"temperatureMin"`
-	WindSpeedMax          float64 `json:"windSpeedMax"`
-	WindDirectionDominant float64 `json:"windDirectionDominant"`
-	PrecipitationHours    float64 `json:"precipitationHours"`
+	Date                  string                     `json:"date"`
+	WeatherType           int                        `json:"weatherType"`
+	TemperatureMax        float64                    `json:"temperatureMax"`
+	TemperatureMin        float64                    `json:"temperatureMin"`
+	WindSpeedMax          float64                    `json:"windSpeedMax"`
+	WindDirectionDominant float64                    `json:"windDirectionDominant"`
+	PrecipitationHours    float64                    `json:"precipitationHours"`
 	DaylightDuration      float64                    `json:"daylightDuration"`
 	PrecipitationSum      float64                    `json:"precipitationSum"`
 	HourlyAirQuality      []hourlyAirQualityResponse `json:"hourlyAirQuality"`

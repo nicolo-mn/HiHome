@@ -36,8 +36,6 @@ type openMeteoAirQualityHourlyResponse struct {
 	} `json:"hourly"`
 }
 
-
-
 type openMeteoWeeklyResponse struct {
 	Daily struct {
 		Time                  []string  `json:"time"`
