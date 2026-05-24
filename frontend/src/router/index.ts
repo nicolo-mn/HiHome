@@ -50,6 +50,11 @@ const router = createRouter({
           component: () => import("@/views/NotificationsView.vue"),
         },
         {
+          path: "/usage-insights",
+          name: "usage-insights",
+          component: () => import("@/views/UsageInsightsView.vue"),
+        },
+        {
           path: "/event-log",
           name: "event-log",
           component: () => import("@/views/EventLogView.vue"),

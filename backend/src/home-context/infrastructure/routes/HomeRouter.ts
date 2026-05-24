@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import { HomeController } from "../controllers/HomeController";
+import { UsageController } from "../controllers/UsageController";
 import { homeIdMiddleware } from "../middlewares/RoutesMiddlewares";
 import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
-import { HomeService } from "../../application/HomeService";
 import {
   componentIdValidator,
   temperatureValidator,
@@ -11,7 +11,10 @@ import {
 export class HomeRouter {
   public router = Router();
 
-  constructor(private homeController: HomeController) {
+  constructor(
+    private homeController: HomeController,
+    private usageController: UsageController,
+  ) {
     this.registerRoutes();
   }
 
@@ -60,6 +63,9 @@ export class HomeRouter {
     this.router.get("/:id/hourly-temperatures", (req, res) =>
       this.homeController.getHourlyTemperatures(req, res),
     );
+    this.router.get("/:id/usage", (req, res) => {
+      this.usageController.getUsage(req, res);
+    });
     this.router.put("/:id/hourly-temperatures", (req, res) =>
       this.homeController.setHourlyTemperatures(req, res),
     );

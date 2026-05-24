@@ -12,7 +12,9 @@ import { MongoHomeRepository } from "./home-context/infrastructure/MongoHomeRepo
 import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/SocketIOSensorUpdateAdapter";
 import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/SocketIOComponentUpdateAdapter";
 import { HomeService } from "./home-context/application/HomeService";
+import { UsageService } from "./home-context/application/services/UsageService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
+import { UsageController } from "./home-context/infrastructure/controllers/UsageController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
 import { UserPreferencesAdapter } from "./user-context/infrastructure/UserPreferencesAdapter";
 import { PreferencesController } from "./user-context/infrastructure/controllers/PreferencesController";
@@ -113,7 +115,9 @@ export const homeController = new HomeController(
   homeService,
   homeNotificationPort,
 );
-const homeRouter = new HomeRouter(homeController);
+const usageService = new UsageService(homeRepo);
+const usageController = new UsageController(usageService);
+const homeRouter = new HomeRouter(homeController, usageController);
 
 // --- Rule Context Setup ---
 const ruleRepo =
