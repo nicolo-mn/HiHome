@@ -25,6 +25,7 @@ describe("UserManagementService.changeUserRole", () => {
       findByUsernameAndHomeId: vi.fn(),
       findById: vi.fn(),
       findAdminsByHome: vi.fn(),
+      listUsersOfHome: vi.fn(),
       save: vi.fn().mockResolvedValue(undefined),
     };
     service = new UserManagementService(repo);

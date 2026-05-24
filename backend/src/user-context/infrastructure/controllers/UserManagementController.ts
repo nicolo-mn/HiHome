@@ -9,6 +9,22 @@ type AuthenticatedRequest = Request & {
 export class UserManagementController {
   constructor(private service: UserManagementService) {}
 
+  async getUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const homeId = req.params.id as string;
+      const users = await this.service.listUsersOfHome(homeId);
+      res.json({
+        users: users.map((u) => ({
+          id: u.id,
+          username: u.username,
+          role: u.role,
+        })),
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message ?? "Failed to list users" });
+    }
+  }
+
   async changeRole(req: Request, res: Response): Promise<void> {
     const homeId = req.params.id as string;
     const targetUserId = req.params.userId as string;

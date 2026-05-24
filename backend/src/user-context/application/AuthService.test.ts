@@ -13,6 +13,7 @@ describe("AuthService", () => {
       findByUsernameAndHomeId: vi.fn().mockResolvedValue(mockUser),
       findById: vi.fn(),
       findAdminsByHome: vi.fn(),
+      listUsersOfHome: vi.fn(),
       save: vi.fn(),
     };
 
@@ -36,6 +37,7 @@ describe("AuthService", () => {
       findByUsernameAndHomeId: vi.fn().mockResolvedValue(null),
       findById: vi.fn(),
       findAdminsByHome: vi.fn(),
+      listUsersOfHome: vi.fn(),
       save: vi.fn(),
     };
 

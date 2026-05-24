@@ -5,6 +5,10 @@ import { RoleAssignmentPolicy, RoleName } from "../domain/RoleAssignmentPolicy";
 export class UserManagementService {
   constructor(private userRepo: UserRepository) {}
 
+  async listUsersOfHome(homeId: string): Promise<User[]> {
+    return this.userRepo.listUsersOfHome(homeId);
+  }
+
   async changeUserRole(
     actorHomeId: string,
     actorUsername: string,

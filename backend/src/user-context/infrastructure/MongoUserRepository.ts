@@ -43,6 +43,11 @@ export class MongoUserRepository
     return docs.map((d) => this.toUser(d));
   }
 
+  async listUsersOfHome(homeId: string): Promise<User[]> {
+    const docs = await UserModel.find({ homeId }).lean<UserRecord[]>().exec();
+    return docs.map((d) => this.toUser(d));
+  }
+
   async save(user: User): Promise<void> {
     await UserModel.updateOne(
       { id: user.id },

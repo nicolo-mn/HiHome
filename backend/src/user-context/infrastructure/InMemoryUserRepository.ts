@@ -46,6 +46,10 @@ export class InMemoryUserRepository
     return this.users.filter((u) => u.homeId === homeId && u.role === "Admin");
   }
 
+  async listUsersOfHome(homeId: string): Promise<User[]> {
+    return this.users.filter((u) => u.homeId === homeId);
+  }
+
   async save(user: User): Promise<void> {
     const index = this.users.findIndex((u) => u.id === user.id);
     if (index === -1) {

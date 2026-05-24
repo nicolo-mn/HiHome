@@ -7,6 +7,13 @@ export class UserRouter {
   public router = Router();
 
   constructor(controller: UserManagementController) {
+    this.router.get(
+      "/:id/users",
+      adminMiddleware,
+      homeIdMiddleware,
+      (req, res) => controller.getUsers(req, res),
+    );
+
     this.router.put(
       "/:id/users/:userId/role",
       adminMiddleware,
