@@ -5,4 +5,7 @@ export interface UserRepository {
     homeId: string,
     username: string,
   ): Promise<User | null>;
+  findById(userId: string): Promise<User | null>;
+  findAdminsByHome(homeId: string): Promise<User[]>;
+  save(user: User): Promise<void>;
 }

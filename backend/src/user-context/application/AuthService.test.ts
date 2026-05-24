@@ -11,6 +11,9 @@ describe("AuthService", () => {
 
     const mockUserRepository: UserRepository = {
       findByUsernameAndHomeId: vi.fn().mockResolvedValue(mockUser),
+      findById: vi.fn(),
+      findAdminsByHome: vi.fn(),
+      save: vi.fn(),
     };
 
     const authService = new AuthService(mockUserRepository);
@@ -31,6 +34,9 @@ describe("AuthService", () => {
   it("should throw an error if the user is not found", async () => {
     const mockUserRepository: UserRepository = {
       findByUsernameAndHomeId: vi.fn().mockResolvedValue(null),
+      findById: vi.fn(),
+      findAdminsByHome: vi.fn(),
+      save: vi.fn(),
     };
 
     const authService = new AuthService(mockUserRepository);

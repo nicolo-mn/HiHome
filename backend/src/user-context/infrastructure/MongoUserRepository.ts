@@ -26,8 +26,37 @@ export class MongoUserRepository
     const doc = await UserModel.findOne({ homeId, username })
       .lean<UserRecord>()
       .exec();
-    if (!doc) return null;
+    return doc ? this.toUser(doc) : null;
+  }
 
+  async findById(userId: string): Promise<User | null> {
+    const doc = await UserModel.findOne({ id: userId })
+      .lean<UserRecord>()
+      .exec();
+    return doc ? this.toUser(doc) : null;
+  }
+
+  async findAdminsByHome(homeId: string): Promise<User[]> {
+    const docs = await UserModel.find({ homeId, role: "Admin" })
+      .lean<UserRecord[]>()
+      .exec();
+    return docs.map((d) => this.toUser(d));
+  }
+
+  async save(user: User): Promise<void> {
+    await UserModel.updateOne(
+      { id: user.id },
+      {
+        $set: {
+          role: user.role,
+          password: user.password,
+          notificationPreferences: user.notificationPreferences,
+        },
+      },
+    ).exec();
+  }
+
+  private toUser(doc: UserRecord): User {
     return {
       id: doc.id,
       homeId: doc.homeId,
