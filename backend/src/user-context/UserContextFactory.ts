@@ -1,6 +1,7 @@
 import { AuthInboundPort } from "./application/AuthInboundPort";
 import { AuthFacade } from "./application/AuthFacade";
 import { AuthService } from "./application/AuthService";
+import { UserManagementService } from "./application/UserManagementService";
 import { PreferencesRepository } from "./domain/PreferencesRepository";
 import { InMemoryUserRepository } from "./infrastructure/InMemoryUserRepository";
 import { MongoUserRepository } from "./infrastructure/MongoUserRepository";
@@ -9,6 +10,7 @@ export interface UserContext {
   authPort: AuthInboundPort;
   facade: AuthFacade;
   preferencesRepository: PreferencesRepository;
+  userManagementService: UserManagementService;
 }
 
 export class UserContextFactory {
@@ -19,11 +21,13 @@ export class UserContextFactory {
         : new MongoUserRepository();
     const service = new AuthService(repository);
     const facade = new AuthFacade(service);
+    const userManagementService = new UserManagementService(repository);
 
     return {
       authPort: service,
       facade: facade,
       preferencesRepository: repository,
+      userManagementService,
     };
   }
 }

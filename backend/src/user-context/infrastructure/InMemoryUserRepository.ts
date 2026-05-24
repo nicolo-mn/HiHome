@@ -38,6 +38,27 @@ export class InMemoryUserRepository
     );
   }
 
+  async findById(userId: string): Promise<User | null> {
+    return this.users.find((u) => u.id === userId) || null;
+  }
+
+  async findAdminsByHome(homeId: string): Promise<User[]> {
+    return this.users.filter((u) => u.homeId === homeId && u.role === "Admin");
+  }
+
+  async listUsersOfHome(homeId: string): Promise<User[]> {
+    return this.users.filter((u) => u.homeId === homeId);
+  }
+
+  async save(user: User): Promise<void> {
+    const index = this.users.findIndex((u) => u.id === user.id);
+    if (index === -1) {
+      this.users.push(user);
+    } else {
+      this.users[index] = user;
+    }
+  }
+
   async findAllByHome(homeId: string): Promise<UserPrefsRecord[]> {
     return this.users
       .filter((u) => u.homeId === homeId)
