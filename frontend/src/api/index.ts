@@ -37,5 +37,8 @@ export type {
 } from "./rules";
 export * as eventLogApi from "./event-log";
 export type { ComponentEventDTO } from "./event-log";
+export * as usersApi from "./users";
+export type { UserSummary, RoleName } from "./users";
+export { ALL_ROLES, ROLE_LABELS } from "./users";
 export * as usageApi from "./usage";
 export type { UsageReport, UsageRange } from "./usage";
