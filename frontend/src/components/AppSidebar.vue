@@ -6,6 +6,7 @@ import dashboardIcon from "@/assets/icons/dashboard.svg?raw";
 import bellIcon from "@/assets/icons/bell.svg?raw";
 import rulesIcon from "@/assets/icons/rules.svg?raw";
 import thermometerIcon from "@/assets/icons/thermometer.svg?raw";
+import insightsIcon from "@/assets/icons/insights.svg?raw";
 
 const auth = useAuthStore();
 
@@ -14,6 +15,7 @@ const navItems = computed(() => {
     { name: "Dashboard", to: "/dashboard", icon: dashboardIcon },
     { name: "Components", to: "/components", icon: componentsIcon },
     { name: "Plan", to: "/thermostat-plan", icon: thermometerIcon },
+    { name: "Insights", to: "/usage-insights", icon: insightsIcon },
   ];
   if (auth.isAdmin) {
     items.push(

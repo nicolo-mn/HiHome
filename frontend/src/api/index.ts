@@ -37,3 +37,5 @@ export type {
 } from "./rules";
 export * as eventLogApi from "./event-log";
 export type { ComponentEventDTO } from "./event-log";
+export * as usageApi from "./usage";
+export type { UsageReport, UsageRange } from "./usage";
