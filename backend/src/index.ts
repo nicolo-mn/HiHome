@@ -19,6 +19,8 @@ import { NotificationContextFactory } from "./notification-context/NotificationC
 import { UserPreferencesAdapter } from "./user-context/infrastructure/UserPreferencesAdapter";
 import { PreferencesController } from "./user-context/infrastructure/controllers/PreferencesController";
 import { PreferencesRouter } from "./user-context/infrastructure/routes/PreferencesRouter";
+import { UserManagementController } from "./user-context/infrastructure/controllers/UserManagementController";
+import { UserRouter } from "./user-context/infrastructure/routes/UserRouter";
 import { ChatService } from "./home-context/application/ChatService";
 
 import { HomeRouter } from "./home-context/infrastructure/routes/HomeRouter";
@@ -61,6 +63,10 @@ const preferencesController = new PreferencesController(
   authContext.preferencesRepository,
 );
 const preferencesRouter = new PreferencesRouter(preferencesController);
+const userManagementController = new UserManagementController(
+  authContext.userManagementService,
+);
+const userRouter = new UserRouter(userManagementController);
 
 const notificationContext = NotificationContextFactory.create(
   io,
@@ -176,6 +182,7 @@ app.use("/api/home", homeRouter.router);
 app.use("/api/home", ruleRouter.router);
 app.use("/api/home", notificationRouter.router);
 app.use("/api/home", preferencesRouter.router);
+app.use("/api/home", userRouter.router);
 
 // --- Socket.IO ---
 io.use(wsAuthMiddleware);
