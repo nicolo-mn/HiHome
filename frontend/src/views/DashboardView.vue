@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useSensorStore } from "@/stores/sensors";
 import SensorCard from "@/components/cards/SensorCard.vue";
+import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
 
 const auth = useAuthStore();
@@ -32,32 +33,13 @@ const sensorReadings = computed(() =>
 
 <template>
   <div class="flex flex-col gap-10 md:gap-12">
-    <header class="flex justify-between items-center">
-      <div class="flex items-baseline gap-3 md:gap-4">
-        <span class="font-medium text-base text-gray-200 md:text-[20px]">
-          Home
-        </span>
-        <span v-if="auth.homeId" class="hidden md:inline text-sm text-gray-500">
-          {{ auth.homeId }}
-        </span>
-      </div>
-      <div class="flex gap-2">
-        <RouterLink
-          to="/notifications"
-          aria-label="Notifications"
-          class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-gray-700 flex items-center justify-center text-gray-200 hover:bg-gray-600 transition-colors no-underline"
-        >
-          <BaseIcon name="bell" :size="22" />
-        </RouterLink>
-        <RouterLink
-          to="/settings"
-          aria-label="Settings"
-          class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-gray-700 flex items-center justify-center text-gray-200 hover:bg-gray-600 transition-colors no-underline"
-        >
-          <BaseIcon name="user" :size="22" />
-        </RouterLink>
-      </div>
-    </header>
+    <AppHeader
+      title="Home"
+      :right-actions="[
+        { icon: 'bell', label: 'Notifications', to: '/notifications' },
+        { icon: 'user', label: 'Settings', to: '/settings' },
+      ]"
+    />
 
     <section class="flex flex-col gap-3">
       <div
