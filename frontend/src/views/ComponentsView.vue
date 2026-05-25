@@ -7,7 +7,8 @@ import { useRoomGroups } from "@/composables/useRoomGroups";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import { ApiError } from "@/api/errors";
 import type { ToggleableType } from "@/api/components";
-import { getRooms } from "@/api/rooms";
+import AppHeader from "@/components/AppHeader.vue";
+import BaseIcon from "@/components/BaseIcon.vue";
 import ComponentCard from "@/components/cards/ComponentCard.vue";
 import AddComponentCard from "@/components/cards/AddComponentCard.vue";
 import BaseButton from "@/components/BaseButton.vue";
@@ -18,21 +19,10 @@ const store = useComponentsStore();
 const { components, isLoading, error } = storeToRefs(store);
 const { load, toggle, step, isBusy, addComponent } = store;
 
-const rooms = ref<{ id: string; name: string }[]>([]);
-const roomsLoading = ref(false);
-
-const roomNameMap = computed(() => {
-  const map = new Map<string, string>();
-  for (const room of rooms.value) {
-    map.set(room.id, room.name);
-  }
-  return map;
-});
-
-const roomGroups = useRoomGroups(components, roomNameMap);
+const roomGroups = useRoomGroups(components);
 
 const fieldClass =
-  "bg-elevated rounded-lg px-4 py-3 text-body placeholder:text-muted outline-none border border-border focus:border-primary transition";
+  "bg-gray-800/50 rounded-2xl px-5 py-3.5 text-gray-200 placeholder:text-gray-600 outline-none border-2 border-gray-800 focus:border-yellow-500 transition-colors";
 
 const typeOptions: { value: ToggleableType; label: string }[] = [
   { value: "light", label: "Light" },
@@ -44,28 +34,17 @@ const draftName = ref("");
 const draftType = ref<ToggleableType>("light");
 const roomSelection = ref("");
 
-function formatRoomLabel(roomId: string): string {
-  return roomId
-    .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
-
 const roomOptions = computed(() => {
   const map = new Map<string, string>();
   for (const comp of components.value) {
     if (comp.roomId) {
-      const roomName = roomNameMap.value.get(comp.roomId);
-      const label = roomName || formatRoomLabel(comp.roomId);
-      map.set(comp.roomId, label);
+      map.set(comp.roomId, comp.roomName ?? comp.roomId);
     }
   }
   return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
 });
 
-const roomSelectOptions = computed(() => roomOptions.value);
-
-const hasRooms = computed(() => roomSelectOptions.value.length > 0);
+const hasRooms = computed(() => roomOptions.value.length > 0);
 
 const canSubmit = computed(
   () => draftName.value.trim().length > 0 && roomSelection.value.length > 0,
@@ -134,115 +113,128 @@ function closeAddComponent() {
   setDefaultRoomSelection();
 }
 
-function onAddComponentClick(roomId: string) {
-  openAddComponent(roomId);
-}
-
-async function loadRooms() {
-  if (!auth.homeId) return;
-  roomsLoading.value = true;
-  try {
-    rooms.value = await getRooms(auth.homeId);
-  } catch (e) {
-    console.error("Failed to load rooms:", e);
-  } finally {
-    roomsLoading.value = false;
-  }
-}
-
 onMounted(() => {
   load();
-  loadRooms();
 });
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-10 md:gap-12">
+    <AppHeader
+      title="Devices"
+      :right-actions="
+        auth.isAdmin
+          ? [{ icon: addFormOpen ? 'close' : 'add', label: 'Add device' }]
+          : []
+      "
+      @action="addFormOpen ? closeAddComponent() : openAddComponent()"
+    />
+
     <section
-      v-if="auth.isAdmin"
-      class="bg-surface border border-border rounded-2xl p-4 md:p-6"
+      v-if="auth.isAdmin && addFormOpen"
+      class="bg-gray-800/50 border-2 border-gray-800 rounded-[28px] md:rounded-[32px] p-5 md:p-6 flex flex-col gap-4"
     >
       <div class="flex items-center justify-between gap-3">
-        <h2 class="text-lg font-medium text-primary">Add component</h2>
+        <h2 class="text-lg md:text-xl font-bold text-gray-200">Add device</h2>
         <button
           type="button"
-          class="text-sm text-muted hover:text-primary transition"
-          @click="addFormOpen ? closeAddComponent() : openAddComponent()"
+          class="w-9 h-9 rounded-2xl text-gray-400 hover:bg-white/5 flex items-center justify-center"
+          @click="closeAddComponent"
         >
-          {{ addFormOpen ? "Close" : "Open" }}
+          <BaseIcon name="close" :size="20" />
         </button>
       </div>
 
-      <div v-if="addFormOpen" class="mt-4 flex flex-col gap-4">
-        <p v-if="createError" class="text-danger text-sm">{{ createError }}</p>
-        <p v-if="!hasRooms" class="text-muted text-sm">
-          Add a room before creating components.
-        </p>
+      <p v-if="createError" class="text-rose-500 text-sm">{{ createError }}</p>
+      <p v-if="!hasRooms" class="text-gray-400 text-sm">
+        Add a room before creating devices.
+      </p>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <BaseInput label="Component name" v-model="draftName" />
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <BaseInput label="Device name" v-model="draftName" />
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-primary">Type</label>
-            <select v-model="draftType" :class="fieldClass">
-              <option
-                v-for="opt in typeOptions"
-                :key="opt.value"
-                :value="opt.value"
-              >
-                {{ opt.label }}
-              </option>
-            </select>
-          </div>
-
-          <div class="flex flex-col gap-1">
-            <label class="text-sm text-primary">Room</label>
-            <select
-              v-model="roomSelection"
-              :class="fieldClass"
-              :disabled="!hasRooms"
+        <div class="flex flex-col gap-1.5">
+          <label
+            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+          >
+            Type
+          </label>
+          <select v-model="draftType" :class="fieldClass">
+            <option
+              v-for="opt in typeOptions"
+              :key="opt.value"
+              :value="opt.value"
             >
-              <option
-                v-for="room in roomSelectOptions"
-                :key="room.value"
-                :value="room.value"
-              >
-                {{ room.label }}
-              </option>
-            </select>
-          </div>
+              {{ opt.label }}
+            </option>
+          </select>
         </div>
 
-        <div class="flex justify-end">
-          <div class="w-full md:w-64">
-            <BaseButton
-              label="Add component"
-              :loading="creating"
-              :disabled="!canSubmit || !hasRooms"
-              @click="createComponent"
-            />
-          </div>
+        <div class="flex flex-col gap-1.5">
+          <label
+            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+          >
+            Room
+          </label>
+          <select
+            v-model="roomSelection"
+            :class="fieldClass"
+            :disabled="!hasRooms"
+          >
+            <option
+              v-for="room in roomOptions"
+              :key="room.value"
+              :value="room.value"
+            >
+              {{ room.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <div class="w-full md:w-64">
+          <BaseButton
+            label="Add device"
+            :loading="creating"
+            :disabled="!canSubmit || !hasRooms"
+            @click="createComponent"
+          />
         </div>
       </div>
     </section>
 
     <div v-if="error && components.length === 0" class="flex flex-col gap-2">
-      <p class="text-danger text-sm">{{ error }}</p>
-      <BaseButton label="Retry" @click="load" />
+      <p class="text-rose-500 text-sm">{{ error }}</p>
+      <BaseButton label="Retry" variant="secondary" @click="load" />
     </div>
-    <p v-else-if="error" class="text-danger text-sm">{{ error }}</p>
+    <p v-else-if="error" class="text-rose-500 text-sm">{{ error }}</p>
 
-    <div v-if="isLoading && components.length === 0" class="text-muted text-sm">
-      Loading components…
-    </div>
+    <p
+      v-if="isLoading && components.length === 0"
+      class="text-gray-400 text-sm"
+    >
+      Loading devices…
+    </p>
 
     <section
       v-for="group in roomGroups"
       :key="group.roomId"
       class="flex flex-col gap-3"
     >
-      <h2 class="text-xl font-light text-primary">{{ group.label }}</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="flex items-center gap-3">
+        <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+          {{ group.label }}
+        </div>
+        <span class="text-sm text-gray-500">
+          {{ group.items.length }} device{{
+            group.items.length === 1 ? "" : "s"
+          }}
+        </span>
+      </div>
+      <div
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3"
+      >
         <ComponentCard
           v-for="item in group.items"
           :key="item.id"
@@ -254,9 +246,11 @@ onMounted(() => {
         <AddComponentCard
           v-if="auth.isAdmin"
           :disabled="creating || !hasRooms"
-          @click="onAddComponentClick(group.roomId)"
+          @click="openAddComponent(group.roomId)"
         />
       </div>
     </section>
+
+    <div class="h-8" />
   </div>
 </template>

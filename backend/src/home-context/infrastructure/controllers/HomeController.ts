@@ -23,10 +23,15 @@ export class HomeController {
 
   async getComponents(req: Request, res: Response) {
     try {
-      const components = await this.homeService.getComponents(
+      const items = await this.homeService.getComponentsWithRoomNames(
         req.params.id as string,
       );
-      res.json(components.map((c) => c.accept(this.stateSerializer)));
+      res.json(
+        items.map(({ component, roomName }) => ({
+          ...component.accept(this.stateSerializer),
+          roomName,
+        })),
+      );
     } catch (e: any) {
       res.status(404).json({ error: e.message });
     }

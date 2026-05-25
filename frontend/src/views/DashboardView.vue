@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
 import { useSensorStore } from "@/stores/sensors";
 import SensorCard from "@/components/cards/SensorCard.vue";
+import AppHeader from "@/components/AppHeader.vue";
+import BaseIcon from "@/components/BaseIcon.vue";
 
+const auth = useAuthStore();
 const sensorStore = useSensorStore();
 const { readings, connected, error } = storeToRefs(sensorStore);
+
 const sensorOrder = [
   "outdoor_temperature",
   "airquality",
@@ -27,30 +32,70 @@ const sensorReadings = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
-    <div
-      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <h1 class="text-2xl font-light text-primary">Dashboard</h1>
-      <RouterLink
-        to="/chat"
-        class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-surface text-sm font-medium hover:brightness-110 transition"
+  <div class="flex flex-col gap-10 md:gap-12">
+    <AppHeader
+      title="Home"
+      :right-actions="[
+        { icon: 'bell', label: 'Notifications', to: '/notifications' },
+        { icon: 'user', label: 'Settings', to: '/settings' },
+      ]"
+    />
+
+    <section class="flex flex-col gap-3">
+      <div
+        class="flex items-baseline gap-3 font-medium text-[18px] md:text-[20px] text-gray-400"
       >
-        Open chat assistant
-      </RouterLink>
-    </div>
+        <span>Overview</span>
+        <span
+          v-if="error"
+          class="text-[13px] text-rose-500 font-normal normal-case"
+        >
+          Live updates unavailable: {{ error }}
+        </span>
+        <span
+          v-else-if="!connected"
+          class="text-[13px] text-gray-500 font-normal normal-case"
+        >
+          Connecting…
+        </span>
+      </div>
+      <div
+        v-if="sensorReadings.length"
+        class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3"
+      >
+        <SensorCard
+          v-for="reading in sensorReadings"
+          :key="reading.sensorId"
+          :reading="reading"
+        />
+      </div>
+      <div v-else class="text-sm text-gray-500">
+        Waiting for sensor readings…
+      </div>
+    </section>
 
-    <p v-if="error" class="text-danger text-sm" role="alert">
-      Real-time connection unavailable: {{ error }}
-    </p>
-    <p v-else-if="!connected" class="text-muted text-sm">Connecting…</p>
+    <section class="flex flex-col gap-3">
+      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+        Quick actions
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+        <RouterLink
+          to="/components"
+          class="h-14 rounded-[28px] md:rounded-[32px] bg-gray-800/50 border-2 border-gray-800 text-gray-200 font-medium text-[18px] md:text-[20px] flex items-center justify-center gap-1.5 hover:bg-gray-800/80 transition-colors no-underline"
+        >
+          <BaseIcon name="devices" :size="22" />
+          Manage devices
+        </RouterLink>
+        <RouterLink
+          to="/chat"
+          class="h-14 rounded-[28px] md:rounded-[32px] bg-yellow-500 text-gray-900 font-bold text-[18px] md:text-[20px] flex items-center justify-center gap-1.5 hover:bg-yellow-400 transition-colors no-underline"
+        >
+          <BaseIcon name="assistant" :size="22" />
+          Open chat assistant
+        </RouterLink>
+      </div>
+    </section>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <SensorCard
-        v-for="reading in sensorReadings"
-        :key="reading.sensorId"
-        :reading="reading"
-      />
-    </div>
+    <div class="h-8" />
   </div>
 </template>

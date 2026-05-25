@@ -2,29 +2,30 @@
 @import "tailwindcss";
 
 :root {
-  /* Surfaces */
-  --base: #1e293b;
-  --surface: #0f172a;
-  --elevated: #334155;
+  /* Surfaces — map to sample's gray-900 / gray-800 / gray-700 palette */
+  --base: #111827; /* gray-900 — page background */
+  --surface: #1f2937; /* gray-800 — sunken panels */
+  --elevated: #374151; /* gray-700 — lifted areas */
 
   /* Borders */
-  --border: #475569;
+  --border: rgba(255, 255, 255, 0.06);
 
   /* Text */
-  --primary: #7dd3fc;
-  --body: #e0f2fe;
-  --muted: #64748b;
+  --primary: #eab308; /* yellow-500 — brand accent */
+  --body: #e5e7eb; /* gray-200 — default body text */
+  --muted: #9ca3af; /* gray-400 — secondary text */
 
   /* State */
-  --success: #6ee7b7;
-  --warning: #fcd34d;
-  --danger: #f87171;
+  --success: #10b981; /* emerald-500 */
+  --warning: #f97316; /* orange-500 */
+  --danger: #f43f5e; /* rose-500 */
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
 }
 
 @theme {
@@ -38,6 +39,12 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+}
+
+html,
+body {
+  background-color: var(--base);
+  color: var(--body);
 }
 
 body {

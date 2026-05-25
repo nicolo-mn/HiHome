@@ -12,6 +12,7 @@ export type ComponentDTO = {
   id: string;
   name: string;
   roomId?: string;
+  roomName?: string;
 };
 
 export type LightDTO = ComponentDTO & {

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BaseIcon from "@/components/BaseIcon.vue";
+import { ACCENT } from "@/utils/accents";
 import type { RuleDto } from "@/api/rules";
 import type { HomeComponent } from "@/api/components";
 
@@ -46,6 +48,8 @@ const ACTION_LABELS: Record<string, string> = {
   "thermostat-set-temperature": "Set thermostat",
 };
 
+const accent = ACCENT.yellow;
+
 function conditionSummary(rule: RuleDto): string {
   const sensor = CONDITION_LABELS[rule.condition.type] ?? rule.condition.type;
   const op =
@@ -70,61 +74,74 @@ function getComponentName(componentId: string): string {
 
 <template>
   <div
-    class="bg-surface border border-border rounded-2xl p-4 md:p-5 flex flex-col gap-2"
+    :class="[
+      'rounded-[26px] md:rounded-[32px] p-4 md:p-5 flex flex-col gap-3',
+      accent.tint,
+    ]"
   >
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2 min-w-0">
-        <div class="flex flex-col">
-          <button
-            type="button"
-            class="text-muted hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition leading-none"
-            :disabled="!canMoveUp || reorderDisabled"
-            aria-label="Move rule up"
-            @click="$emit('move-up')"
-          >
-            ▲
-          </button>
-          <button
-            type="button"
-            class="text-muted hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition leading-none"
-            :disabled="!canMoveDown || reorderDisabled"
-            aria-label="Move rule down"
-            @click="$emit('move-down')"
-          >
-            ▼
-          </button>
-        </div>
-        <span class="text-xs text-muted w-6 text-center"
-          >#{{ rule.order + 1 }}</span
+    <div class="flex items-center gap-3">
+      <div class="flex flex-col">
+        <button
+          type="button"
+          class="text-gray-400 hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
+          :disabled="!canMoveUp || reorderDisabled"
+          aria-label="Move rule up"
+          @click="$emit('move-up')"
         >
-        <h3 class="text-base font-medium text-primary truncate">
-          {{ rule.name }}
-        </h3>
+          ▲
+        </button>
+        <button
+          type="button"
+          class="text-gray-400 hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
+          :disabled="!canMoveDown || reorderDisabled"
+          aria-label="Move rule down"
+          @click="$emit('move-down')"
+        >
+          ▼
+        </button>
+      </div>
+      <div
+        class="w-11 h-11 rounded-2xl bg-gray-900/40 flex items-center justify-center shrink-0"
+        :class="accent.text"
+      >
+        <BaseIcon name="bolt" :size="22" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500 tabular-nums shrink-0">
+            #{{ rule.order + 1 }}
+          </span>
+          <h3
+            class="text-[17px] md:text-[19px] font-bold text-gray-200 truncate"
+          >
+            {{ rule.name }}
+          </h3>
+        </div>
+        <p class="text-sm text-gray-400 mt-0.5 truncate">
+          <span class="font-semibold" :class="accent.text">When</span>
+          {{ conditionSummary(rule) }}
+        </p>
       </div>
       <button
         type="button"
-        class="text-xs text-muted hover:text-red-400 transition shrink-0"
+        class="w-9 h-9 rounded-2xl text-gray-400 hover:text-rose-400 hover:bg-white/5 flex items-center justify-center shrink-0"
+        aria-label="Delete rule"
         @click="$emit('delete')"
       >
-        Delete
+        <BaseIcon name="trash" :size="18" />
       </button>
     </div>
 
-    <p class="text-sm text-muted">
-      <span class="text-primary font-medium">When</span>
-      {{ conditionSummary(rule) }}
-    </p>
-
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2 pl-1">
       <span
         v-for="(action, i) in rule.actions"
         :key="i"
-        class="text-xs bg-elevated border border-border rounded-lg px-3 py-1 text-muted"
+        class="text-xs bg-gray-900/40 rounded-xl px-3 py-1.5 text-gray-300 font-medium"
       >
         {{ actionSummary(action) }}
-        <span class="text-primary/50 ml-1"
-          >({{ getComponentName(action.componentId) }})</span
-        >
+        <span class="text-gray-500 ml-1">
+          ({{ getComponentName(action.componentId) }})
+        </span>
       </span>
     </div>
   </div>

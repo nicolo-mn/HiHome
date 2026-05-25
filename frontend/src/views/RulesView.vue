@@ -6,7 +6,7 @@ import type { RuleDto } from "@/api/rules";
 import type { HomeComponent } from "@/api/components";
 import { useAuthStore } from "@/stores/auth";
 import { useAsyncAction } from "@/composables/useAsyncAction";
-import BaseButton from "@/components/BaseButton.vue";
+import AppHeader from "@/components/AppHeader.vue";
 import RuleCard from "@/components/RuleCard.vue";
 
 const router = useRouter();
@@ -85,30 +85,26 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold text-primary">Rules</h1>
-      <div class="w-40">
-        <BaseButton
-          label="New rule"
-          @click="router.push({ name: 'rule-create' })"
-        />
-      </div>
-    </div>
+  <div class="flex flex-col gap-8 md:gap-10">
+    <AppHeader
+      title="Rules"
+      :right-actions="[{ icon: 'add', label: 'New rule' }]"
+      @action="router.push({ name: 'rule-create' })"
+    />
 
-    <p v-if="error" class="text-red-400 text-sm">{{ error }}</p>
-    <p v-if="deleteError" class="text-red-400 text-sm">{{ deleteError }}</p>
-    <p v-if="reorderError" class="text-red-400 text-sm">{{ reorderError }}</p>
+    <p v-if="error" class="text-rose-500 text-sm">{{ error }}</p>
+    <p v-if="deleteError" class="text-rose-500 text-sm">{{ deleteError }}</p>
+    <p v-if="reorderError" class="text-rose-500 text-sm">{{ reorderError }}</p>
 
-    <div v-if="isLoading && rules.length === 0" class="text-muted text-sm">
+    <p v-if="isLoading && rules.length === 0" class="text-gray-400 text-sm">
       Loading rules…
-    </div>
+    </p>
 
-    <p v-else-if="rules.length === 0" class="text-muted text-sm">
+    <p v-else-if="rules.length === 0" class="text-gray-400 text-sm">
       No rules configured yet.
     </p>
 
-    <div v-else class="flex flex-col gap-3">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <RuleCard
         v-for="(rule, index) in sortedRules"
         :key="rule.id"
@@ -121,5 +117,7 @@ onMounted(load);
         @move-down="moveDown(index)"
       />
     </div>
+
+    <div class="h-8" />
   </div>
 </template>

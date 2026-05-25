@@ -38,6 +38,15 @@ export class HomeService implements ActionService {
     return home.getAllComponents();
   }
 
+  async getComponentsWithRoomNames(
+    homeId: string,
+  ): Promise<{ component: Component; roomName: string }[]> {
+    const home = await this.ensureHomeExists(homeId);
+    return home.rooms.flatMap((room) =>
+      room.components.map((component) => ({ component, roomName: room.name })),
+    );
+  }
+
   async getRooms(homeId: string): Promise<Room[]> {
     const home = await this.ensureHomeExists(homeId);
     return home.rooms;
