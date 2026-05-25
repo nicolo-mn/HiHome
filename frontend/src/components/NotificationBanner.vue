@@ -19,7 +19,7 @@ const emit = defineEmits<{
       <div
         v-for="toast in toasts"
         :key="toast.id"
-        class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-2xl bg-gray-800 border border-yellow-500/30 shadow-2xl cursor-pointer"
+        class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl bg-gray-800 border border-yellow-500/30 shadow-2xl cursor-pointer"
         @click="emit('dismiss', toast.id)"
       >
         <span
