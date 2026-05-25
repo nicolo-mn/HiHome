@@ -5,11 +5,14 @@ import {
   getHourlyTemperatures,
   setHourlyTemperatures,
 } from "@/api/thermostatPlan";
+import AppHeader from "@/components/AppHeader.vue";
+import BaseIcon from "@/components/BaseIcon.vue";
 
 const authStore = useAuthStore();
 const temperatures = ref<number[]>(new Array(24).fill(20));
 const loading = ref(true);
 const saving = ref(false);
+const saveError = ref<string | null>(null);
 
 const MIN_TEMP = 10;
 const MAX_TEMP = 30;
@@ -32,10 +35,11 @@ async function load() {
 async function save() {
   if (!authStore.homeId) return;
   saving.value = true;
+  saveError.value = null;
   try {
     await setHourlyTemperatures(authStore.homeId, temperatures.value);
   } catch (e) {
-    console.error(e);
+    saveError.value = e instanceof Error ? e.message : "Failed to save plan";
   } finally {
     saving.value = false;
   }
@@ -48,7 +52,7 @@ function updateTemp(index: number, event: MouseEvent) {
   const y = event.clientY - rect.top;
   const percentage = 1 - Math.max(0, Math.min(1, y / rect.height));
   const temp = MIN_TEMP + percentage * (MAX_TEMP - MIN_TEMP);
-  temperatures.value[index] = Math.round(temp * 2) / 2; // Snap to 0.5
+  temperatures.value[index] = Math.round(temp * 2) / 2;
 }
 
 function onMouseDown(index: number, event: MouseEvent) {
@@ -57,9 +61,7 @@ function onMouseDown(index: number, event: MouseEvent) {
 }
 
 function onMouseMove(index: number, event: MouseEvent) {
-  if (isDragging) {
-    updateTemp(index, event);
-  }
+  if (isDragging) updateTemp(index, event);
 }
 
 function onMouseUp() {
@@ -77,64 +79,88 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold text-primary">Daily Thermostat Plan</h1>
-      <button
-        class="rounded-lg bg-primary text-surface px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition"
-        @click="save"
-        :disabled="saving"
-      >
-        {{ saving ? "Saving..." : "Save Plan" }}
-      </button>
+  <div class="flex flex-col gap-6 md:gap-8">
+    <AppHeader
+      title="Daily plan"
+      :right-actions="[{ icon: 'check', label: 'Save plan' }]"
+      @action="save"
+    />
+
+    <p v-if="saveError" class="text-rose-500 text-sm">{{ saveError }}</p>
+
+    <div v-if="loading" class="flex justify-center py-16">
+      <div class="text-gray-400">Loading plan…</div>
     </div>
 
-    <div v-if="loading" class="flex justify-center py-12">
-      <div class="animate-pulse flex flex-col items-center text-muted">
+    <div v-else class="flex flex-col gap-4">
+      <div class="flex items-center justify-between flex-wrap gap-3">
         <div
-          class="h-8 w-8 mb-4 border-4 border-t-primary border-primary/30 rounded-full animate-spin"
-        ></div>
-        <span>Loading plan...</span>
+          class="flex items-center gap-3 text-gray-400 text-[15px] md:text-[17px]"
+        >
+          <BaseIcon
+            name="device_thermostat"
+            :size="22"
+            class="text-orange-500"
+          />
+          <span>Drag the bars to set the target temperature for each hour</span>
+        </div>
+        <button
+          type="button"
+          :disabled="saving"
+          :class="[
+            'h-12 px-6 rounded-[24px] font-semibold text-[15px] flex items-center justify-center gap-2 transition-colors',
+            saving
+              ? 'bg-yellow-500/25 text-gray-400 cursor-not-allowed'
+              : 'bg-yellow-500 text-gray-900 hover:bg-yellow-400',
+          ]"
+          @click="save"
+        >
+          <BaseIcon name="check" :size="18" />
+          {{ saving ? "Saving…" : "Save plan" }}
+        </button>
       </div>
-    </div>
 
-    <div
-      v-else
-      class="rounded-2xl border border-border bg-surface p-6 shadow-sm overflow-x-auto"
-    >
-      <div class="min-w-[600px]">
-        <div class="flex items-end justify-between space-x-2 h-64 select-none">
-          <div
-            v-for="(temp, i) in temperatures"
-            :key="i"
-            class="flex flex-col items-center flex-1 h-full group"
-          >
+      <div
+        class="bg-gray-700 rounded-[28px] md:rounded-[32px] p-5 md:p-6 overflow-x-auto"
+      >
+        <div class="min-w-[640px]">
+          <div class="flex items-end justify-between gap-2 h-64 select-none">
             <div
-              class="text-xs font-medium text-primary mb-2 transition-transform group-hover:-translate-y-1"
-            >
-              {{ temp }}°
-            </div>
-            <div
-              class="relative w-full h-full bg-elevated rounded-t-lg cursor-ns-resize overflow-hidden"
-              :ref="(el) => (containerRefs[i] = el as HTMLElement)"
-              @mousedown="onMouseDown(i, $event)"
-              @mousemove="onMouseMove(i, $event)"
+              v-for="(temp, i) in temperatures"
+              :key="i"
+              class="flex flex-col items-center flex-1 h-full group"
             >
               <div
-                class="absolute bottom-0 w-full bg-primary/90 rounded-t-lg transition-all duration-75 pointer-events-none group-hover:bg-primary"
-                :style="{
-                  height: `${((temp - MIN_TEMP) / (MAX_TEMP - MIN_TEMP)) * 100}%`,
-                }"
+                class="text-[11px] font-medium text-gray-200 mb-2 tabular-nums"
               >
-                <div class="w-full h-1 bg-white/30 absolute top-0"></div>
+                {{ temp }}°
               </div>
-            </div>
-            <div class="text-xs text-muted mt-3 font-medium">
-              {{ String(i).padStart(2, "0") }}:00
+              <div
+                class="relative w-full h-full bg-gray-900/40 rounded-t-lg cursor-ns-resize overflow-hidden"
+                :ref="(el) => (containerRefs[i] = el as HTMLElement)"
+                @mousedown="onMouseDown(i, $event)"
+                @mousemove="onMouseMove(i, $event)"
+              >
+                <div
+                  class="absolute bottom-0 w-full bg-orange-500/80 rounded-t-lg transition-all duration-75 pointer-events-none group-hover:bg-orange-500"
+                  :style="{
+                    height: `${((temp - MIN_TEMP) / (MAX_TEMP - MIN_TEMP)) * 100}%`,
+                  }"
+                >
+                  <div class="w-full h-1 bg-white/30 absolute top-0"></div>
+                </div>
+              </div>
+              <div
+                class="text-[11px] text-gray-400 mt-2 font-medium tabular-nums"
+              >
+                {{ String(i).padStart(2, "0") }}
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="h-8" />
   </div>
 </template>

@@ -8,6 +8,8 @@ import {
   type ToolCallInfo,
 } from "@/composables/useChatSocket";
 import { renderMarkdown } from "@/utils/markdown";
+import AppHeader from "@/components/AppHeader.vue";
+import BaseIcon from "@/components/BaseIcon.vue";
 
 const authStore = useAuthStore();
 const { token, username, homeId } = storeToRefs(authStore);
@@ -22,6 +24,7 @@ const sendError = ref<string | null>(null);
 const scrollAnchor = ref<HTMLDivElement | null>(null);
 const streamingContent = ref("");
 const activeToolCalls = ref<ToolCallInfo[]>([]);
+
 const streamingHtml = computed(() =>
   streamingContent.value ? renderMarkdown(`${streamingContent.value}▌`) : "",
 );
@@ -36,6 +39,13 @@ const canSend = computed(() =>
   Boolean(draft.value.trim() && username.value && homeId.value),
 );
 
+const suggestions = [
+  "What is the indoor temperature?",
+  "Turn off all the lights",
+  "Set the thermostat to 21°C",
+  "What's the weather forecast?",
+];
+
 const TOOL_LABELS: Record<string, string> = {
   get_forecast_summary: "Getting forecast",
   add_rule: "Creating automation rule",
@@ -47,6 +57,10 @@ function toolLabel(name: string): string {
 
 function renderMessage(content: string): string {
   return renderMarkdown(content);
+}
+
+function applySuggestion(text: string) {
+  draft.value = text;
 }
 
 function onSend() {
@@ -124,11 +138,12 @@ function persistMessages(key: string, value: ChatMessage[]) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+const welcomeMessage: ChatMessage = {
+  role: "assistant",
+  content: "Welcome! How can I help you today?",
+};
+
 function resetChat() {
-  const welcomeMessage: ChatMessage = {
-    role: "assistant",
-    content: "Welcome! How can I help you today?",
-  };
   messages.value = [welcomeMessage];
   persistMessages(storageKey.value, [welcomeMessage]);
   streamingContent.value = "";
@@ -138,12 +153,7 @@ function resetChat() {
 }
 
 function ensureWelcomeMessage() {
-  messages.value = [
-    {
-      role: "assistant",
-      content: "Welcome! How can I help you today?",
-    },
-  ];
+  messages.value = [welcomeMessage];
   streamingContent.value = "";
   activeToolCalls.value = [];
   sendError.value = null;
@@ -188,36 +198,45 @@ watch(
   },
   { deep: true },
 );
+
+const onlyWelcome = computed(
+  () => messages.value.length <= 1 && !sending.value,
+);
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 h-full">
-    <header class="flex flex-col gap-2">
-      <h1 class="text-2xl font-light text-primary">Chat Assistant</h1>
-      <p class="text-sm text-muted">
-        Ask about home assistance, devices, energy management, wellness, or the
-        forecast.
-      </p>
-      <p v-if="error" class="text-danger text-sm" role="alert">
-        Live chat connection unavailable: {{ error }}
-      </p>
-      <p v-else-if="!connected" class="text-muted text-sm">Connecting…</p>
-      <button
-        type="button"
-        class="w-fit text-sm text-primary border border-primary/40 rounded-lg px-3 py-1 hover:bg-primary/10 transition"
-        @click="resetChat"
-      >
-        New chat
-      </button>
-    </header>
+  <div class="flex flex-col gap-6 md:gap-8 pb-32 md:pb-8">
+    <AppHeader
+      title="Assistant"
+      :right-actions="[{ icon: 'add', label: 'New chat' }]"
+      @action="resetChat"
+    />
+
+    <p v-if="error" class="text-rose-500 text-sm">
+      Live chat connection unavailable: {{ error }}
+    </p>
+    <p v-else-if="!connected" class="text-gray-500 text-sm">Connecting…</p>
+
+    <section v-if="onlyWelcome" class="flex flex-col gap-3">
+      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+        Suggestions
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+        <button
+          v-for="s in suggestions"
+          :key="s"
+          type="button"
+          class="h-[92px] md:h-[104px] rounded-[26px] md:rounded-[32px] bg-gray-200/[0.08] px-6 flex items-center text-left text-gray-300 font-bold text-[18px] md:text-[20px] hover:bg-gray-200/[0.12] transition-colors"
+          @click="applySuggestion(s)"
+        >
+          {{ s }}
+        </button>
+      </div>
+    </section>
 
     <section
-      class="flex-1 overflow-auto rounded-2xl border border-border p-4 bg-surface"
+      class="flex-1 flex flex-col gap-3 rounded-[26px] md:rounded-[32px] bg-gray-800/30 p-4 md:p-5 min-h-[280px]"
     >
-      <div v-if="messages.length === 0" class="text-muted text-sm">
-        No messages yet. Start the conversation.
-      </div>
-
       <div class="flex flex-col gap-3">
         <div
           v-for="(message, index) in messages"
@@ -233,37 +252,28 @@ watch(
               <div
                 v-for="(tc, i) in message.toolCalls"
                 :key="i"
-                class="flex items-center gap-2 text-xs text-muted"
+                class="flex items-center gap-2 text-xs text-gray-500"
               >
-                <svg
-                  class="w-3.5 h-3.5 flex-shrink-0"
-                  viewBox="0 0 512 512"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M78.6 5C69.1-2.4 55.6-1.5 47.7 7L7.7 47c-8.7 8.7-8.7 22.8 0 31.5l37.1 37.1c-13.5 21-20.8 45.7-20.8 71.4c0 73.4 59.6 133 133 133c25.7 0 50.3-7.3 71.4-20.8l37.1 37.1c8.7 8.7 22.8 8.7 31.5 0l39.3-39.3c8.5-8.1 9.4-21.6 2-31.1L78.6 5zM332.6 265.8l27.5-27.5c4.7-4.7 12.3-4.7 17 0l120.2 120.2c15.6 15.6 15.6 40.9 0 56.6l-29 29c-15.6 15.6-40.9 15.6-56.6 0L291.5 323.3c-4.7-4.7-4.7-12.3 0-17l27.5-27.5 13.6 13.6c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-33.9-33.9l33.9-33.9c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L298.7 190l-13.6-13.6c-4.7-4.7-4.7-12.3 0-17l27.5-27.5L432.8 12.1c15.6-15.6 40.9-15.6 56.6 0l29 29c15.6 15.6 15.6 40.9 0 56.6L398.2 217.9l-13.6-13.6c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l13.6 13.6-17.7 17.7-13.6-13.6c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l.5 .5z"
-                  />
-                </svg>
-                <span
-                  >Called <strong>{{ toolLabel(tc.name) }}</strong></span
-                >
+                <BaseIcon name="bolt" :size="14" />
+                <span>
+                  Called <strong>{{ toolLabel(tc.name) }}</strong>
+                </span>
               </div>
             </div>
 
             <div
-              class="rounded-2xl px-4 py-2 text-sm"
+              class="rounded-2xl px-4 py-2.5 text-[15px]"
               :class="
                 message.role === 'user'
-                  ? 'bg-primary text-surface whitespace-pre-wrap'
-                  : 'bg-elevated text-body'
+                  ? 'bg-sky-500 text-gray-50 whitespace-pre-wrap'
+                  : 'bg-gray-700 text-gray-200'
               "
             >
               <template v-if="message.role === 'assistant'">
                 <div
                   class="chat-markdown"
                   v-html="renderMessage(message.content)"
-                ></div>
+                />
               </template>
               <template v-else>
                 {{ message.content }}
@@ -272,42 +282,29 @@ watch(
           </div>
         </div>
 
-        <!-- Streaming response bubble -->
         <div v-if="sending" class="flex justify-start">
           <div class="max-w-[80%] flex flex-col gap-2">
-            <!-- Tool call indicators -->
             <div
               v-for="(tc, i) in activeToolCalls"
               :key="i"
-              class="flex items-center gap-2 text-xs text-muted animate-pulse"
+              class="flex items-center gap-2 text-xs text-gray-500 animate-pulse"
             >
-              <svg
-                class="w-3.5 h-3.5 flex-shrink-0"
-                viewBox="0 0 512 512"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M78.6 5C69.1-2.4 55.6-1.5 47.7 7L7.7 47c-8.7 8.7-8.7 22.8 0 31.5l37.1 37.1c-13.5 21-20.8 45.7-20.8 71.4c0 73.4 59.6 133 133 133c25.7 0 50.3-7.3 71.4-20.8l37.1 37.1c8.7 8.7 22.8 8.7 31.5 0l39.3-39.3c8.5-8.1 9.4-21.6 2-31.1L78.6 5zM332.6 265.8l27.5-27.5c4.7-4.7 12.3-4.7 17 0l120.2 120.2c15.6 15.6 15.6 40.9 0 56.6l-29 29c-15.6 15.6-40.9 15.6-56.6 0L291.5 323.3c-4.7-4.7-4.7-12.3 0-17l27.5-27.5 13.6 13.6c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-33.9-33.9l33.9-33.9c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0L298.7 190l-13.6-13.6c-4.7-4.7-4.7-12.3 0-17l27.5-27.5L432.8 12.1c15.6-15.6 40.9-15.6 56.6 0l29 29c15.6 15.6 15.6 40.9 0 56.6L398.2 217.9l-13.6-13.6c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l13.6 13.6-17.7 17.7-13.6-13.6c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l.5 .5z"
-                />
-              </svg>
-              <span
-                >Called <strong>{{ toolLabel(tc.name) }}</strong></span
-              >
+              <BaseIcon name="bolt" :size="14" />
+              <span>
+                Called <strong>{{ toolLabel(tc.name) }}</strong>
+              </span>
             </div>
 
-            <!-- Streaming text -->
             <div
               v-if="streamingContent"
-              class="rounded-2xl px-4 py-2 text-sm bg-elevated text-body"
+              class="rounded-2xl px-4 py-2.5 text-[15px] bg-gray-700 text-gray-200"
             >
-              <div class="chat-markdown" v-html="streamingHtml"></div>
+              <div class="chat-markdown" v-html="streamingHtml" />
             </div>
 
-            <!-- Thinking indicator when no content yet -->
             <div
               v-else-if="activeToolCalls.length === 0"
-              class="rounded-2xl px-4 py-2 text-sm bg-elevated text-muted"
+              class="rounded-2xl px-4 py-2.5 text-[15px] bg-gray-700 text-gray-500"
             >
               <span class="animate-pulse">Thinking…</span>
             </div>
@@ -317,28 +314,47 @@ watch(
       <div ref="scrollAnchor" />
     </section>
 
-    <form class="flex flex-col gap-3" @submit.prevent="onSend">
-      <label class="text-sm text-primary">Message</label>
-      <textarea
+    <p v-if="sendError" class="text-rose-500 text-sm">{{ sendError }}</p>
+
+    <div
+      class="md:hidden fixed left-4 right-4 bottom-28 z-20 h-14 rounded-full bg-gray-700 px-4 flex items-center gap-2 shadow-2xl"
+    >
+      <BaseIcon name="search" :size="22" class="text-gray-400" />
+      <input
         v-model="draft"
-        rows="3"
-        placeholder="Type your request…"
-        class="bg-elevated rounded-lg px-4 py-3 text-body placeholder:text-muted outline-none border border-border focus:border-primary transition"
+        placeholder="Ask anything…"
+        class="flex-1 bg-transparent border-0 outline-none text-gray-200 placeholder:text-gray-400 text-[15px] min-w-0"
         @keydown="onDraftKeydown"
       />
-      <p v-if="sendError" class="text-danger text-sm" role="alert">
-        {{ sendError }}
-      </p>
-      <div class="flex flex-col sm:flex-row gap-3">
-        <button
-          type="submit"
-          :disabled="!canSend || sending"
-          class="sm:w-48 py-3 rounded-xl bg-primary text-surface font-medium hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ sending ? "Sending…" : "Send" }}
-        </button>
-      </div>
-    </form>
+      <button
+        type="button"
+        :disabled="!canSend || sending"
+        class="w-9 h-9 rounded-full bg-sky-500 flex items-center justify-center text-gray-900 disabled:opacity-50"
+        @click="onSend"
+      >
+        <BaseIcon name="send" :size="18" />
+      </button>
+    </div>
+
+    <div
+      class="hidden md:flex sticky bottom-6 z-20 h-16 rounded-full bg-gray-700 px-5 items-center gap-3 shadow-2xl border border-white/[0.04]"
+    >
+      <BaseIcon name="search" :size="22" class="text-gray-400" />
+      <input
+        v-model="draft"
+        placeholder="Ask anything…"
+        class="flex-1 bg-transparent border-0 outline-none text-gray-200 placeholder:text-gray-400 text-[17px] min-w-0"
+        @keydown="onDraftKeydown"
+      />
+      <button
+        type="button"
+        :disabled="!canSend || sending"
+        class="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center text-gray-900 hover:bg-sky-400 disabled:opacity-50"
+        @click="onSend"
+      >
+        <BaseIcon name="send" :size="20" />
+      </button>
+    </div>
   </div>
 </template>
 

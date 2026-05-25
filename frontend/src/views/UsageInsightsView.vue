@@ -2,20 +2,39 @@
 import { computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useUsageStore } from "@/stores/usage";
-import type { UsageRange } from "@/api/usage";
+import AppHeader from "@/components/AppHeader.vue";
+import BaseIcon from "@/components/BaseIcon.vue";
 import MetricCard from "@/components/cards/MetricCard.vue";
-import BaseButton from "@/components/BaseButton.vue";
-import insightsIcon from "@/assets/icons/insights.svg?raw";
 import lightIcon from "@/assets/icons/light.svg?raw";
 import windowIcon from "@/assets/icons/window.svg?raw";
 import bellIcon from "@/assets/icons/bell.svg?raw";
 
 const store = useUsageStore();
-const { report, range, isLoading, error } = storeToRefs(store);
+const { report, isLoading, error } = storeToRefs(store);
 
-const ranges: { value: UsageRange; label: string }[] = [
-  { value: "week", label: "Last 7 days" },
-];
+const W = 457;
+const H = 240;
+const padL = 28;
+const padR = 12;
+const padT = 16;
+const padB = 30;
+const innerW = W - padL - padR;
+const innerH = H - padT - padB;
+
+const hours = computed(() => report.value?.activityByHour ?? []);
+const maxHour = computed(() => Math.max(1, ...hours.value));
+
+const barWidth = computed(() =>
+  hours.value.length ? innerW / hours.value.length - 2 : 0,
+);
+
+function xFor(i: number) {
+  return padL + (i / Math.max(1, hours.value.length)) * innerW;
+}
+
+function hForCount(count: number) {
+  return (count / maxHour.value) * innerH;
+}
 
 const totalActions = computed(() => {
   if (!report.value) return 0;
@@ -34,24 +53,26 @@ const automatedPct = computed(() =>
   totalActions.value === 0 ? 0 : 100 - manualPct.value,
 );
 
-const hourMax = computed(() => {
-  if (!report.value) return 0;
-  return Math.max(1, ...report.value.activityByHour);
-});
-
-const peakHour = computed(() => {
-  if (!report.value) return null;
-  let bestIndex = -1;
+const peakHourIndex = computed(() => {
+  if (!report.value) return -1;
+  let best = -1;
   let bestCount = 0;
-  report.value.activityByHour.forEach((count, idx) => {
-    if (count > bestCount) {
-      bestCount = count;
-      bestIndex = idx;
+  report.value.activityByHour.forEach((c, i) => {
+    if (c > bestCount) {
+      bestCount = c;
+      best = i;
     }
   });
-  if (bestIndex < 0) return null;
-  return `${String(bestIndex).padStart(2, "0")}:00`;
+  return best;
 });
+
+const peakHour = computed(() =>
+  peakHourIndex.value >= 0
+    ? `${String(peakHourIndex.value).padStart(2, "0")}:00`
+    : "—",
+);
+
+const totalDay = computed(() => hours.value.reduce((sum, n) => sum + n, 0));
 
 const historicalDays = computed(
   () => report.value?.historicalWeather?.days ?? [],
@@ -144,291 +165,350 @@ function buildLinePath(
     .join(" ");
 }
 
-function selectRange(next: UsageRange) {
-  store.setRange(next);
-}
-
 onMounted(() => store.load());
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
-    <header class="flex flex-col gap-3">
-      <div class="flex items-center gap-3">
-        <span
-          class="w-10 h-10 rounded-2xl bg-elevated border border-border flex items-center justify-center text-primary"
-          v-html="insightsIcon"
-        />
-        <div>
-          <h1 class="text-2xl font-light text-primary">Usage Insights</h1>
-          <p class="text-sm text-muted">
-            Energy consumption and activity across your home.
-          </p>
-        </div>
-      </div>
+  <div class="flex flex-col gap-6 md:gap-8">
+    <AppHeader title="Insights" />
 
-      <div
-        class="inline-flex w-fit rounded-xl bg-elevated border border-border p-1"
-      >
-        <button
-          v-for="r in ranges"
-          :key="r.value"
-          type="button"
-          class="px-4 py-1.5 text-sm rounded-lg transition"
-          :class="
-            range === r.value
-              ? 'bg-primary text-surface font-medium'
-              : 'text-muted hover:text-primary'
-          "
-          @click="selectRange(r.value)"
-        >
-          {{ r.label }}
-        </button>
-      </div>
-    </header>
+    <p v-if="error" class="text-rose-500 text-sm">{{ error }}</p>
 
-    <div v-if="error && !report" class="flex flex-col gap-2">
-      <p class="text-danger text-sm">{{ error }}</p>
-      <BaseButton label="Retry" @click="store.load()" />
-    </div>
-    <p v-else-if="error" class="text-danger text-sm">{{ error }}</p>
-
-    <div v-if="isLoading && !report" class="text-muted text-sm">
+    <div v-if="isLoading && !report" class="text-gray-400 text-sm">
       Loading insights…
     </div>
 
-    <div
-      v-if="report"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-    >
-      <MetricCard
-        :icon="lightIcon"
-        label="Energy / week"
-        :value="fmt(report.energyKWhPerWeek, 2)"
-        unit="kWh"
-        subtitle="From lights on-time"
-      />
-      <MetricCard
-        :icon="lightIcon"
-        label="Lights on / week"
-        :value="fmt(report.lightsOnHoursPerWeek, 1)"
-        unit="hours"
-        subtitle="Across all lights"
-      />
-      <MetricCard
-        :icon="windowIcon"
-        label="Windows open"
-        :value="fmt(report.windowOpenHours, 1)"
-        unit="hours"
-        subtitle="Total in period"
-      />
-      <MetricCard
-        :icon="bellIcon"
-        label="Manual vs automated"
-        :value="totalActions === 0 ? '—' : `${manualPct}%`"
-        :unit="totalActions === 0 ? '' : 'manual'"
-        :subtitle="
-          totalActions === 0
-            ? 'No actions in period'
-            : `${report.manualVsAutomated.manual} manual · ${report.manualVsAutomated.automated} automated`
-        "
-      >
-        <div
-          v-if="totalActions > 0"
-          class="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-surface"
-        >
-          <div class="h-full bg-primary" :style="{ width: `${manualPct}%` }" />
-          <div
-            class="h-full bg-success"
-            :style="{ width: `${automatedPct}%` }"
-          />
-        </div>
-      </MetricCard>
+    <template v-if="report">
+      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+        Activity (last 7 days)
+      </div>
 
       <div
-        class="sm:col-span-2 lg:col-span-2 flex flex-col gap-3 px-5 py-5 rounded-2xl bg-elevated border border-border"
+        class="bg-gray-700 rounded-[28px] md:rounded-[32px] p-5 md:p-6 flex flex-col gap-4"
       >
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wide text-muted">
-            Activity by hour
-          </span>
-          <span v-if="peakHour" class="text-xs text-muted">
-            Peak: <span class="text-primary">{{ peakHour }}</span>
-          </span>
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-11 h-11 rounded-[14px] bg-sky-500/[0.16] flex items-center justify-center text-sky-500 shrink-0"
+            >
+              <BaseIcon name="chart" :size="26" />
+            </div>
+            <div class="min-w-0">
+              <div
+                class="font-bold text-[20px] md:text-[22px] text-gray-200 truncate"
+              >
+                Hourly activity
+              </div>
+              <div class="text-sm text-gray-400 truncate">
+                {{ totalDay }} actions over the period
+              </div>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <div
+              class="font-bold text-3xl md:text-4xl text-gray-200 leading-10 tabular-nums"
+            >
+              {{ maxHour }}
+            </div>
+            <div class="text-[12px] md:text-[13px] font-semibold text-sky-500">
+              Peak · {{ peakHour }}
+            </div>
+          </div>
         </div>
-        <div class="flex items-end gap-1 h-32">
+
+        <div class="relative mt-1 w-full" style="aspect-ratio: 457 / 240">
+          <svg
+            :viewBox="`0 0 ${W} ${H}`"
+            preserveAspectRatio="none"
+            class="w-full h-full overflow-visible"
+          >
+            <g stroke="rgba(229,231,235,0.06)" stroke-width="1">
+              <line
+                v-for="frac in [0.25, 0.5, 0.75, 1]"
+                :key="frac"
+                :x1="padL"
+                :x2="W - padR"
+                :y1="padT + innerH * (1 - frac)"
+                :y2="padT + innerH * (1 - frac)"
+              />
+            </g>
+
+            <g v-for="(count, i) in hours" :key="i">
+              <rect
+                :x="xFor(i) + 1"
+                :y="padT + innerH - hForCount(count)"
+                :width="barWidth"
+                :height="hForCount(count)"
+                rx="2"
+                fill="#0EA5E9"
+                :opacity="i === peakHourIndex ? 1 : 0.55"
+              />
+            </g>
+
+            <g font-size="11" fill="#9CA3AF" text-anchor="middle">
+              <text :x="padL" :y="H - 10">00</text>
+              <text :x="padL + innerW * 0.25" :y="H - 10">06</text>
+              <text :x="padL + innerW * 0.5" :y="H - 10">12</text>
+              <text :x="padL + innerW * 0.75" :y="H - 10">18</text>
+              <text :x="padL + innerW" :y="H - 10">23</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-1">
+          <div class="bg-gray-900/50 rounded-2xl px-3 md:px-3.5 py-3">
+            <div
+              class="text-[11px] md:text-xs text-gray-400 uppercase tracking-wider font-medium"
+            >
+              Total
+            </div>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span
+                class="font-bold text-[22px] md:text-[26px] text-gray-200 leading-[30px] tabular-nums"
+              >
+                {{ totalDay }}
+              </span>
+            </div>
+          </div>
+          <div class="bg-gray-900/50 rounded-2xl px-3 md:px-3.5 py-3">
+            <div
+              class="text-[11px] md:text-xs text-gray-400 uppercase tracking-wider font-medium"
+            >
+              Peak
+            </div>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span
+                class="font-bold text-[22px] md:text-[26px] leading-[30px] text-sky-500 tabular-nums"
+              >
+                {{ maxHour }}
+              </span>
+              <span class="text-xs text-gray-400">/h</span>
+            </div>
+            <div class="text-xs text-gray-400 mt-0.5">{{ peakHour }}</div>
+          </div>
+          <div class="bg-gray-900/50 rounded-2xl px-3 md:px-3.5 py-3">
+            <div
+              class="text-[11px] md:text-xs text-gray-400 uppercase tracking-wider font-medium"
+            >
+              Manual %
+            </div>
+            <div class="flex items-baseline gap-1 mt-1">
+              <span
+                class="font-bold text-[22px] md:text-[26px] leading-[30px] text-yellow-500 tabular-nums"
+              >
+                {{ totalActions === 0 ? "—" : `${manualPct}%` }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="font-medium text-[18px] md:text-[20px] text-gray-400 mt-2">
+        Metrics
+      </div>
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3"
+      >
+        <MetricCard
+          :icon="lightIcon"
+          label="Energy / week"
+          :value="fmt(report.energyKWhPerWeek, 2)"
+          unit="kWh"
+          subtitle="From lights on-time"
+        />
+        <MetricCard
+          :icon="lightIcon"
+          label="Lights on / week"
+          :value="fmt(report.lightsOnHoursPerWeek, 1)"
+          unit="hours"
+          subtitle="Across all lights"
+        />
+        <MetricCard
+          :icon="windowIcon"
+          label="Windows open"
+          :value="fmt(report.windowOpenHours, 1)"
+          unit="hours"
+          subtitle="Total in period"
+        />
+        <MetricCard
+          :icon="bellIcon"
+          label="Manual vs automated"
+          :value="totalActions === 0 ? '—' : `${manualPct}%`"
+          :unit="totalActions === 0 ? '' : 'manual'"
+          :subtitle="
+            totalActions === 0
+              ? 'No actions in period'
+              : `${report.manualVsAutomated.manual} manual · ${report.manualVsAutomated.automated} automated`
+          "
+        >
           <div
-            v-for="(count, hour) in report.activityByHour"
-            :key="hour"
-            class="flex-1 h-full flex flex-col justify-end items-center group"
-            :title="`${String(hour).padStart(2, '0')}:00 — ${count} actions`"
+            v-if="totalActions > 0"
+            class="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-gray-900/40"
           >
             <div
-              class="w-full rounded-t bg-primary/30 group-hover:bg-primary transition"
-              :style="{
-                height: `${(Math.sqrt(count) / Math.sqrt(hourMax)) * 100}%`,
-                minHeight: count > 0 ? '4px' : '2px',
-              }"
+              class="h-full bg-yellow-500"
+              :style="{ width: `${manualPct}%` }"
+            />
+            <div
+              class="h-full bg-emerald-500"
+              :style="{ width: `${automatedPct}%` }"
             />
           </div>
-        </div>
-        <div class="flex justify-between text-[10px] text-muted">
-          <span>00</span>
-          <span>06</span>
-          <span>12</span>
-          <span>18</span>
-          <span>23</span>
-        </div>
+        </MetricCard>
+      </div>
+
+      <div class="font-medium text-[18px] md:text-[20px] text-gray-400 mt-2">
+        Weather (past week)
       </div>
 
       <div
-        class="sm:col-span-2 lg:col-span-2 flex flex-col gap-3 px-5 py-5 rounded-2xl bg-elevated border border-border"
+        class="bg-gray-700 rounded-[28px] md:rounded-[32px] p-5 md:p-6 flex flex-col gap-4"
       >
-        <div class="flex items-center justify-between">
-          <span class="text-xs uppercase tracking-wide text-muted">
-            Daily temperature range (past week)
-          </span>
-          <div class="flex items-center gap-3 text-[11px] text-muted">
-            <span class="flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-primary" /> Max
+        <div class="flex items-center justify-between gap-3">
+          <div class="font-bold text-[18px] md:text-[20px] text-gray-200">
+            Daily temperature range
+          </div>
+          <div class="flex items-center gap-3 text-[12px] text-gray-400">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-sky-500" /> Max
             </span>
-            <span class="flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-success" /> Min
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500" /> Min
             </span>
           </div>
         </div>
-        <div v-if="historicalDays.length" class="flex flex-col gap-2">
-          <div class="flex gap-1">
-            <div
-              class="flex flex-col justify-between h-32 text-[10px] text-muted leading-none"
+        <div v-if="historicalDays.length" class="flex gap-2">
+          <div
+            class="flex flex-col justify-between h-32 text-[11px] text-gray-400 leading-none tabular-nums"
+          >
+            <span class="-mt-1">{{ fmt(tempBounds.max, 1) }}°</span>
+            <span class="-mb-1">{{ fmt(tempBounds.min, 1) }}°</span>
+          </div>
+          <div class="flex-1 flex flex-col gap-2">
+            <svg
+              viewBox="0 0 100 40"
+              class="w-full h-32"
+              preserveAspectRatio="none"
             >
-              <span class="-mt-1">{{ fmt(tempBounds.max, 1) }}°</span>
-              <span class="-mb-1">{{ fmt(tempBounds.min, 1) }}°</span>
+              <path
+                v-if="tempMaxPath"
+                :d="tempMaxPath"
+                fill="none"
+                stroke="#0EA5E9"
+                stroke-width="1"
+                stroke-linejoin="round"
+                vector-effect="non-scaling-stroke"
+              />
+              <path
+                v-if="tempMinPath"
+                :d="tempMinPath"
+                fill="none"
+                stroke="#10B981"
+                stroke-width="1"
+                stroke-linejoin="round"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+            <div class="flex justify-between text-[11px] text-gray-400">
+              <span v-for="(label, idx) in dayLabels" :key="`temp-${idx}`">
+                {{ label }}
+              </span>
             </div>
-            <div class="flex-1 flex flex-col gap-2">
-              <svg
-                viewBox="0 0 100 40"
-                class="w-full h-32"
-                preserveAspectRatio="none"
+          </div>
+        </div>
+        <p v-else class="text-sm text-gray-400">
+          Historical data not ready yet.
+        </p>
+      </div>
+
+      <div
+        class="bg-gray-700 rounded-[28px] md:rounded-[32px] p-5 md:p-6 flex flex-col gap-4"
+      >
+        <div class="font-bold text-[18px] md:text-[20px] text-gray-200">
+          Daily precipitation
+        </div>
+        <div v-if="historicalDays.length" class="flex gap-2">
+          <div
+            class="flex flex-col justify-between h-28 text-[11px] text-gray-400 leading-none tabular-nums"
+          >
+            <span class="-mt-1">{{ fmt(precipitationMax, 1) }} mm</span>
+            <span class="-mb-1">0</span>
+          </div>
+          <div class="flex-1 flex flex-col gap-2">
+            <div class="flex items-end gap-2 h-28">
+              <div
+                v-for="(value, idx) in precipitationSeries"
+                :key="`precip-${idx}`"
+                class="flex-1 flex flex-col items-center justify-end"
+                :title="`${fmt(value, 1)} mm`"
               >
-                <path
-                  v-if="tempMaxPath"
-                  :d="tempMaxPath"
-                  fill="none"
-                  stroke="currentColor"
-                  class="text-primary"
-                  stroke-width="1"
-                  stroke-linejoin="round"
-                />
-                <path
-                  v-if="tempMinPath"
-                  :d="tempMinPath"
-                  fill="none"
-                  stroke="currentColor"
-                  class="text-success"
-                  stroke-width="1"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <div class="flex justify-between text-[10px] text-muted">
-                <span v-for="(label, idx) in dayLabels" :key="`temp-${idx}`">
-                  {{ label }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p v-else class="text-xs text-muted">Historical data not ready yet.</p>
-      </div>
-
-      <div
-        class="flex flex-col gap-3 px-5 py-5 rounded-2xl bg-elevated border border-border"
-      >
-        <span class="text-xs uppercase tracking-wide text-muted">
-          Daily precipitation (past week)
-        </span>
-        <div v-if="historicalDays.length" class="flex flex-col gap-2">
-          <div class="flex gap-1">
-            <div
-              class="flex flex-col justify-between h-28 text-[10px] text-muted leading-none"
-            >
-              <span class="-mt-1">{{ fmt(precipitationMax, 1) }} mm</span>
-              <span class="-mb-1">0</span>
-            </div>
-            <div class="flex-1 flex flex-col gap-2">
-              <div class="flex items-end gap-2 h-28">
                 <div
-                  v-for="(value, idx) in precipitationSeries"
-                  :key="`precip-${idx}`"
-                  class="flex-1 flex flex-col items-center justify-end"
-                  :title="`${fmt(value, 1)} mm`"
-                >
-                  <div
-                    class="w-full rounded-t bg-primary/30"
-                    :style="{
-                      height: `${(value / precipitationMax) * 100}%`,
-                      minHeight: value > 0 ? '4px' : '2px',
-                    }"
-                  />
-                </div>
+                  class="w-full rounded-t bg-sky-500/40"
+                  :style="{
+                    height: `${(value / precipitationMax) * 100}%`,
+                    minHeight: value > 0 ? '4px' : '2px',
+                  }"
+                />
               </div>
-              <div class="flex gap-2 text-[10px] text-muted">
-                <span
-                  v-for="(label, idx) in dayLabels"
-                  :key="`precip-label-${idx}`"
-                  class="flex-1 text-center"
-                >
-                  {{ label }}
-                </span>
-              </div>
+            </div>
+            <div class="flex gap-2 text-[11px] text-gray-400">
+              <span
+                v-for="(label, idx) in dayLabels"
+                :key="`precip-label-${idx}`"
+                class="flex-1 text-center"
+              >
+                {{ label }}
+              </span>
             </div>
           </div>
         </div>
-        <p v-else class="text-xs text-muted">Historical data not ready yet.</p>
+        <p v-else class="text-sm text-gray-400">
+          Historical data not ready yet.
+        </p>
       </div>
 
       <div
-        class="sm:col-span-2 lg:col-span-3 flex flex-col gap-3 px-5 py-5 rounded-2xl bg-elevated border border-border"
+        class="bg-gray-700 rounded-[28px] md:rounded-[32px] p-5 md:p-6 flex flex-col gap-4"
       >
-        <div class="flex items-center">
-          <span class="text-xs uppercase tracking-wide text-muted">
-            AQI (past week)
-          </span>
+        <div class="font-bold text-[18px] md:text-[20px] text-gray-200">
+          Air quality (AQI)
         </div>
-        <div v-if="hourlyAqiSeries.length" class="flex flex-col gap-2">
-          <div class="flex gap-1">
-            <div
-              class="flex flex-col justify-between h-32 text-[10px] text-muted leading-none"
+        <div v-if="hourlyAqiSeries.length" class="flex gap-2">
+          <div
+            class="flex flex-col justify-between h-32 text-[11px] text-gray-400 leading-none tabular-nums"
+          >
+            <span class="-mt-1">{{ Math.round(aqiBounds.max) }}</span>
+            <span class="-mb-1">{{ Math.round(aqiBounds.min) }}</span>
+          </div>
+          <div class="flex-1 flex flex-col gap-2">
+            <svg
+              viewBox="0 0 100 40"
+              class="w-full h-32"
+              preserveAspectRatio="none"
             >
-              <span class="-mt-1">{{ Math.round(aqiBounds.max) }}</span>
-              <span class="-mb-1">{{ Math.round(aqiBounds.min) }}</span>
-            </div>
-            <div class="flex-1 flex flex-col gap-2">
-              <svg
-                viewBox="0 0 100 40"
-                class="w-full h-32"
-                preserveAspectRatio="none"
-              >
-                <path
-                  v-if="aqiPath"
-                  :d="aqiPath"
-                  fill="none"
-                  stroke="currentColor"
-                  class="text-amber-500"
-                  stroke-width="1"
-                  vector-effect="non-scaling-stroke"
-                />
-              </svg>
-              <div class="flex justify-between text-[10px] text-muted">
-                <span v-for="(label, idx) in dayLabels" :key="`aqi-${idx}`">
-                  {{ label }}
-                </span>
-              </div>
+              <path
+                v-if="aqiPath"
+                :d="aqiPath"
+                fill="none"
+                stroke="#F59E0B"
+                stroke-width="1"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+            <div class="flex justify-between text-[11px] text-gray-400">
+              <span v-for="(label, idx) in dayLabels" :key="`aqi-${idx}`">
+                {{ label }}
+              </span>
             </div>
           </div>
         </div>
-        <p v-else class="text-xs text-muted">Historical data not ready yet.</p>
+        <p v-else class="text-sm text-gray-400">
+          Historical data not ready yet.
+        </p>
       </div>
-    </div>
+
+      <div class="h-8" />
+    </template>
+
   </div>
 </template>
