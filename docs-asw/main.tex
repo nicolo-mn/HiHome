@@ -30,4 +30,71 @@ Il progetto HiHome consiste in un applicativo per gestire dispositivi all'intern
     \item \textbf{Admin}: ha accesso a funzioni avanzate sulla gestione della casa, come log di eventi relativi a manipolazione di smart device, creazione di automazioni e aggiunta di device.
     \item \textbf{Utente Standard}: può agire sugli smart device, visualizzare statistiche relative allo stato attuale della casa, grafici relativi ad eventi passati, come lo stato della qualità dell'aria nella zona durante la settimana precedente e interagire con il chatbot.
 \end{itemize}
+
+\newpage
+\section{Requisiti}
+\subsection{Requisiti funzionali}
+\begin{itemize}
+    \item Login
+    \item Menu per navigazione tra le pagine 
+    \item Dashboard con informazioni sullo stato attuale della casa e del circondario:
+    \begin{itemize}
+        \item Temperatura (interna ed esterna)
+        \item Condizioni meteo attuali
+        \item Qualità dell'aria
+        \item Velocità e direzione del vento
+    \end{itemize}
+    \item Lista dispositivi smart, divisi per stanza, con possibilità di interagire con essi, in particolare:
+    \begin{itemize}
+        \item Accensione/spegnimento per luci
+        \item Apertura/chiusura per finestre
+        \item Impostazione temperatura per termostato
+    \end{itemize}
+    \item (Admin) Possibilità di aggiunta di nuovi dispositivi smart, con specifica del tipo di dispositivo, del nome e della stanza in cui si trova
+    \item (Admin) Possibilità di creare automazioni, ognuna definita da:
+    \begin{itemize}
+        \item Nome
+        \item Condizione di attivazione composta da un sensore, un operatore e un valore
+        \item Una o più azioni da eseguire quando la condizione è verificata, ognuna composta da un dispositivo smart e un'azione da eseguire su di esso
+    \end{itemize}
+    \item (Admin) Possibilità di visualizzare la lista completa di automazioni presenti
+    \item (Admin) Possibilità di visualizzare un log di eventi relativi alla manipolazione dei dispositivi smart, con specificate data, ora, dispositivo interessato, azione eseguita e utente che ha eseguito l'azione
+    \item Grafici relativi a dati passati, in particolare:
+    \begin{itemize}
+        \item Grafico della temperatura esterna durante la settimana precedente, con temperatura massima e minima per ogni giorno
+        \item Andamento della qualità dell'aria durante la settimana precedente
+        \item Grafico di utilizzo dei dispositivi smart durante la settimana precedente, con numero di azioni per fascia oraria
+        \item Dati relativi a numero di attivazioni manuali e automatiche per i dispositivi smart
+        \item Dati relativi a percentuale di accensioni di luci e apertura di finestre
+    \end{itemize}
+    \item Chatbot con cui è possibile interagire in linguaggio naturale per eseguire azioni e chiedere informazioni a seconda dei privilegi dell'utente, ovvero:
+    \begin{itemize}
+        \item Aggiungere un dispositivo smart (Admin)
+        \item Aggiungere una regola di automazione (Admin)
+        \item Chiedere informazioni relative alle previsioni meteo per la settimana successiva
+    \end{itemize}
+    \item Notifiche relative a: 
+    \begin{itemize}
+        \item Esecuzione di un'automazione
+        \item Livelli critici relativi alla qualità dell'aria
+        \item (Admin) Azioni eseguite da utenti non admin
+    \end{itemize}
+    \item Impostazioni, con possibilità di:
+    \begin{itemize}
+        \item Effettuare logout
+        \item (Admin) gestire gli utenti, con possibilità di visualizzare e modificare i permessi degli utenti della casa
+        \item Definire quali notifiche ricevere
+    \end{itemize}
+    \item Piano giornaliero delle temperature, con possibilità di visualizzare la temperatura prevista per ogni ora del giorno e di impostare una temperatura desiderata per ogni fascia oraria
+\end{itemize}
+\subsection{Requisiti non funzionali}
+\begin{itemize}
+    \item 
+\end{itemize}
+\subsection{Requisiti di implementazione}
+\begin{itemize}
+    \item 
+\end{itemize}
+
+% TODO: aggiungi appendice in fondo con tutte le schermate sia mobile che web
 \end{document}
