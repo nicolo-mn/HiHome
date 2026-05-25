@@ -84,7 +84,7 @@ const unitSymbol = computed(() => {
     />
     <div class="flex flex-col gap-1 min-w-0 flex-1">
       <span
-        class="font-bold text-[19px] md:text-[20px] leading-6 truncate"
+        class="font-bold text-[19px] md:text-[20px] leading-6 break-words whitespace-normal"
         :class="accentClasses.text"
       >
         {{ label }}

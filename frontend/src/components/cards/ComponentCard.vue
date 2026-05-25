@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import BaseIcon from "@/components/BaseIcon.vue";
 import BaseToggle from "@/components/BaseToggle.vue";
 import { ACCENT } from "@/utils/accents";
@@ -43,6 +50,10 @@ const isOn = computed(() => {
   return true;
 });
 
+const isToggle = computed(
+  () => props.component.type === "light" || props.component.type === "window",
+);
+
 const cardClasses = computed(() => {
   if (props.component.type === "unknown") {
     return "bg-gray-800/50 border-2 border-gray-800";
@@ -70,6 +81,54 @@ const subtitleClasses = computed(() =>
 );
 
 const subtitle = computed(() => props.component.roomName ?? "");
+
+const isThermostat = computed(() => props.component.type === "thermostat");
+const wrapControls = ref(false);
+const rowRef = ref<HTMLDivElement | null>(null);
+const iconRef = ref<HTMLDivElement | null>(null);
+const titleMeasureRef = ref<HTMLSpanElement | null>(null);
+const subtitleMeasureRef = ref<HTMLSpanElement | null>(null);
+const controlRef = ref<HTMLDivElement | null>(null);
+let resizeObserver: ResizeObserver | null = null;
+
+function measureWrap() {
+  if (!isThermostat.value) {
+    wrapControls.value = false;
+    return;
+  }
+  const row = rowRef.value;
+  const icon = iconRef.value;
+  const control = controlRef.value;
+  if (!row || !icon || !control) return;
+
+  const style = getComputedStyle(row);
+  const gap = Number.parseFloat(style.columnGap || style.gap || "0") || 0;
+  const titleWidth = titleMeasureRef.value?.offsetWidth ?? 0;
+  const subtitleWidth = subtitleMeasureRef.value?.offsetWidth ?? 0;
+  const textWidth = Math.max(titleWidth, subtitleWidth);
+  const needed = icon.offsetWidth + gap + textWidth + gap + control.offsetWidth;
+  wrapControls.value = needed > row.clientWidth;
+}
+
+onMounted(() => {
+  nextTick(measureWrap);
+  if (typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(() => measureWrap());
+    if (rowRef.value) resizeObserver.observe(rowRef.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+  resizeObserver = null;
+});
+
+watch(
+  [() => props.component.name, subtitle, () => props.component.type],
+  () => {
+    nextTick(measureWrap);
+  },
+);
 
 const canDecrease = computed(
   () =>
@@ -100,83 +159,105 @@ function onStep(direction: "up" | "down") {
 <template>
   <div
     :class="[
-      'h-[100px] md:h-[104px] rounded-[26px] md:rounded-[32px] px-5 md:px-6 flex flex-row items-center gap-3 overflow-hidden transition-colors',
+      'min-h-[100px] md:min-h-[104px] rounded-[26px] md:rounded-[32px] px-5 md:px-6 py-4 flex flex-col gap-2 overflow-hidden transition-colors',
       cardClasses,
       busy ? 'opacity-75' : '',
     ]"
   >
-    <div
-      class="w-12 md:w-14 h-12 md:h-14 flex items-center justify-center shrink-0"
-      :class="iconClasses"
-    >
-      <BaseIcon :name="meta.icon" :size="36" />
-    </div>
+    <div ref="rowRef" class="flex flex-wrap items-center gap-3 w-full">
+      <div
+        ref="iconRef"
+        class="w-12 md:w-14 h-12 md:h-14 flex items-center justify-center shrink-0"
+        :class="iconClasses"
+      >
+        <BaseIcon :name="meta.icon" :size="36" />
+      </div>
 
-    <div class="flex flex-col gap-1 min-w-0 flex-1">
+      <div class="relative flex flex-col gap-1 min-w-0 flex-1">
+        <span
+          :class="[
+            'font-bold text-[19px] md:text-[20px] leading-6',
+            wrapControls ? 'break-words whitespace-normal' : 'truncate',
+            titleClasses,
+          ]"
+        >
+          {{ component.name }}
+        </span>
+        <span
+          v-if="subtitle"
+          :class="[
+            'text-[15px] md:text-[16px] leading-[22px] tracking-tight',
+            wrapControls ? 'break-words whitespace-normal' : 'truncate',
+            subtitleClasses,
+          ]"
+        >
+          {{ subtitle }}
+        </span>
+        <span
+          ref="titleMeasureRef"
+          aria-hidden="true"
+          class="absolute -z-10 opacity-0 pointer-events-none whitespace-nowrap font-bold text-[19px] md:text-[20px] leading-6"
+        >
+          {{ component.name }}
+        </span>
+        <span
+          v-if="subtitle"
+          ref="subtitleMeasureRef"
+          aria-hidden="true"
+          class="absolute -z-10 opacity-0 pointer-events-none whitespace-nowrap text-[15px] md:text-[16px] leading-[22px] tracking-tight"
+        >
+          {{ subtitle }}
+        </span>
+      </div>
+
+      <BaseToggle
+        v-if="isToggle"
+        :model-value="isOn"
+        :accent="meta.accent"
+        :disabled="busy"
+        :aria-label="`Toggle ${component.name}`"
+        @update:model-value="onToggle"
+      />
+
+      <div
+        v-else-if="component.type === 'thermostat'"
+        ref="controlRef"
+        :class="[wrapControls ? 'basis-full justify-end' : 'ml-auto']"
+        class="flex items-center gap-1.5"
+      >
+        <button
+          type="button"
+          :disabled="!canDecrease"
+          class="w-9 h-9 rounded-2xl bg-white/[0.08] flex items-center justify-center text-gray-200 hover:bg-white/[0.14] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          :aria-label="`Decrease ${component.name}`"
+          @click="onStep('down')"
+        >
+          <BaseIcon name="remove" :size="18" />
+        </button>
+        <span
+          class="font-medium text-[16px] md:text-[18px] tabular-nums w-16 text-center"
+          :class="accentClasses.text"
+        >
+          {{ (component as ThermostatComponent).setpoint.toFixed(1)
+          }}{{ (component as ThermostatComponent).unit }}
+        </span>
+        <button
+          type="button"
+          :disabled="!canIncrease"
+          class="w-9 h-9 rounded-2xl bg-white/[0.08] flex items-center justify-center text-gray-200 hover:bg-white/[0.14] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          :aria-label="`Increase ${component.name}`"
+          @click="onStep('up')"
+        >
+          <BaseIcon name="add" :size="18" />
+        </button>
+      </div>
+
       <span
-        :class="[
-          'font-bold text-[19px] md:text-[20px] leading-6 truncate',
-          titleClasses,
-        ]"
+        v-else
+        class="text-xs uppercase tracking-wider text-gray-500 font-semibold"
       >
-        {{ component.name }}
-      </span>
-      <span
-        v-if="subtitle"
-        :class="[
-          'text-[15px] md:text-[16px] leading-[22px] tracking-tight truncate',
-          subtitleClasses,
-        ]"
-      >
-        {{ subtitle }}
+        unsupported
       </span>
     </div>
-
-    <BaseToggle
-      v-if="component.type === 'light' || component.type === 'window'"
-      :model-value="isOn"
-      :accent="meta.accent"
-      :disabled="busy"
-      :aria-label="`Toggle ${component.name}`"
-      @update:model-value="onToggle"
-    />
-
-    <div
-      v-else-if="component.type === 'thermostat'"
-      class="flex items-center gap-1.5 shrink-0"
-    >
-      <button
-        type="button"
-        :disabled="!canDecrease"
-        class="w-9 h-9 rounded-2xl bg-white/[0.08] flex items-center justify-center text-gray-200 hover:bg-white/[0.14] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        :aria-label="`Decrease ${component.name}`"
-        @click="onStep('down')"
-      >
-        <BaseIcon name="remove" :size="18" />
-      </button>
-      <span
-        class="font-medium text-[16px] md:text-[18px] tabular-nums w-16 text-center"
-        :class="accentClasses.text"
-      >
-        {{ (component as ThermostatComponent).setpoint.toFixed(1)
-        }}{{ (component as ThermostatComponent).unit }}
-      </span>
-      <button
-        type="button"
-        :disabled="!canIncrease"
-        class="w-9 h-9 rounded-2xl bg-white/[0.08] flex items-center justify-center text-gray-200 hover:bg-white/[0.14] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        :aria-label="`Increase ${component.name}`"
-        @click="onStep('up')"
-      >
-        <BaseIcon name="add" :size="18" />
-      </button>
-    </div>
-
-    <span
-      v-else
-      class="text-xs uppercase tracking-wider text-gray-500 font-semibold"
-    >
-      unsupported
-    </span>
   </div>
 </template>
