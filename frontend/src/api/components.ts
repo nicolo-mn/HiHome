@@ -15,6 +15,7 @@ export interface BaseComponent {
   id: string;
   name: string;
   roomId?: string;
+  roomName?: string;
 }
 
 // Shared interface for components whose state is a single boolean.
@@ -40,6 +41,7 @@ export interface RawComponent {
   id: string;
   name: string;
   roomId?: string;
+  roomName?: string;
   type: string;
   isOn?: boolean;
   isOpen?: boolean;
@@ -51,6 +53,7 @@ export function normalizeComponent(raw: RawComponent): HomeComponent {
     id: raw.id,
     name: raw.name,
     roomId: raw.roomId,
+    roomName: raw.roomName,
     type: raw.type,
   };
 
