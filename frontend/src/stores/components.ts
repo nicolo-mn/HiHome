@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { io, type Socket } from "socket.io-client";
 import { componentsApi } from "@/api";
+import { getRooms } from "@/api/rooms";
 import type {
   HomeComponent,
   ToggleableComponent,
@@ -20,6 +21,7 @@ export const useComponentsStore = defineStore("components", () => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const loadedHomeId = ref<string | null>(null);
+  const roomNames = ref<Record<string, string>>({});
   const busy = useBusyIds();
   let socket: Socket | null = null;
 
@@ -28,12 +30,46 @@ export const useComponentsStore = defineStore("components", () => {
     () => loadedHomeId.value !== null && loadedHomeId.value === homeId.value,
   );
 
+  async function loadRoomNames() {
+    if (!homeId.value) return;
+    try {
+      const rooms = await getRooms(homeId.value);
+      const next: Record<string, string> = {};
+      for (const room of rooms) {
+        next[room.id] = room.name;
+      }
+      roomNames.value = next;
+    } catch {
+      // Best effort: fallback to whatever roomName arrives with components.
+    }
+  }
+
+  function needsRoomNames(list: HomeComponent[]) {
+    return list.some(
+      (c) => c.roomId && (!c.roomName || c.roomName.trim() === c.roomId.trim()),
+    );
+  }
+
+  function enrichRoomName(component: HomeComponent): HomeComponent {
+    if (!component.roomId) return component;
+    const mapped = roomNames.value[component.roomId];
+    if (!mapped) return component;
+    if (component.roomName && component.roomName.trim() !== component.roomId) {
+      return component;
+    }
+    return { ...component, roomName: mapped };
+  }
+
   async function fetchAll() {
     if (!homeId.value) return;
     isLoading.value = true;
     error.value = null;
     try {
-      components.value = await componentsApi.getComponents(homeId.value);
+      const loaded = await componentsApi.getComponents(homeId.value);
+      if (needsRoomNames(loaded)) {
+        await loadRoomNames();
+      }
+      components.value = loaded.map(enrichRoomName);
       loadedHomeId.value = homeId.value;
     } catch (e) {
       error.value =
@@ -60,7 +96,7 @@ export const useComponentsStore = defineStore("components", () => {
 
   function applyRemoteUpdate(raw: RawComponent) {
     if (!raw?.id) return;
-    const updated = normalizeComponent(raw);
+    const updated = enrichRoomName(normalizeComponent(raw));
     const index = components.value.findIndex((c) => c.id === updated.id);
     if (index === -1) {
       components.value = [...components.value, updated];
@@ -107,7 +143,7 @@ export const useComponentsStore = defineStore("components", () => {
     if (!homeId.value) return;
     busy.add(componentId);
     try {
-      const updated = await run();
+      const updated = enrichRoomName(await run());
       components.value = components.value.map((c) =>
         c.id === updated.id ? updated : c,
       );
@@ -141,7 +177,8 @@ export const useComponentsStore = defineStore("components", () => {
     error.value = null;
     try {
       const created = await componentsApi.createComponent(homeId.value, input);
-      components.value = [...components.value, created];
+      const resolved = enrichRoomName(created);
+      components.value = [...components.value, resolved];
       return created;
     } catch (e) {
       error.value = e instanceof Error ? e.message : "Failed to add component";
