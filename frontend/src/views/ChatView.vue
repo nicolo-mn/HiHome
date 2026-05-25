@@ -205,7 +205,7 @@ const onlyWelcome = computed(
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 md:gap-8 pb-32 md:pb-8">
+  <div class="flex flex-col gap-6 md:gap-8 pb-40 md:pb-8">
     <AppHeader
       title="Assistant"
       :right-actions="[{ icon: 'add', label: 'New chat' }]"
@@ -217,16 +217,18 @@ const onlyWelcome = computed(
     </p>
     <p v-else-if="!connected" class="text-gray-500 text-sm">Connecting…</p>
 
-    <section v-if="onlyWelcome" class="flex flex-col gap-3">
-      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
-        Suggestions
+    <section v-if="onlyWelcome" class="flex flex-col gap-2">
+      <div class="font-medium text-[16px] md:text-[20px] text-gray-400">
+        Suggested actions
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+      <div
+        class="flex gap-2 overflow-x-auto pb-1 -mx-2 px-2 md:mx-0 md:px-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible"
+      >
         <button
           v-for="s in suggestions"
           :key="s"
           type="button"
-          class="h-[92px] md:h-[104px] rounded-[26px] md:rounded-[32px] bg-gray-200/[0.08] px-6 flex items-center text-left text-gray-300 font-bold text-[18px] md:text-[20px] hover:bg-gray-200/[0.12] transition-colors"
+          class="shrink-0 h-12 md:h-[104px] rounded-[999px] md:rounded-[32px] bg-gray-200/[0.08] px-5 md:px-6 flex items-center text-left text-gray-300 font-semibold text-[14px] md:text-[20px] hover:bg-gray-200/[0.12] transition-colors"
           @click="applySuggestion(s)"
         >
           {{ s }}
@@ -317,7 +319,7 @@ const onlyWelcome = computed(
     <p v-if="sendError" class="text-rose-500 text-sm">{{ sendError }}</p>
 
     <div
-      class="md:hidden fixed left-4 right-4 bottom-28 z-20 h-14 rounded-full bg-gray-700 px-4 flex items-center gap-2 shadow-2xl"
+      class="md:hidden fixed left-4 right-4 bottom-32 z-40 h-14 rounded-full bg-gray-700 px-4 flex items-center gap-2 shadow-2xl"
     >
       <BaseIcon name="search" :size="22" class="text-gray-400" />
       <input
