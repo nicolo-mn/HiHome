@@ -1,25 +1,38 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { resolveSensorIcon } from "@/assets/icons";
+import { ACCENT } from "@/utils/accents";
+import type { Accent } from "@/types/ui";
 import type { SensorReading } from "@/api/sensors";
 
 const props = defineProps<{
   reading: SensorReading;
 }>();
 
-const sensorTypeLabel: Record<string, string> = {
-  thermometer: "Indoor Temperature",
-  airquality: "Outdoor Air Quality",
-  outdoor_temperature: "Outdoor Temperature",
+const SENSOR_LABEL: Record<string, string> = {
+  thermometer: "Indoor temperature",
+  airquality: "Outdoor air quality",
+  outdoor_temperature: "Outdoor temperature",
   weather: "Weather",
   wind: "Wind",
 };
 
-const icon = computed(() => resolveSensorIcon(props.reading));
+const SENSOR_ACCENT: Record<string, Accent> = {
+  thermometer: "orange",
+  outdoor_temperature: "orange",
+  airquality: "sky",
+  weather: "sky",
+  wind: "blue",
+};
 
+const icon = computed(() => resolveSensorIcon(props.reading));
 const label = computed(
-  () => sensorTypeLabel[props.reading.type] ?? props.reading.type,
+  () => SENSOR_LABEL[props.reading.type] ?? props.reading.type,
 );
+const accent = computed<Accent>(
+  () => SENSOR_ACCENT[props.reading.type] ?? "sky",
+);
+const accentClasses = computed(() => ACCENT[accent.value]);
 
 const displayValue = computed(() => {
   const v = props.reading.value;
@@ -59,19 +72,32 @@ const unitSymbol = computed(() => {
 
 <template>
   <div
-    class="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5 px-5 py-5 rounded-2xl bg-elevated border border-primary"
+    :class="[
+      'min-h-[100px] md:min-h-[104px] rounded-[26px] md:rounded-[32px] px-5 md:px-6 py-4 flex flex-row items-center gap-3 overflow-hidden',
+      accentClasses.tint,
+    ]"
   >
-    <span class="w-14 h-14 block text-primary shrink-0" v-html="icon" />
-    <p class="flex-1 text-body text-xl font-semibold lg:truncate">
-      {{ label }}
-    </p>
-    <p
-      class="text-primary text-3xl font-semibold tabular-nums leading-tight shrink-0"
+    <span
+      class="w-12 md:w-14 h-12 md:h-14 flex items-center justify-center shrink-0"
+      :class="accentClasses.text"
+      v-html="icon"
+    />
+    <div class="flex flex-col gap-1 min-w-0 flex-1">
+      <span
+        class="font-bold text-[19px] md:text-[20px] leading-6 truncate"
+        :class="accentClasses.text"
+      >
+        {{ label }}
+      </span>
+    </div>
+    <span
+      class="font-medium text-[20px] md:text-[24px] leading-7 tabular-nums shrink-0"
+      :class="accentClasses.text"
     >
       {{ displayValue
-      }}<span v-if="unitSymbol" class="text-lg ml-1 text-muted font-normal">{{
+      }}<span v-if="unitSymbol" class="text-base ml-1 opacity-70">{{
         unitSymbol
       }}</span>
-    </p>
+    </span>
   </div>
 </template>

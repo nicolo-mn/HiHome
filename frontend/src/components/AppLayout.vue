@@ -3,8 +3,8 @@ import { computed } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useNotificationSocket } from "@/composables/useNotificationSocket";
-import AppHeader from "./AppHeader.vue";
 import AppSidebar from "./AppSidebar.vue";
+import AppBottomNav from "./AppBottomNav.vue";
 import NotificationBanner from "./NotificationBanner.vue";
 
 const authStore = useAuthStore();
@@ -15,14 +15,22 @@ const { toasts, dismiss } = useNotificationSocket(homeId, token);
 </script>
 
 <template>
-  <div class="min-h-screen bg-base flex flex-col md:flex-row">
+  <div
+    class="min-h-screen flex bg-gray-900 text-gray-200 font-sans antialiased"
+  >
     <AppSidebar />
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <AppHeader />
-      <main class="flex-1 p-4 md:p-6 overflow-auto pb-24 md:pb-6">
-        <RouterView />
-      </main>
-    </div>
+
+    <main class="flex-1 min-w-0 flex flex-col">
+      <div class="flex-1 min-h-screen pb-32 md:pb-0">
+        <div
+          class="mx-auto w-full max-w-[1280px] px-5 sm:px-8 md:px-10 lg:px-12 pt-6 md:pt-10"
+        >
+          <RouterView />
+        </div>
+      </div>
+    </main>
+
+    <AppBottomNav />
     <NotificationBanner :toasts="toasts" @dismiss="dismiss" />
   </div>
 </template>

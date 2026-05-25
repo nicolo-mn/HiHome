@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import plusIcon from "@/assets/icons/plus.svg?raw";
+import BaseIcon from "@/components/BaseIcon.vue";
 
 defineProps<{
   disabled?: boolean;
@@ -14,14 +14,10 @@ defineEmits<{
   <button
     type="button"
     :disabled="disabled"
-    class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-elevated border border-border border-dashed text-muted hover:text-primary hover:border-primary transition disabled:opacity-50 disabled:cursor-not-allowed"
+    class="h-[100px] md:h-[104px] rounded-[26px] md:rounded-[32px] border-2 border-dashed border-gray-800 text-gray-300 font-semibold text-base md:text-lg flex items-center justify-center gap-2 hover:bg-white/[0.02] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     @click="$emit('click')"
   >
-    <span class="flex-1 text-left text-sm">Add Component</span>
-    <span
-      class="inline-flex items-center justify-center w-5 h-5 rounded border border-current"
-    >
-      <span class="w-3 h-3 block" v-html="plusIcon" />
-    </span>
+    <BaseIcon name="add" :size="22" />
+    Add component
   </button>
 </template>

@@ -10,23 +10,23 @@ defineProps<{
 
 <template>
   <div
-    class="relative flex flex-col gap-2 px-5 py-5 rounded-2xl bg-elevated border border-border transition hover:border-primary/60 hover:shadow-lg"
+    class="relative flex flex-col gap-2 px-5 py-5 rounded-[26px] md:rounded-[32px] bg-gray-800/50 border-2 border-gray-800 transition hover:bg-gray-800/70"
   >
     <span
       v-if="icon"
-      class="absolute top-4 right-4 w-6 h-6 text-primary opacity-70"
+      class="absolute top-4 right-4 w-6 h-6 text-gray-400"
       v-html="icon"
     />
-    <span class="text-xs uppercase tracking-wide text-muted">
+    <span class="text-xs uppercase tracking-wide text-gray-400 font-medium">
       {{ label }}
     </span>
     <div class="flex items-baseline gap-1">
-      <span class="text-3xl font-light text-primary leading-none">
+      <span class="text-3xl font-bold text-gray-200 leading-none tabular-nums">
         {{ value }}
       </span>
-      <span v-if="unit" class="text-sm text-muted">{{ unit }}</span>
+      <span v-if="unit" class="text-sm text-gray-400">{{ unit }}</span>
     </div>
-    <span v-if="subtitle" class="text-xs text-muted">{{ subtitle }}</span>
+    <span v-if="subtitle" class="text-xs text-gray-500">{{ subtitle }}</span>
     <slot />
   </div>
 </template>

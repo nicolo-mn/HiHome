@@ -12,8 +12,12 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-1">
-    <label class="text-sm text-primary">{{ label }}</label>
+  <div class="flex flex-col gap-1.5">
+    <label
+      class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+    >
+      {{ label }}
+    </label>
     <input
       :type="type ?? 'text'"
       :value="modelValue"
@@ -21,7 +25,7 @@ defineEmits<{
       @input="
         $emit('update:modelValue', ($event.target as HTMLInputElement).value)
       "
-      class="bg-elevated rounded-lg px-4 py-3 text-body placeholder:text-muted outline-none border border-border focus:border-primary transition"
+      class="bg-gray-800/50 rounded-2xl px-5 py-3.5 text-gray-200 text-[16px] md:text-[17px] placeholder:text-gray-600 outline-none border-2 border-gray-800 focus:border-yellow-500 transition-colors min-w-0"
     />
   </div>
 </template>
