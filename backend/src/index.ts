@@ -43,6 +43,7 @@ import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExec
 import { NotificationContextAdapter as RuleNotificationContextAdapter } from "./rule-context/infrastructure/NotificationContextAdapter";
 import { HomeServiceComponentNameResolver } from "./rule-context/infrastructure/HomeServiceComponentNameResolver";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
+import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/InMemoryHistoricalWeatherRepository";
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
 import { NotificationContextAdapter } from "./home-context/infrastructure/NotificationPortAdapter";
@@ -105,6 +106,7 @@ const ruleServicePort = new AsyncBusRuleServiceAdapter(
 );
 const externalSensorsDataPort = new ExtApiServiceDataAdapter(EXT_API_BASE_URL);
 const sensorRegistry = new InMemorySensorRegistry();
+const historicalWeatherRepo = new InMemoryHistoricalWeatherRepository();
 const homeRepo =
   process.env.NODE_ENV === "test"
     ? new InMemoryHomeRepository()
@@ -121,7 +123,7 @@ export const homeController = new HomeController(
   homeService,
   homeNotificationPort,
 );
-const usageService = new UsageService(homeRepo);
+const usageService = new UsageService(homeRepo, historicalWeatherRepo);
 const usageController = new UsageController(usageService);
 const homeRouter = new HomeRouter(homeController, usageController);
 
@@ -298,6 +300,27 @@ const runUpdate = () => {
   });
 };
 
+const pollHistoricalWeatherData = async () => {
+  const homes = await homeRepo.getAllHomes();
+
+  await Promise.all(
+    homes.map(async (home) => {
+      try {
+        const summary = await externalSensorsDataPort.getHistoricalSummary(
+          home.coordinates,
+        );
+        if (!summary) return;
+        historicalWeatherRepo.setForHome(home.id, summary);
+      } catch (error) {
+        console.error(
+          `Error fetching historical weather data for home ${home.id}:`,
+          error,
+        );
+      }
+    }),
+  );
+};
+
 const scheduleHourlyPlanUpdates = () => {
   runUpdate();
   const now = new Date();
@@ -317,7 +340,11 @@ export async function bootstrap() {
     await seedDatabase(homeRepo);
 
     await homeService.pollAllHomesExternalSensorsData();
+    await pollHistoricalWeatherData();
     await scheduleHourlyPlanUpdates();
+    setInterval(() => {
+      void pollHistoricalWeatherData();
+    }, HOUR_IN_MS);
     setInterval(async () => {
       try {
         await homeService.pollAllHomesExternalSensorsData();

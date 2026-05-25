@@ -11,6 +11,7 @@ import {
 import { ComponentEvent } from "../../domain/EventLog";
 import { HomeRepository } from "../../domain/HomeRepository";
 import { LIGHT_WATTAGE_W } from "./UsageService";
+import type { HistoricalWeatherRepository } from "../HistoricalWeatherRepository";
 
 class FakeHomeRepository implements HomeRepository {
   constructor(public home: Home) {}
@@ -24,6 +25,18 @@ class FakeHomeRepository implements HomeRepository {
     return null;
   }
   async saveHome() {}
+}
+
+class FakeHistoricalWeatherRepository implements HistoricalWeatherRepository {
+  constructor(private data: any = null) {}
+
+  getByHomeId() {
+    return this.data;
+  }
+
+  setForHome(homeId: string, data: any) {
+    this.data = data;
+  }
 }
 
 const NOW = new Date("2026-05-22T12:00:00Z");
@@ -44,6 +57,13 @@ function buildHome(events: ComponentEvent[]): Home {
     ],
     new Array(24).fill(20),
     events,
+  );
+}
+
+function makeService(events: ComponentEvent[]): UsageService {
+  return new UsageService(
+    new FakeHomeRepository(buildHome(events)),
+    new FakeHistoricalWeatherRepository(),
   );
 }
 
@@ -72,7 +92,7 @@ function ev(
 describe("UsageService", () => {
   describe("empty event log", () => {
     it("returns zeroed report", async () => {
-      const svc = new UsageService(new FakeHomeRepository(buildHome([])));
+      const svc = makeService([]);
       const report = await svc.getUsage("1", 7, NOW);
 
       expect(report).toEqual({
@@ -82,6 +102,7 @@ describe("UsageService", () => {
         windowOpenHours: 0,
         manualVsAutomated: { manual: 0, automated: 0 },
         activityByHour: new Array(24).fill(0),
+        historicalWeather: null,
       });
     });
   });
@@ -92,7 +113,7 @@ describe("UsageService", () => {
         ev("LightTurnedOn", "light-1", hoursAgo(10)),
         ev("LightTurnedOff", "light-1", hoursAgo(8)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       expect(r.lightsOnHoursPerWeek).toBeCloseTo(2);
       expect(r.energyKWhPerWeek).toBeCloseTo((2 * LIGHT_WATTAGE_W) / 1000);
@@ -102,7 +123,7 @@ describe("UsageService", () => {
       const events: ComponentEvent[] = [
         ev("LightTurnedOn", "light-1", hoursAgo(3)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       expect(r.lightsOnHoursPerWeek).toBeCloseTo(3);
     });
@@ -111,7 +132,7 @@ describe("UsageService", () => {
       const events: ComponentEvent[] = [
         ev("LightTurnedOff", "light-1", hoursAgo(4)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       const expectedHours = 7 * 24 - 4;
       expect(r.lightsOnHoursPerWeek).toBeCloseTo(expectedHours);
@@ -122,7 +143,7 @@ describe("UsageService", () => {
         ev("LightTurnedOn", "light-1", daysAgo(10)),
         ev("LightTurnedOff", "light-1", hoursAgo(2)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       const expectedHours = 7 * 24 - 2;
       expect(r.lightsOnHoursPerWeek).toBeCloseTo(expectedHours);
@@ -135,7 +156,7 @@ describe("UsageService", () => {
         ev("LightTurnedOff", "light-1", hoursAgo(1)),
         ev("LightTurnedOff", "light-2", hoursAgo(1)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       expect(r.lightsOnHoursPerWeek).toBeCloseTo(1);
       expect(r.energyKWhPerWeek).toBeCloseTo((2 * LIGHT_WATTAGE_W) / 1000);
@@ -148,7 +169,7 @@ describe("UsageService", () => {
         ev("LightTurnedOff", "light-1", hoursAgo(2)),
         ev("LightTurnedOff", "light-2", hoursAgo(1)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       expect(r.lightsOnHoursPerWeek).toBeCloseTo(3);
     });
@@ -160,7 +181,7 @@ describe("UsageService", () => {
         ev("WindowOpened", "window-1", hoursAgo(6)),
         ev("WindowClosed", "window-1", hoursAgo(5)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       expect(r.windowOpenHours).toBeCloseTo(1);
     });
@@ -177,7 +198,7 @@ describe("UsageService", () => {
           actor: { username: "bob", role: "Admin" },
         } as any),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       expect(r.manualVsAutomated).toEqual({ manual: 2, automated: 1 });
     });
@@ -191,7 +212,7 @@ describe("UsageService", () => {
         ev("LightTurnedOff", "light-1", at("2026-05-22T05:45:00Z")),
         ev("LightTurnedOn", "light-1", at("2026-05-21T22:10:00Z")),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
       const totalBuckets = r.activityByHour.reduce((a, b) => a + b, 0);
       expect(totalBuckets).toBe(3);
@@ -205,7 +226,7 @@ describe("UsageService", () => {
         ev("LightTurnedOn", "light-1", daysAgo(20)),
         ev("LightTurnedOff", "light-1", daysAgo(19)),
       ];
-      const svc = new UsageService(new FakeHomeRepository(buildHome(events)));
+      const svc = makeService(events);
       const r7 = await svc.getUsage("1", 7, NOW);
       expect(r7.lightsOnHoursPerWeek).toBe(0);
 
@@ -216,7 +237,7 @@ describe("UsageService", () => {
 
   describe("not found", () => {
     it("throws when home does not exist", async () => {
-      const svc = new UsageService(new FakeHomeRepository(buildHome([])));
+      const svc = makeService([]);
       await expect(svc.getUsage("does-not-exist", 7, NOW)).rejects.toThrow();
     });
   });

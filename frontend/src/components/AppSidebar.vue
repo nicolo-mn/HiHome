@@ -42,7 +42,7 @@ const navItems = computed(() => {
     >
       <span class="w-6 h-6 block" v-html="item.icon" />
       <span
-        class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-elevated text-primary text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none"
+        class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-elevated text-primary text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-50"
       >
         {{ item.name }}
       </span>
