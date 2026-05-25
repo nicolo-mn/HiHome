@@ -4,6 +4,7 @@ import { UsageRangeDays, UsageReport } from "../dtos/UsageDTO";
 import { OnOffIntervalCalculator } from "../usage/OnOffIntervalCalculator";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const TIMEZONE = "Europe/Rome";
 export const LIGHT_WATTAGE_W = 10;
 
 type ActivitySummary = {
@@ -80,7 +81,10 @@ export class UsageService {
       if (event.createdAt < rangeStart || event.createdAt > rangeEnd) continue;
       if (event.actor) manual += 1;
       else automated += 1;
-      activityByHour[event.createdAt.getHours()] += 1;
+      const hour = new Date(
+        event.createdAt.toLocaleString("en-US", { timeZone: TIMEZONE }),
+      ).getHours();
+      activityByHour[hour] += 1;
     }
     return { manual, automated, activityByHour };
   }
