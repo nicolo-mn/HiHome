@@ -10,6 +10,15 @@ export type UsageReport = {
   windowOpenHours: number;
   manualVsAutomated: { manual: number; automated: number };
   activityByHour: number[];
+  historicalWeather: {
+    days: {
+      date: string;
+      temperatureMax: number;
+      temperatureMin: number;
+      precipitationSum: number;
+      hourlyAirQuality: { time: string; europeanAqi: number }[];
+    }[];
+  } | null;
 };
 
 export async function getUsage(

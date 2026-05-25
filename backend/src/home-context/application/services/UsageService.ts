@@ -1,6 +1,7 @@
 import { ComponentEvent } from "../../domain";
 import { HomeRepository } from "../../domain/HomeRepository";
 import { UsageRangeDays, UsageReport } from "../dtos/UsageDTO";
+import { HistoricalWeatherRepository } from "../HistoricalWeatherRepository";
 import { OnOffIntervalCalculator } from "../usage/OnOffIntervalCalculator";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -22,7 +23,10 @@ export class UsageService {
     offType: "WindowClosed",
   });
 
-  constructor(private readonly homeRepo: HomeRepository) {}
+  constructor(
+    private readonly homeRepo: HomeRepository,
+    private readonly historicalWeatherRepo: HistoricalWeatherRepository,
+  ) {}
 
   async getUsage(
     homeId: string,
@@ -65,6 +69,7 @@ export class UsageService {
         automated: activity.automated,
       },
       activityByHour: activity.activityByHour,
+      historicalWeather: this.historicalWeatherRepo.getByHomeId(homeId),
     };
   }
 

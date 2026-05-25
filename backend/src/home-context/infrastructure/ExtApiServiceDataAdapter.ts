@@ -3,6 +3,7 @@ import type {
   ForecastPort,
   ForecastSummary,
 } from "../application/ForecastPort";
+import type { HistoricalWeatherSummary } from "../application/dtos/UsageDTO";
 import {
   ExternalSensorsUpdate,
   Home,
@@ -149,6 +150,56 @@ export class ExtApiServiceDataAdapter
     };
     console.log(
       `Successfully received forecast summary for coordinates (${coords.latitude}, ${coords.longitude})`,
+    );
+    return result;
+  }
+
+  async getHistoricalSummary(
+    coords: Coordinates,
+  ): Promise<HistoricalWeatherSummary | null> {
+    const url = new URL("/api/historical", this.baseUrl);
+    url.searchParams.set("latitude", coords.latitude.toString());
+    url.searchParams.set("longitude", coords.longitude.toString());
+
+    let response: Response;
+    try {
+      response = await fetch(url.toString());
+    } catch (error) {
+      console.error(
+        `Failed to reach ext-api-service for historical forecast at ${url.toString()}:`,
+        error,
+      );
+      return null;
+    }
+    if (!response.ok) {
+      console.error(
+        `ext-api-service responded with status ${response.status} for historical forecast at ${url.toString()}`,
+      );
+      return null;
+    }
+
+    let payload: ExtApiServiceForecastResponse;
+    try {
+      payload = (await response.json()) as ExtApiServiceForecastResponse;
+    } catch (error) {
+      console.error(
+        `Failed to parse ext-api-service historical response at ${url.toString()}:`,
+        error,
+      );
+      return null;
+    }
+
+    const result = {
+      days: payload.days.map((day) => ({
+        date: day.date,
+        temperatureMax: day.temperatureMax,
+        temperatureMin: day.temperatureMin,
+        precipitationSum: day.precipitationSum,
+        hourlyAirQuality: day.hourlyAirQuality,
+      })),
+    };
+    console.log(
+      `Successfully received historical summary for coordinates (${coords.latitude}, ${coords.longitude})`,
     );
     return result;
   }
