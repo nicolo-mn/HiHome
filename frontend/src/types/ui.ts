@@ -10,6 +10,7 @@ export type Accent =
 
 export type IconName =
   | "add"
+  | "remove"
   | "back"
   | "bell"
   | "settings"

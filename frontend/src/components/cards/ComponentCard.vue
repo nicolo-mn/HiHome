@@ -152,7 +152,7 @@ function onStep(direction: "up" | "down") {
         :aria-label="`Decrease ${component.name}`"
         @click="onStep('down')"
       >
-        <BaseIcon name="close" :size="18" />
+        <BaseIcon name="remove" :size="18" />
       </button>
       <span
         class="font-medium text-[16px] md:text-[18px] tabular-nums w-16 text-center"
