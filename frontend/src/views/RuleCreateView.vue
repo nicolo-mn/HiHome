@@ -137,8 +137,8 @@ const COMPONENT_META: Record<
   ComponentType,
   { icon: IconName; accent: Accent }
 > = {
-  light: { icon: "bolt", accent: "yellow" },
-  window: { icon: "swap", accent: "emerald" },
+  light: { icon: "lamp", accent: "yellow" },
+  window: { icon: "window", accent: "emerald" },
   thermostat: { icon: "device_thermostat", accent: "orange" },
   unknown: { icon: "info", accent: "sky" },
 };
@@ -523,9 +523,7 @@ function bgFor(accent: Accent) {
             Then
           </span>
           <span class="text-sm text-gray-500">
-            {{ actions.length }} action{{
-              actions.length === 1 ? "" : "s"
-            }}
+            {{ actions.length }} action{{ actions.length === 1 ? "" : "s" }}
             will run
           </span>
         </div>

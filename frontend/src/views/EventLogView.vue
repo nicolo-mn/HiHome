@@ -16,8 +16,8 @@ const filter = ref<Filter>("all");
 const search = ref("");
 
 const TYPE_META: Record<string, { icon: IconName; accent: Accent }> = {
-  light: { icon: "bolt", accent: "yellow" },
-  window: { icon: "swap", accent: "emerald" },
+  light: { icon: "lamp", accent: "yellow" },
+  window: { icon: "window", accent: "emerald" },
   thermostat: { icon: "device_thermostat", accent: "orange" },
 };
 
