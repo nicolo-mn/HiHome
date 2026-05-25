@@ -219,7 +219,7 @@ onMounted(() => store.fetchAll());
                 {{ formatTime(n.createdAt) }}
               </span>
             </div>
-            <div class="text-[15px] md:text-base leading-[22px] text-gray-200">
+            <div class="text-[15px] md:text-base leading-[22px] text-gray-100">
               {{ n.message }}
             </div>
             <div
@@ -273,7 +273,7 @@ onMounted(() => store.fetchAll());
                 {{ formatTime(n.createdAt) }}
               </span>
             </div>
-            <div class="text-[15px] md:text-base leading-[22px] text-gray-200">
+            <div class="text-[15px] md:text-base leading-[22px] text-gray-100">
               {{ n.message }}
             </div>
           </div>

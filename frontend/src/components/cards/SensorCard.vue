@@ -95,9 +95,12 @@ const unitSymbol = computed(() => {
       :class="accentClasses.text"
     >
       {{ displayValue
-      }}<span v-if="unitSymbol" class="text-base ml-1 opacity-70">{{
-        unitSymbol
-      }}</span>
+      }}<span
+        v-if="unitSymbol"
+        class="text-base ml-1"
+        :class="accentClasses.text"
+        >{{ unitSymbol }}</span
+      >
     </span>
   </div>
 </template>
