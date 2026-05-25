@@ -509,6 +509,5 @@ onMounted(() => store.load());
 
       <div class="h-8" />
     </template>
-
   </div>
 </template>
