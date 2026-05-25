@@ -177,6 +177,9 @@ export const useComponentsStore = defineStore("components", () => {
     error.value = null;
     try {
       const created = await componentsApi.createComponent(homeId.value, input);
+      if (created.roomId && !roomNames.value[created.roomId]) {
+        await loadRoomNames();
+      }
       const resolved = enrichRoomName(created);
       components.value = [...components.value, resolved];
       return created;
