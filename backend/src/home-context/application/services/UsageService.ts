@@ -60,7 +60,7 @@ export class UsageService {
         2,
       ),
       lightsOnHoursPerWeek: this.round(lightHoursUnion / weeks, 2),
-      windowOpenHours: this.round(windowHours, 2),
+      windowOpenHours: this.round(windowHours / weeks, 2),
       manualVsAutomated: {
         manual: activity.manual,
         automated: activity.automated,
