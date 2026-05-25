@@ -529,7 +529,7 @@ function bgFor(accent: Accent) {
         </div>
 
         <p v-if="components.length === 0" class="text-sm text-gray-500 mb-3">
-          No components available yet.
+          No devices available yet.
         </p>
 
         <div class="flex flex-col gap-3">
@@ -560,10 +560,10 @@ function bgFor(accent: Accent) {
               </button>
             </div>
             <BasePickerRow
-              prefix="Component"
+              prefix="Device"
               :icon="componentMeta(a.componentType).icon"
               :accent="componentMeta(a.componentType).accent"
-              :value="componentForAction(a)?.name ?? 'Select component'"
+              :value="componentForAction(a)?.name ?? 'Select device'"
               :sub="componentForAction(a)?.roomName ?? ''"
               @open="sheet = { kind: 'component', index: i }"
             />
@@ -796,9 +796,7 @@ function bgFor(accent: Accent) {
       </template>
 
       <template v-else-if="sheet?.kind === 'component'">
-        <div class="font-bold text-2xl mb-3 text-gray-200">
-          Choose a component
-        </div>
+        <div class="font-bold text-2xl mb-3 text-gray-200">Choose a device</div>
         <div
           class="flex flex-col gap-1.5 overflow-y-auto"
           style="max-height: 60vh"

@@ -84,7 +84,7 @@ const sensorReadings = computed(() =>
           class="h-14 rounded-[28px] md:rounded-[32px] bg-gray-800/50 border-2 border-gray-800 text-gray-200 font-medium text-[18px] md:text-[20px] flex items-center justify-center gap-1.5 hover:bg-gray-800/80 transition-colors no-underline"
         >
           <BaseIcon name="devices" :size="22" />
-          Manage components
+          Manage devices
         </RouterLink>
         <RouterLink
           to="/chat"

@@ -33,7 +33,7 @@ const TYPE_META: Record<
     kind: "rule",
   },
   ComponentAction: {
-    label: "Component action",
+    label: "Device action",
     icon: "devices",
     accent: "sky",
     kind: "metric",

@@ -17,7 +17,7 @@ const router = useRouter();
 
 const primary: NavItem[] = [
   { to: "/dashboard", label: "Home", icon: "home" },
-  { to: "/components", label: "Components", icon: "devices" },
+  { to: "/components", label: "Devices", icon: "devices" },
   { to: "/chat", label: "Assistant", icon: "assistant" },
   { to: "/rules", label: "Rules", icon: "rules", admin: true },
 ];

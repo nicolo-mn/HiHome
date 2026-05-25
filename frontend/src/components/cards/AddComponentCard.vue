@@ -18,6 +18,6 @@ defineEmits<{
     @click="$emit('click')"
   >
     <BaseIcon name="add" :size="22" />
-    Add component
+    Add device
   </button>
 </template>

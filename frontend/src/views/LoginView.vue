@@ -158,7 +158,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
                 <input
                   v-model="homeId"
                   type="text"
-                  placeholder="e.g. wilson-loft-3201"
+                  placeholder="e.g. 1"
                   class="flex-1 bg-transparent border-0 outline-none text-gray-200 font-medium text-[18px] md:text-[20px] leading-[28px] placeholder:text-gray-600 min-w-0"
                   @focus="setFocus('home', true)"
                   @blur="setFocus('home', false)"

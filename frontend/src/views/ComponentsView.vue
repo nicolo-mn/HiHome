@@ -121,10 +121,10 @@ onMounted(() => {
 <template>
   <div class="flex flex-col gap-10 md:gap-12">
     <AppHeader
-      title="Components"
+      title="Devices"
       :right-actions="
         auth.isAdmin
-          ? [{ icon: addFormOpen ? 'close' : 'add', label: 'Add component' }]
+          ? [{ icon: addFormOpen ? 'close' : 'add', label: 'Add device' }]
           : []
       "
       @action="addFormOpen ? closeAddComponent() : openAddComponent()"
@@ -135,9 +135,7 @@ onMounted(() => {
       class="bg-gray-800/50 border-2 border-gray-800 rounded-[28px] md:rounded-[32px] p-5 md:p-6 flex flex-col gap-4"
     >
       <div class="flex items-center justify-between gap-3">
-        <h2 class="text-lg md:text-xl font-bold text-gray-200">
-          Add component
-        </h2>
+        <h2 class="text-lg md:text-xl font-bold text-gray-200">Add device</h2>
         <button
           type="button"
           class="w-9 h-9 rounded-2xl text-gray-400 hover:bg-white/5 flex items-center justify-center"
@@ -149,11 +147,11 @@ onMounted(() => {
 
       <p v-if="createError" class="text-rose-500 text-sm">{{ createError }}</p>
       <p v-if="!hasRooms" class="text-gray-400 text-sm">
-        Add a room before creating components.
+        Add a room before creating devices.
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <BaseInput label="Component name" v-model="draftName" />
+        <BaseInput label="Device name" v-model="draftName" />
 
         <div class="flex flex-col gap-1.5">
           <label
@@ -197,7 +195,7 @@ onMounted(() => {
       <div class="flex justify-end">
         <div class="w-full md:w-64">
           <BaseButton
-            label="Add component"
+            label="Add device"
             :loading="creating"
             :disabled="!canSubmit || !hasRooms"
             @click="createComponent"
@@ -216,7 +214,7 @@ onMounted(() => {
       v-if="isLoading && components.length === 0"
       class="text-gray-400 text-sm"
     >
-      Loading components…
+      Loading devices…
     </p>
 
     <section
@@ -229,7 +227,7 @@ onMounted(() => {
           {{ group.label }}
         </div>
         <span class="text-sm text-gray-500">
-          {{ group.items.length }} component{{
+          {{ group.items.length }} device{{
             group.items.length === 1 ? "" : "s"
           }}
         </span>

@@ -47,7 +47,7 @@ const NOTIF_META: Record<
   ComponentAction: {
     icon: "devices",
     accent: "sky",
-    desc: "Alert me when a component is turned on, off or adjusted.",
+    desc: "Alert me when a device is turned on, off or adjusted.",
   },
 };
 
