@@ -89,12 +89,67 @@ Il progetto HiHome consiste in un applicativo per gestire dispositivi all'intern
 \end{itemize}
 \subsection{Requisiti non funzionali}
 \begin{itemize}
-    \item 
+    \item Aggiornamento in tempo reale sullo stato dei dispositivi smart
+    \item Interfaccia user-friendly e responsive
+    \item Utilizzo di token per autenticazione della sessione
+    \item Aggiornamento della chat con streaming delle risposte da parte del modello AI, per evitare tempi di attesa eccessivi
 \end{itemize}
 \subsection{Requisiti di implementazione}
 \begin{itemize}
-    \item 
+    \item Utilizzo di API RESTful per comunicazione tra frontend e backend
+    \item Architettura MEVN (MongoDB, Express.js, Vue.js, Node.js), con aggiunta di un servizio esterno in Go per ottenere dati meteo e qualità dell'aria
+    \item Utilizzo di Socket.io per notifiche, aggiornamenti in tempo reale e streaming delle risposte del modello AI
+    \item Applicazione web responsive e mobile-first, con l'utilizzo di Tailwind CSS
+    \item Utilizzo di Docker come tecnologia di containerizzazione per facilitare lo sviluppo e la distribuzione dell'applicazione
+    \item Utilizzo di Semantic Versioning per il versionamento
+    \item Git e Semantic Commit per la gestione del codice sorgente
 \end{itemize}
+
+\section{Design}
+\subsection{User Interface}
+L'interfaccia utente è progettata per essere intuitiva e facile da navigare, con un design moderno e pulito. Il design si è basato su un approccio mobile-first. L'usabilità su dispositivi mobile è stata quindi una priorità, e le interfacce grafiche sono state poi estese a schermi desktop tramite layout responsive. Per prima cosa, è stata realizzata una moodboard per identificare la palette colori da utilizzare e il tono generale dell'applicazione, visibile in Figura \ref{fig:moodboard}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/moodboard.png}
+    \caption{Moodboard per il design dell'applicazione}
+    \label{fig:moodboard}
+\end{figure}
+Di seguito sono riportati i mockup delle principali schermate dell'applicazione, sia per la versione mobile che per la versione desktop. Sebbene siano state apportate lievi modifiche durante la fase di implementazione, l'interfaccia grafica è rimasta sostanzialmente fedele a questi mockup.
+
+% TODO: inserisci mockup effettivi (e magari descrivi più nel dettaglio le scelte di design?)
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/moodboard.png}
+    \caption{Schermata di login}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/moodboard.png}
+    \caption{Schermata dashboard}
+\end{figure}
+
+\subsection{Design Architetturale}
+Il progetto è stato realizzato seguendo la filosofia di design \textbf{Domain-Driven Design (DDD)}. Come pattern architetturale, è stata adottata un'architettura esagonale (ports and adapters) per ogni bounded context identificato. In particolare, sono stati identificati i seguenti bounded contexts:
+\begin{itemize}
+    \item \textbf{Home context}: è il contesto principale dell'applicazione, che si occupa della gestione delle case, dei dispositivi smart e della chat
+    \item \textbf{User context}: si occupa della gestione degli utenti e dell'autenticazione
+    \item \textbf{Notification context}: si occupa della gestione delle notifiche
+    \item \textbf{Rule context}: si occupa della gestione delle regole di automazione
+    \item \textbf{Weather context}: si occupa di ottenere dati relativi al meteo e alla qualità dell'aria da servizi esterni
+\end{itemize}
+L'architettura utilizza lo stack MEVN, con i primi 4 contesti implementati nel backend in Node.js, mentre il Weather context è implementato in un servizio esterno in Go.
+
+L'applicazione HiHome è quindi divisa in diversi componenti. I client, che accedono all'applicazione tramite interfaccia web, il backend, che espone API RESTful per la comunicazione con i client e gestisce la business logic, e il servizio esterno per il meteo, che è interrogato periodicamente dal backend per ottenere dati aggiornati relativi alle condizioni nelle zone in cui le varie case si trovano. Il server backend, inoltre, accetta connessioni WebSocket dai client per l'invio di notifiche e aggiornamenti in tempo reale, e per lo streaming delle risposte del modello AI. Il backend accede ai dati tramite un database MongoDB.
+
+Per quanto riguarda i concetti di dominio, si definiscono di seguito i principali, già brevemente descritti in precedenza:
+\begin{itemize}
+    \item \textbf{Casa}: rappresenta una casa intelligente, con i suoi dispositivi smart, le sue automazioni e i suoi utenti
+    \item \textbf{Dispositivo Smart}: rappresenta un dispositivo intelligente all'interno di una casa, come una luce, una finestra o un termostato
+    \item \textbf{Automazione}: rappresenta una regola di automazione, composta da una condizione di attivazione e da una o più azioni da eseguire quando la condizione è verificata
+    \item \textbf{Utente}: rappresenta un utente dell'applicazione, con i suoi permessi e le sue preferenze
+\end{itemize}
+\subsection{Progettazione API}
 
 % TODO: aggiungi appendice in fondo con tutte le schermate sia mobile che web
 \end{document}

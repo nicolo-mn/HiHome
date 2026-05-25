@@ -1,0 +1,24 @@
+flowchart LR
+  api["/api"]:::api
+  api --> login["/login<br/>POST"]:::leaf
+  api --> health["/health<br/>GET"]:::leaf
+  api --> home["/home"]:::api
+  home --> sensors["/:id/sensors/internal-temperature<br/>POST"]:::leaf
+  home --> rooms["/:id/rooms<br/>GET"]:::leaf
+  home --> comp_types["/:id/components/types<br/>GET"]:::api
+  comp_types --> comp_types_by["/:id/components/types/:type<br/>GET"]:::leaf
+  home --> comps["/:id/components<br/>GET, POST"]:::api
+  comps --> comp_get["/:id/components/:componentId<br/>GET"]:::api
+  comp_get --> comp_action["/:id/components/:componentId/:action<br/>POST"]:::leaf
+  home --> comp_events["/:id/components/events<br/>GET"]:::leaf
+  home --> hourly["/:id/hourly-temperatures<br/>GET, PUT"]:::leaf
+  home --> usage["/:id/usage<br/>GET"]:::leaf
+  home --> rules["/:id/rules<br/>GET, POST"]:::api
+  rules --> rules_order["/:id/rules/order<br/>PUT"]:::leaf
+  rules --> rules_delete["/:id/rules/:ruleId<br/>DELETE"]:::leaf
+  home --> notifications["/:id/notifications<br/>GET"]:::leaf
+  home --> preferences["/:homeId/users/me/preferences<br/>GET, PUT"]:::leaf
+  home --> users["/:id/users<br/>GET"]:::api
+  users --> user_role["/:id/users/:userId/role<br/>PUT"]:::leaf
+  classDef api fill:#e3f2fd,stroke:#1e88e5,stroke-width:2px,color:#0d47a1;
+  classDef leaf fill:#e8f5e9,stroke:#43a047,stroke-width:1.5px,color:#1b5e20;

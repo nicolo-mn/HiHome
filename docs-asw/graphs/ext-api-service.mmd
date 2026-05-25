@@ -1,0 +1,11 @@
+flowchart TD
+  root["/"]:::root
+  api["/api"]:::api
+  root --> root_health["/health<br/>GET"]:::leaf
+  root --> api
+  api --> weather["/weather<br/>GET"]:::leaf
+  api --> forecast["/forecast<br/>GET"]:::leaf
+  api --> historical["/historical<br/>GET"]:::leaf
+  classDef root fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#4e342e;
+  classDef api fill:#ede7f6,stroke:#5e35b1,stroke-width:2px,color:#311b92;
+  classDef leaf fill:#f3e5f5,stroke:#8e24aa,stroke-width:1.5px,color:#4a148c;
