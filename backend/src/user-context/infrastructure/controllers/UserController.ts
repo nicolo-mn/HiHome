@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AuthInboundPort } from "../application/ports/AuthInboundPort";
+import { AuthInboundPort } from "../../application/ports/AuthInboundPort";
 
 export class UserController {
   constructor(private service: AuthInboundPort) {}

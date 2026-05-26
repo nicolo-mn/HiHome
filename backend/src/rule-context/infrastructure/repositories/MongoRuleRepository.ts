@@ -19,7 +19,7 @@ import {
   WindowCloseAction,
   ThermostatSetTemperatureAction,
 } from "../../domain/Actions";
-import { RuleRepository } from "../application/RuleRepository";
+import { RuleRepository } from "../../application/repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
 import { RuleModel } from "../models/RuleModel";

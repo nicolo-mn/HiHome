@@ -1,8 +1,8 @@
-import { NotificationInboundPort } from "../../notification-context/application/ports/NotificationInboundPort";
+import { NotificationInboundPort } from "../../../notification-context/application/ports/NotificationInboundPort";
 import {
   RuleNotificationPort,
   RulesExecutedEvent,
-} from "../application/ports/RuleNotificationPort";
+} from "../../application/ports/RuleNotificationPort";
 
 export class NotificationContextAdapter implements RuleNotificationPort {
   constructor(private notificationPort: NotificationInboundPort) {}

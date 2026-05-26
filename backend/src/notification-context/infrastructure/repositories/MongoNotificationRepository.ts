@@ -2,9 +2,9 @@ import {
   Notification,
   NotificationDetails,
   NotificationType,
-} from "../domain/Notification";
-import { NotificationRepository } from "../domain/NotificationRepository";
-import { NotificationModel } from "./models/NotificationModel";
+} from "../../domain/Notification";
+import { NotificationRepository } from "../../domain/NotificationRepository";
+import { NotificationModel } from "../models/NotificationModel";
 
 type NotificationRecord = {
   id: string;

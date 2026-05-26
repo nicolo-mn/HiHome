@@ -1,4 +1,4 @@
-import type { ChatCompletionPort } from "../ChatCompletionPort";
+import type { ChatCompletionPort } from "../ports/ChatCompletionPort";
 import type { ChatStreamPort } from "../ports/ChatStreamPort";
 import { HomeService } from "./HomeService";
 

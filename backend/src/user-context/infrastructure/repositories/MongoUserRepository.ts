@@ -1,12 +1,12 @@
-import { Role } from "../domain/Role";
-import { User } from "../domain/User";
-import { UserRepository } from "../domain/UserRepository";
+import { Role } from "../../domain/Role";
+import { User } from "../../domain/User";
+import { UserRepository } from "../../domain/UserRepository";
 import {
   PreferencesRepository,
   UserPrefsRecord,
   ALL_NOTIFICATION_TYPES,
-} from "../domain/PreferencesRepository";
-import { UserModel } from "./models/UserModel";
+} from "../../domain/PreferencesRepository";
+import { UserModel } from "../models/UserModel";
 
 type UserRecord = {
   id: string;

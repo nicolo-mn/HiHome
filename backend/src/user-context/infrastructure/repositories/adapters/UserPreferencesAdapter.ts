@@ -1,8 +1,8 @@
-import { UserPreferencesPort } from "../../notification-context/application/ports/UserPreferencesPort";
+import { UserPreferencesPort } from "../../../../notification-context/application/ports/UserPreferencesPort";
 import {
   PreferencesRepository,
   ALL_NOTIFICATION_TYPES,
-} from "../domain/PreferencesRepository";
+} from "../../../domain/PreferencesRepository";
 
 export class UserPreferencesAdapter implements UserPreferencesPort {
   constructor(private prefsRepo: PreferencesRepository) {}

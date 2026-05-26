@@ -6,7 +6,7 @@ import {
   WindowOpenAction,
   WindowCloseAction,
   ThermostatSetTemperatureAction,
-} from "../domain/Actions";
+} from "../../domain/Actions";
 
 describe("ActionExecutionAdapter", () => {
   let mockActionService: any;

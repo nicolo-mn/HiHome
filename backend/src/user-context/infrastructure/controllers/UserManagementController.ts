@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserManagementService } from "../../application/UserManagementService";
+import { UserManagementService } from "../../application/services/UserManagementService";
 import { Role } from "../../domain/Role";
 
 type AuthenticatedRequest = Request & {

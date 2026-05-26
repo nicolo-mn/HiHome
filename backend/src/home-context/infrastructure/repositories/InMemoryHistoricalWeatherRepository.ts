@@ -1,5 +1,5 @@
-import type { HistoricalWeatherRepository } from "../application/HistoricalWeatherRepository";
-import type { HistoricalWeatherSummary } from "../application/dtos/UsageDTO";
+import type { HistoricalWeatherRepository } from "../../application/HistoricalWeatherRepository";
+import type { HistoricalWeatherSummary } from "../../application/dtos/UsageDTO";
 
 export class InMemoryHistoricalWeatherRepository implements HistoricalWeatherRepository {
   private readonly dataByHome = new Map<string, HistoricalWeatherSummary>();

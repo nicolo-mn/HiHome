@@ -1,11 +1,11 @@
-import { Role } from "../domain/Role";
-import { User } from "../domain/User";
-import { UserRepository } from "../domain/UserRepository";
+import { Role } from "../../domain/Role";
+import { User } from "../../domain/User";
+import { UserRepository } from "../../domain/UserRepository";
 import {
   PreferencesRepository,
   UserPrefsRecord,
   ALL_NOTIFICATION_TYPES,
-} from "../domain/PreferencesRepository";
+} from "../../domain/PreferencesRepository";
 
 export class InMemoryUserRepository
   implements UserRepository, PreferencesRepository

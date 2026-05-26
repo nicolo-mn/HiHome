@@ -1,11 +1,11 @@
-import type { ChatCompletionPort } from "../application/ChatCompletionPort";
+import type { ChatCompletionPort } from "../../application/ports/ChatCompletionPort";
 import type { ChatMessage } from "../../application/services/ChatService";
 import type { ChatStreamPort } from "../../application/ports/ChatStreamPort";
 import { ChatStreamEventType } from "../../application/ports/ChatStreamPort";
 import type {
   ForecastPort,
   ForecastSummary,
-} from "../application/ForecastPort";
+} from "../../application/ports/ForecastPort";
 import { HomeService } from "../../application/services/HomeService";
 import { ComponentTypes } from "../../domain";
 import type { AddRuleDto } from "../../../rule-context/application/services/RuleService";

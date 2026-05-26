@@ -1,10 +1,10 @@
 import { AuthInboundPort } from "./application/ports/AuthInboundPort";
 import { AuthFacade } from "./application/AuthFacade";
-import { AuthService } from "./application/AuthService";
-import { UserManagementService } from "./application/UserManagementService";
+import { AuthService } from "./application/services/AuthService";
+import { UserManagementService } from "./application/services/UserManagementService";
 import { PreferencesRepository } from "./domain/PreferencesRepository";
-import { InMemoryUserRepository } from "./infrastructure/InMemoryUserRepository";
-import { MongoUserRepository } from "./infrastructure/MongoUserRepository";
+import { InMemoryUserRepository } from "./infrastructure/repositories/InMemoryUserRepository";
+import { MongoUserRepository } from "./infrastructure/repositories/MongoUserRepository";
 
 export interface UserContext {
   authPort: AuthInboundPort;

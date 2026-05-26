@@ -1,4 +1,4 @@
-import type { Coordinates, WeatherForecast } from "../domain";
+import type { Coordinates, WeatherForecast } from "../../domain";
 
 export type ForecastDaySummary = {
   date: string;

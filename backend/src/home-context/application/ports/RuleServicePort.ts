@@ -1,4 +1,4 @@
-import { ExternalSensorsUpdate, TemperatureState } from "../domain";
+import { ExternalSensorsUpdate, TemperatureState } from "../../domain";
 
 // Evaluates rules based on update sensors data
 export interface RuleServicePort {

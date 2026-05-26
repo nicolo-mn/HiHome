@@ -1,5 +1,5 @@
-import { AuthInboundPort } from "./AuthInboundPort";
-import { UserRepository } from "../domain/UserRepository";
+import { AuthInboundPort } from "../ports/AuthInboundPort";
+import { UserRepository } from "../../domain/UserRepository";
 import jwt from "jsonwebtoken";
 
 export class AuthService implements AuthInboundPort {

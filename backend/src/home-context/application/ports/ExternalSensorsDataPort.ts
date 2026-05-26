@@ -1,4 +1,4 @@
-import { ExternalSensorsUpdate, Home } from "../domain";
+import { ExternalSensorsUpdate, Home } from "../../domain";
 
 // Gets external sensors data for a given home
 export interface ExternalSensorsDataPort {

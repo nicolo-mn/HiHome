@@ -1,8 +1,8 @@
-import { ExternalSensorsDataPort } from "../application/ExternalSensorsDataPort";
+import { ExternalSensorsDataPort } from "../../application/ports/ExternalSensorsDataPort";
 import type {
   ForecastPort,
   ForecastSummary,
-} from "../application/ForecastPort";
+} from "../../application/ports/ForecastPort";
 import type { HistoricalWeatherSummary } from "../../application/dtos/UsageDTO";
 import {
   ExternalSensorsUpdate,

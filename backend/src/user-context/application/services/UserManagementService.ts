@@ -1,6 +1,6 @@
-import { Role } from "../domain/Role";
-import { User } from "../domain/User";
-import { UserRepository } from "../domain/UserRepository";
+import { Role } from "../../domain/Role";
+import { User } from "../../domain/User";
+import { UserRepository } from "../../domain/UserRepository";
 
 export class UserManagementService {
   constructor(private userRepo: UserRepository) {}

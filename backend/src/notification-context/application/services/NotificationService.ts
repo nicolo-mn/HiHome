@@ -5,12 +5,12 @@ import {
   NotificationInboundPort,
   RulesExecutedEvent,
   SensorUpdateEvent,
-} from "./ports/NotificationInboundPort";
-import { Notification, NotificationDetails } from "../domain/Notification";
-import { NotificationDeliveryPort } from "../domain/NotificationDeliveryPort";
-import { NotificationRepository } from "../domain/NotificationRepository";
-import { NotificationPolicy } from "./NotificationPolicy";
-import { UserPreferencesPort } from "./ports/UserPreferencesPort";
+} from "../ports/NotificationInboundPort";
+import { Notification, NotificationDetails } from "../../domain/Notification";
+import { NotificationDeliveryPort } from "../../domain/NotificationDeliveryPort";
+import { NotificationRepository } from "../../domain/NotificationRepository";
+import { NotificationPolicy } from "../NotificationPolicy";
+import { UserPreferencesPort } from "../ports/UserPreferencesPort";
 
 export class NotificationService implements NotificationInboundPort {
   constructor(

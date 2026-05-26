@@ -1,4 +1,4 @@
-import type { ChatMessage } from "./services/ChatService";
+import type { ChatMessage } from "../services/ChatService";
 import type { ChatStreamPort } from "./ChatStreamPort";
 
 export interface ChatCompletionPort {

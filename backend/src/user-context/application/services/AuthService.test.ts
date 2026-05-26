@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { describe, it, expect, vi } from "vitest";
 import { AuthService } from "./AuthService";
-import { UserRepository } from "../domain/UserRepository";
-import { Role } from "../domain/Role";
-import { User } from "../domain/User";
+import { UserRepository } from "../../domain/UserRepository";
+import { Role } from "../../domain/Role";
+import { User } from "../../domain/User";
 import jwt from "jsonwebtoken";
 
 describe("AuthService", () => {
