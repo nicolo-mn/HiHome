@@ -216,10 +216,10 @@ onMounted(() => store.fetchAll());
                 </span>
               </div>
               <div
-                :class="[
-                  'text-[15px] md:text-base font-medium mb-2',
-                  ACCENT[metaFor(e.componentType).accent].text,
-                ]"
+                class="text-[15px] md:text-base font-medium mb-2"
+                :style="{
+                  color: `var(--color-${metaFor(e.componentType).accent}-500)`,
+                }"
               >
                 {{ formatAction(e) }}
               </div>
