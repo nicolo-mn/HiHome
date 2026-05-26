@@ -59,7 +59,7 @@
 \newpage
 
 \section{Introduzione}
-Il progetto HiHome consiste in un applicativo per gestire dispositivi all'interno di una smart home. Permette di gestire dispositivi smart da applicazione e aggiungere automazioni. Sono presenti funzionalità come notifiche, log di event relativi ai device smart, informazioni sullo stato attuale di temperatura, meteo e qualità dell'aria nella zona e grafici relativi ai valori passati di questi ultimi. Inoltre, è integrato con un agente AI in modo da effettuare alcune azioni in linguaggio naturale. L'applicazione supporta due tipi di utenti:
+Il progetto HiHome consiste in un applicativo per gestire dispositivi all'interno di una smart home. Permette di gestire dispositivi smart da applicazione e aggiungere automazioni. Sono presenti funzionalità come notifiche, log di event relativi ai device smart, informazioni sullo stato attuale di temperatura, meteo e qualità dell'aria nella zona e grafici relativi ai valori passati di questi ultimi. Inoltre, è integrato con un agente AI in modo da effettuare alcune azioni a partire da istruzioni in linguaggio naturale. L'applicazione supporta due tipi di utenti:
 
 \begin{itemize}
     \item \textbf{Admin}: ha accesso a funzioni avanzate sulla gestione della casa, come log di eventi relativi a manipolazione di smart device, creazione di automazioni e aggiunta di device.
@@ -79,7 +79,7 @@ Il progetto HiHome consiste in un applicativo per gestire dispositivi all'intern
         \item Qualità dell'aria
         \item Velocità e direzione del vento
     \end{itemize}
-    \item Lista dispositivi smart, divisi per stanza, con possibilità di interagire con essi, in particolare:
+    \item Lista dispositivi smart, divisi per stanza, con possibilità di interagire con essi; in particolare:
     \begin{itemize}
         \item Accensione/spegnimento per luci
         \item Apertura/chiusura per finestre
@@ -100,31 +100,32 @@ Il progetto HiHome consiste in un applicativo per gestire dispositivi all'intern
         \item Andamento della qualità dell'aria durante la settimana precedente
         \item Grafico di utilizzo dei dispositivi smart durante la settimana precedente, con numero di azioni per fascia oraria
         \item Dati relativi a numero di attivazioni manuali e automatiche per i dispositivi smart
-        \item Dati relativi a percentuale di accensioni di luci e apertura di finestre
+        \item Dati relativi alla percentuale di tempo settimanale in cui le luci sono rimaste accese e le finestre aperte
     \end{itemize}
     \item Chatbot con cui è possibile interagire in linguaggio naturale per eseguire azioni e chiedere informazioni a seconda dei privilegi dell'utente, ovvero:
     \begin{itemize}
         \item Aggiungere un dispositivo smart (Admin)
         \item Aggiungere una regola di automazione (Admin)
         \item Chiedere informazioni relative alle previsioni meteo per la settimana successiva
+        \item Domande generiche limitatamente all'ambito delle smart home
     \end{itemize}
     \item Notifiche relative a: 
     \begin{itemize}
         \item Esecuzione di un'automazione
-        \item Livelli critici relativi alla qualità dell'aria
+        \item Livelli critici della qualità dell'aria
         \item (Admin) Azioni eseguite da utenti non admin
     \end{itemize}
     \item Impostazioni, con possibilità di:
     \begin{itemize}
         \item Effettuare logout
-        \item (Admin) gestire gli utenti, con possibilità di visualizzare e modificare i permessi degli utenti della casa
+        \item (Admin) Gestire gli utenti, con possibilità di visualizzare e modificare i permessi degli utenti della casa
         \item Definire quali notifiche ricevere
     \end{itemize}
     \item Piano giornaliero delle temperature, con possibilità di visualizzare la temperatura prevista per ogni ora del giorno e di impostare una temperatura desiderata per ogni fascia oraria
 \end{itemize}
 \subsection{Requisiti non funzionali}
 \begin{itemize}
-    \item Aggiornamento in tempo reale sullo stato dei dispositivi smart
+    \item Aggiornamento in tempo reale dello stato dei dispositivi smart
     \item Interfaccia user-friendly e responsive
     \item Utilizzo di token per autenticazione della sessione
     \item Aggiornamento della chat con streaming delle risposte da parte del modello AI, per evitare tempi di attesa eccessivi
@@ -382,7 +383,15 @@ Il progetto è stato realizzato seguendo la filosofia di design \textbf{Domain-D
 \end{itemize}
 L'architettura utilizza lo stack MEVN, con i primi 4 contesti implementati nel backend in Node.js, mentre il Weather context è implementato in un servizio esterno in Go.
 
-L'applicazione HiHome è quindi divisa in diversi componenti. I client, che accedono all'applicazione tramite interfaccia web, il backend, che espone API RESTful per la comunicazione con i client e gestisce la business logic, e il servizio esterno per il meteo, che è interrogato periodicamente dal backend per ottenere dati aggiornati relativi alle condizioni nelle zone in cui le varie case si trovano. Il server backend, inoltre, accetta connessioni WebSocket dai client per l'invio di notifiche e aggiornamenti in tempo reale, e per lo streaming delle risposte del modello AI. Il backend accede ai dati tramite un database MongoDB.
+L'applicazione HiHome è quindi divisa in diversi componenti. 
+\begin{itemize}
+    \item I \textbf{client}, che accedono all'applicazione tramite interfaccia web
+    \item Il \textbf{backend}, che espone API RESTful per la comunicazione con i client e gestisce la business logic
+    \item Il \textbf{servizio esterno per il meteo}, che è interrogato periodicamente dal backend per ottenere dati aggiornati relativi alle condizioni nelle zone in cui le varie case si trovano
+    \item Il \textbf{Modello AI}, ovvero \texttt{Deepseek-V4}, al quale l'accesso avviene tramite API key
+\end{itemize}
+
+Il server backend, inoltre, accetta connessioni WebSocket dai client per l'invio di notifiche, l'invio aggiornamenti in tempo reale e per lo streaming delle risposte del modello AI. Il backend accede ai dati tramite un database MongoDB.
 
 Per quanto riguarda i concetti di dominio, si definiscono di seguito i principali, già brevemente descritti in precedenza:
 \begin{itemize}
@@ -453,25 +462,28 @@ Ogni Persona è associata a use case che descrivono la loro interazione con il s
 Di seguito vengono presentati i profili utente identificati e le situazioni tipiche in cui si trovano a interagire con il sistema.
 
 \subsubsection{Persona 1: Marco, il padre di famiglia}
+
 \textbf{Profilo:} 45 anni, impiegato. Ricopre il ruolo di amministratore della smart home.
 
-\textbf{Obiettivo:} Gestire la casa in modo efficiente, ottimizzando i consumi energetici e garantendo il benessere della famiglia.
+\noindent\textbf{Obiettivo:} Gestire la casa in modo efficiente, ottimizzando i consumi energetici e garantendo il benessere della famiglia.
 
-\textbf{Scenario 1: Configurazione e automazioni.} In vista dell'estate, Marco decide di ottimizzare la gestione della temperatura all'interno della casa. Accede alla sezione delle automazioni e crea una nuova regola: se la temperatura esterna sale sopra i 30 gradi, le finestre devono essere aperte. 
+\noindent\textbf{Scenario 1: Configurazione e automazioni.} In vista dell'estate, Marco decide di ottimizzare la gestione della temperatura all'interno della casa. Accede alla sezione delle automazioni e crea una nuova regola: se la temperatura esterna sale sopra i 30 gradi, le finestre devono essere aperte. 
 
 \subsubsection{Persona 2: Giulia, la ragazza tecnologica}
+
 \textbf{Profilo:} 21 anni, studentessa universitaria, esperta di tecnologia. Si è da poco trasferita.
 
-\textbf{Obiettivo:} Aggiungere dispositivi alla smart home.
+\noindent\textbf{Obiettivo:} Aggiungere dispositivi alla smart home.
 
-\textbf{Scenario 2: Controllo dei dispositivi.} Giulia ha acquistato diversi dispositivi smart e vuole aggiungerli alla sua casa. Accede alla sezione di gestione dei dispositivi, seleziona "Aggiungi dispositivo" e segue la procedura guidata per configurare ogni nuovo dispositivo, assegnandolo alla stanza corretta. Una volta aggiunti, interagisce con essi tramite l'app, accendendo le luci, regolando il termostato e chiudendo le finestre direttamente dal suo smartphone.
+\noindent\textbf{Scenario 2: Controllo dei dispositivi.} Giulia ha acquistato diversi dispositivi smart e vuole aggiungerli alla sua casa. Accede alla sezione di gestione dei dispositivi, seleziona "Aggiungi dispositivo" e segue la procedura guidata per configurare ogni nuovo dispositivo, assegnandolo alla stanza corretta. Una volta aggiunti, interagisce con essi tramite app, accendendo le luci, regolando il termostato e chiudendo le finestre direttamente dal suo smartphone.
 
 \subsubsection{Persona 3: Elena, la madre attenta al benessere}
+
 \textbf{Profilo:} 42 anni, insegnante, utilizza lo smartphone ma non è un'esperta di domotica.
 
-\textbf{Obiettivo:} Monitorare il benessere abitativo e tenere sotto controllo l'utilizzo della casa.
+\noindent\textbf{Obiettivo:} Monitorare il benessere abitativo e tenere sotto controllo l'utilizzo della casa.
 
-\textbf{Scenario 3: Monitoraggio ambientale e notifiche.} Elena soffre di allergie ed è particolarmente attenta alla qualità dell'aria. Ha configurato l'app per ricevere notifiche push nel caso in cui i livelli di inquinanti esterni superino la soglia di guardia. Ricevuta una notifica di allerta inquinamento, decide di chiudere le finestre di casa tramite l'app per evitare che l'aria esterna comprometta l'ambiente domestico. Consulta inoltre i grafici della qualità dell'aria per capire l'andamento della settimana.
+\noindent\textbf{Scenario 3: Monitoraggio ambientale e notifiche.} Elena soffre di allergie ed è particolarmente attenta alla qualità dell'aria. Ha configurato l'app per ricevere notifiche push nel caso in cui i livelli di inquinanti esterni superino la soglia di guardia. Ricevuta una notifica di allerta inquinamento, decide di chiudere le finestre di casa tramite l'app per evitare che l'aria esterna comprometta l'ambiente domestico. Consulta inoltre i grafici della qualità dell'aria per capire l'andamento della settimana.
 \newpage
 \section{Tecnologie}
 Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, Vue.js, Node.js), con l'aggiunta di un servizio esterno in Go per ottenere dati meteo e sulla qualità dell'aria. Sono di seguito descritte le principali tecnologie e librerie principali utilizzate. 
@@ -504,7 +516,7 @@ Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, V
     \item \textbf{Docker}: utilizzato per la containerizzazione dell'applicazione (backend, frontend, servizio API meteo), facilitando lo sviluppo e la distribuzione su diversi ambienti.
     \item \textbf{Docker Compose}: utilizzato per orchestrare i container Docker, semplificando la gestione dei servizi e delle dipendenze tra di essi.
     \begin{itemize}
-        \item Utilizzo di due compose file distinti, uno per la produzione ed uno per lo sviluppo, quest'ultimo con funzionalità aggiuntive come il live reloading per facilitare lo sviluppo.
+        \item Utilizzo di due compose file distinti, uno per l'ambiente di produzione ed uno per lo sviluppo, quest'ultimo provvisto di live reloading per facilitare lo sviluppo.
         \item Implementazione di healthcheck per ogni servizio, in modo da verificare lo stato di ogni servizio e gestire al meglio la dipendenza tra i servizi (es. il backend dipende dal servizio meteo, quindi è stato configurato in modo che venga avviato solo dopo che il servizio meteo è risultato healthy).
     \end{itemize}
 \end{itemize}
@@ -513,7 +525,7 @@ Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, V
 \section{Codice}
 
 \subsection{Logica di Autorizzazione}
-Questo middleware rappresenta un componente fondamentale per la sicurezza delle API esposte. Tramite questo codice, il backend si assicura che solo gli utenti con privilegi di "Admin" possano eseguire determinate operazioni, come la manipolazione di regole e l'aggiunta di dispositivi. Il token JWT viene estratto dall'header della richiesta HTTP, decodificato e verificato, permettendo al controller di procedere solo se l'utente risulta avere il ruolo di amministratore.
+Questo middleware rappresenta un componente fondamentale per la sicurezza delle API esposte. Tramite questo codice, il backend si assicura che solo gli utenti con privilegi di "Admin" possano eseguire determinate operazioni, come la manipolazione di regole e l'aggiunta di dispositivi. L'autenticazione viene gestita attraverso token JWT. Questo token viene qui estratto dall'header della richiesta HTTP, decodificato e verificato, permettendo al controller di procedere solo se l'utente risulta avere il ruolo di amministratore.
 \begin{lstlisting}
 export const adminMiddleware = (
   req: Request,
@@ -565,7 +577,7 @@ export const temperatureValidator = [
 \end{lstlisting}
 
 \subsection{Notifiche Real-Time con Socket.io}
-Questo breve snippet mostra l'adattatore utilizzato per inviare aggiornamenti di stato dei dispositivi in tempo reale ai client connessi. Quando lo stato di un sensore viene aggiornato nel backend, questo adapter utilizza Socket.io per emetter un evento specifico a tutti i client connessi della casa interessata, garantendo così che le interfacce utente riflettano immediatamente i cambiamenti senza necessità di refresh manuali. Il metodo \texttt{broadcast} centralizza la logica di invio dei messaggi, semplificando l'implementazione di notifiche per i vari tipi di eventi.
+Il codice qui presente viene utilizzato per inviare aggiornamenti di stato dei dispositivi in tempo reale ai client connessi. Quando lo stato di un sensore viene aggiornato nel backend, questo adapter utilizza Socket.io per emetter un evento specifico a tutti i client connessi della casa interessata, garantendo così che le interfacce utente riflettano immediatamente i cambiamenti senza necessità di refresh manuali. Il metodo \texttt{broadcast} centralizza la logica di invio dei messaggi, semplificando l'implementazione di notifiche per i vari tipi di eventi.
 \begin{lstlisting}
 export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
   constructor(
@@ -620,20 +632,20 @@ async streamChat(
 \subsection{Euristiche di Nielsen}
 Per quanto riguarda la produzione di mockup e l'implementazione del frontend, è stato prestata particolare attenzione alle \textbf{Euristiche di Nielsen} per l'usabilità, al fine di garantire un'esperienza utente ottimale. Di seguito sono riportati alcuni esempi di come queste euristiche sono state applicate durante la progettazione dell'interfaccia utente:
 \begin{itemize}
-    \item \textbf{Visibilità dello stato del sistema}: sono state implementate notifiche in tempo reale per informare gli utenti su eventi importanti. Sono stati inseriti feedback visivi immediati quando lo stato di un dispositivo smart viene modificato, ad esempio agendo sul toogle corrispondente.
-    \item \textbf{Corrispondenza tra il sistema e il mondo reale}: sono stati utilizzati termini e icone familiari agli utenti per rappresentare i dispositivi smart e le azioni disponibili, ad esempio un'icona di una lampadina per rappresentare una luce.
-    \item \textbf{Controllo e libertà dell'utente}: è stata implementata la possibilità di annullare azioni semplicemente, come il cambio istantaneo del toggle di dispositivi smart o la possibiltà di eliminare facilemente regole di automazione. Inoltre, la navbar permette una navigazione semplice e veloce tra le diverse sezioni dell'applicazione.
+    \item \textbf{Visibilità dello stato del sistema}: sono state implementate notifiche in tempo reale per informare gli utenti su eventi importanti. Sono stati inseriti feedback visivi immediati quando lo stato di un dispositivo smart viene modificato, ad esempio, un riscontro visuale sul toogle corrispondente.
+    \item \textbf{Corrispondenza tra il sistema e il mondo reale}: sono stati utilizzati termini e icone familiari agli utenti per rappresentare i dispositivi smart e le azioni disponibili, ad esempio un'icona di una lampadina per rappresentare una lampadina smart.
+    \item \textbf{Controllo e libertà dell'utente}: è stata implementata la possibilità di annullare azioni semplicemente, come il cambio istantaneo del toggle di dispositivi smart o la possibiltà di eliminare facilmente regole di automazione. Inoltre, la navbar permette una navigazione semplice e veloce tra le diverse sezioni dell'applicazione.
     \item \textbf{Coerenza e standard}: è stata mantenuta una coerenza visiva e funzionale in tutte le pagine dell'applicazione, utilizzando la stessa palette colori, lo stesso stile dei pulsanti e lo stesso layout per elementi simili.
-    \item \textbf{Prevenzione dell'errore}: abbiamo implementato meccanismi di prevenzione di errori, ad esempio, nel momento in cui l'utente agisce sul termostato, la temperatura viene modificata attraverso pulsanti di incremento/decremento, che sono disabilitati quando viene raggiunta la temperatura massima o minima consentita, evitando così l'inserimento di valori non validi.
-    \item \textbf{Riconoscimento piuttosto che ricordo}: sono stati utilizzati menu a tendina, icone e pulsanti chiaramente etichettati per facilitare la navigazione e l'interazione, riducendo la necessità per gli utenti di ricordare comandi o percorsi specifici. Ad esempio, nella creazione di una regola di automazione, i campi per la condizione e l'azione sono presentati come menu a tendina con opzioni predefinite, facilitando la selezione e riducendo la possibilità di errori, come l'inserimento di device non esistenti o azioni non valide.
+    \item \textbf{Prevenzione dell'errore}: abbiamo implementato meccanismi di prevenzione di errori, ad esempio, nel momento in cui l'utente agisce sul termostato: la temperatura viene modificata attraverso pulsanti di incremento/decremento che vengono disabilitati quando viene raggiunta la temperatura massima o minima consentita, evitando così l'inserimento di valori non validi.
+    \item \textbf{Riconoscimento piuttosto che ricordo}: sono stati utilizzati menu a tendina, icone e pulsanti chiaramente etichettati per facilitare la navigazione e l'interazione, riducendo la necessità per gli utenti di ricordare comandi o percorsi specifici. Ad esempio, nella creazione di una regola di automazione i campi per la condizione e l'azione sono presentati come menu a tendina con opzioni predefinite, facilitando la selezione e riducendo la possibilità di errori, come l'inserimento di device non esistenti o azioni non valide.
     \item \textbf{Flessibilità e efficienza d'uso}: l'applicazione è stata progettata per essere utilizzata sia da utenti esperti che da utenti meno esperti. Ad esempio, una regola di automazione può essere creata tramite un'interfaccia guidata per utenti meno esperti, ma anche attraverso linguaggio naturale via chat, offrendo così un trade-off tra flessibilità e intuitività.
-    \item \textbf{Estetica e design minimalista}: seguendo una filosofia "less is more", l'interfaccia è stata progettata per essere pulita, evitando elementi pesanti e ricchi di testo a favore di icone intuitive all'interno di layout semplici.
-    \item \textbf{Aiutare gli utenti a riconoscere, diagnosticare e recuperare gli errori}: sono stati implementati messaggi di errore chiari e specifici, ad esempio, se un utente tenta di eseguire un'azione non consentita, viene visualizzato un messaggio che spiega il motivo del blocco e suggerisce come risolvere il problema.
-    \item \textbf{Aiuto e documentazione}: dando la priorità a un design intuitivo ed a un'interfaccia auto-esplicativa, abbiamo ritenuto che l'applicazione non necessitasse di una sezione di aiuto dedicata.
+    \item \textbf{Estetica e design minimalista}: seguendo una filosofia "less is more", l'interfaccia è stata progettata per essere pulita, preferendo icone intuitive e layout semplici rispetto a elementi pesanti e ricchi di testo.
+    \item \textbf{Aiutare gli utenti a riconoscere, diagnosticare e recuperare gli errori}: sono stati implementati messaggi di errore chiari e specifici, ad esempio, se un utente tenta di eseguire un'azione non consentita viene visualizzato un messaggio che spiega il motivo del blocco e suggerisce come risolvere il problema.
+    \item \textbf{Aiuto e documentazione}: dando la priorità a un design intuitivo ed a un'interfaccia auto-esplicativa abbiamo ritenuto che l'applicazione non necessitasse di una sezione di aiuto dedicata.
 \end{itemize}
 \subsection{Unit Testing e Strumenti di sviluppo}
-Per garantire il corretto funzionamento delle funzionalità principali, sono stati utilizzati test unitari per il backend. Questo permette di verificare frequentemente lo stato dell'applicazione e di avere sempre a disposizione test regressivi da effettuare ad ogni cambiamento o estensione delle funzionalità. Per i test unitari, sono stati utilizzati \textbf{Supertest} e \textbf{Vitest}. I test sono stati inseriti nella pipeline di Continuous Integration e nei Git Hook, perciò sono eseguiti automaticamente ad ogni push, ad ogni pull request e ad ogni commit sul branch principale, garantendo così che il codice presente in questi branch sia sempre coperto da test e che eventuali errori vengano individuati tempestivamente. Inoltre, i test ci hanno anche permesso di tenere sotto controllo la copertura del codice.
-Per assicurarsi la compatibilità cross-browser, l'applicazione è stata testata regolarmente su Google Chrome e Mozilla Firefox. Grazie alla possibilità di cambiare il tipo di device simulato all'interno degli strumenti di sviluppo, è stato possibile testare l'applicazione su una vasta gamma di dispositivi, dando la priorità ai dispositivi mobile, in ottima mobile-first.
+Per garantire il corretto funzionamento delle funzionalità principali, sono stati utilizzati test unitari per il backend. Questo permette di verificare frequentemente lo stato dell'applicazione e di avere sempre a disposizione test regressivi da effettuare ad ogni cambiamento o estensione delle funzionalità. Per i test unitari, sono stati utilizzati \textbf{Supertest} e \textbf{Vitest}. I test sono stati inseriti nella pipeline di Continuous Integration e nei Git Hook; perciò sono eseguiti automaticamente ad ogni push, ad ogni pull request e ad ogni commit sul branch principale, garantendo così che il codice presente in questi branch sia sempre coperto da test e che eventuali errori vengano individuati tempestivamente. Inoltre, i test ci hanno anche permesso di tenere sotto controllo la copertura del codice.
+Per assicurarsi la compatibilità cross-browser, l'applicazione è stata testata regolarmente su Google Chrome e Mozilla Firefox. Grazie alla possibilità di cambiare il tipo di device simulato all'interno degli strumenti di sviluppo, è stato possibile testare l'applicazione su una vasta gamma di dispositivi, dando la priorità ai dispositivi mobile, in ottica mobile-first.
 
 \subsection{Test di usabilità}
 Per validare il nostro design e la nostra progettazione, abbiamo svolto dei test di usabilità con utenti reali. Sono stati individuati cinque task e tre metriche principali per valutare l'esperienza utente.
@@ -648,10 +660,10 @@ Per validare il nostro design e la nostra progettazione, abbiamo svolto dei test
 \begin{itemize}
     \item \textbf{Aggiunta dispositivo}: l'utente (Admin) deve aggiungere una nuova lampadina smart in salotto. Successivamente, deve accenderla e spegnerla tramite l'app.
     \item \textbf{Verifica previsioni meteo}: l'utente deve chiedere al chatbot le previsioni meteo per la settimana successiva.
-    \item \textbf{Creazione automazione}: l'utente (Admin) deve creare una regola di automazione che prevede l'apertura della finestra in soggiorno quando la temperatura interna supera i 25 gradi.
+    \item \textbf{Creazione automazione}: l'utente (Admin) deve creare una regola di automazione che preveda l'apertura della finestra in soggiorno quando la temperatura interna supera i 25 gradi.
     \item \textbf{Verifica interazioni su dispositivo}: l'utente (Admin) deve verificare chi ha spento per ultimo la luce in cucina.
-    \item \textbf{Programmazione giornaliera}: l'utente deve modificare la programmazione giornaliera, impostando la temperatura tra le 11 e le 12 a 17 gradi.
-    \item \textbf{Storico qualità dell'aria}: l'utente deve visualizzare il l'andamento della qualità dell'aria durante la settimana precedente.
+    \item \textbf{Programmazione giornaliera}: l'utente deve modificare la programmazione giornaliera, impostando a 17 gradi la temperatura tra le 11 e le 12.
+    \item \textbf{Storico qualità dell'aria}: l'utente deve visualizzare l'andamento della qualità dell'aria durante la settimana precedente.
 \end{itemize}
 \subsubsection{Dati rilevati}
 \begin{table}[h!]
@@ -714,8 +726,8 @@ In particolare:
 Per fare fronte a questi problemi abbiamo implementato le seguenti modifiche:
 \begin{itemize}
     \item E' stato introdotto lo streaming delle risposte del modello AI, utilizzando la connessione websocket, in modo da restituire all'utente un feedback continuo. Inoltre, nel momento in cui la risposta viene processata, è stato inserito un placeholder di caricamento ("Thinking...").
-    \item E' stato aggiunto un messaggio di benvenuto nella chat, che guida l'utente su come interagire con il modello AI e su quali tipi di domande fosse possibile fare.
-    \item Ogni volta che un tool viene chiamato, appare sulla chat, sempre attraverso il websocket, il nome del tool, per dare trasparenza all'interazione del modello AI con il sistema di HiHome.
+    \item E' stato aggiunto un messaggio di benvenuto nella chat che guida l'utente su come interagire con il modello AI e su quali tipi di domande sia possibile fare.
+    \item Ogni volta che un tool viene chiamato appare sulla chat (attraverso la connessione websocket) il nome del tool stesso, per dare trasparenza all'interazione del modello AI con il sistema di HiHome.
 \end{itemize}
 
 \newpage
@@ -728,10 +740,10 @@ Di seguito sono descritti i comandi principali per gestire il ciclo di vita dell
 \subsubsection{Esecuzione Container (Produzione)}
 Per compilare ed avviare l'intero stack in modalità di produzione:
 \begin{lstlisting}[language=bash]
-# Avvio di tutti i servizi in primo piano
+# Avvio di tutti i container
 docker compose up
 
-# Arresto dei servizi con rimozione dei volumi associati (es. database)
+# Arresto dei container con rimozione dei volumi associati (es. database)
 docker compose down -v
 \end{lstlisting}
 
@@ -764,7 +776,7 @@ go test -C ext-api-service -coverprofile=coverage.out -v ./...
 \end{lstlisting}
 
 \subsection{Endpoint e Indirizzi Locali}
-Una volta che l'applicazione è in esecuzione con successo, i vari moduli ed endpoint esposti possono essere interrogati localmente tramite i seguenti indirizzi web:
+Una volta che l'applicazione è in esecuzione localmente, i vari moduli ed endpoint esposti possono essere interrogati localmente tramite i seguenti indirizzi web:
 \begin{itemize}
     \item \textbf{Frontend Application (Vue 3)}: Raggiungibile all'indirizzo \href{http://localhost:8080}{http://localhost:8080}. Costituisce l'interfaccia utente principale per l'interazione con la smart home.
     \item \textbf{Backend REST API (Node.js/Express)}: Raggiungibile all'indirizzo \href{http://localhost:3000}{http://localhost:3000}. Ad esempio, è possibile testare lo stato di salute del backend effettuando una richiesta GET su \href{http://localhost:3000/api/health}{http://localhost:3000/api/health}.
@@ -774,7 +786,7 @@ Una volta che l'applicazione è in esecuzione con successo, i vari moduli ed end
 \section{Conclusioni}
 Il gruppo di lavoro ritiene di aver raggiunto con successo tutti i traguardi prefissati in fase di analisi. I test di usabilità condotti sul campo hanno confermato che l'interfaccia utente, sviluppata seguendo pattern moderni e con un approccio mobile-first, risulta fin da subito chiara ed estremamente accessibile anche per utenti non tecnici. I test unitari hanno supportato la stabilità del sistema, garantendo che le funzionalità principali funzionassero correttamente e che eventuali regressioni venissero individuate tempestivamente.
 
-Seppur le interazioni con i dispositivi siano simulate, in quanto abbiamo ritenuto che la parte IOT non fosse il focus del progetto, l'applicazione è stata progettata per gestire in maniera efficace i casi d'uso proposti e per essere facilmente estendibile. Durante lo svolgimento del progetto, abbiamo avuto la possibilità di diventare più pratici con lo stack MEVN e lo sviluppo di applicazioni web. Particolarmente interessante è stata l'integrazione con servizi esterni, come il modello AI ed il servizio per il meteo, oltre che l'implementazione della comunicazione tra i vari servizi del sistema, caratterizzata da interazioni ed aggiornamenti real-time.
+Seppur le interazioni con i dispositivi siano simulate, in quanto abbiamo ritenuto che la parte IoT non fosse il focus del progetto, l'applicazione è stata progettata per gestire in maniera efficace i casi d'uso proposti e per essere facilmente estendibile. Durante lo svolgimento del progetto abbiamo avuto la possibilità di diventare più pratici con lo stack MEVN e lo sviluppo di applicazioni web. Particolarmente interessante è stata l'integrazione con servizi esterni, come il modello AI ed il servizio per il meteo, oltre che l'implementazione della comunicazione tra i vari servizi del sistema, caratterizzata da interazioni ed aggiornamenti real-time.
 
 Il gruppo ha lavorato in modo coeso e collaborativo, suddividendo equamente i compiti. La complessità del dominio ha fornito più volte spunti di riflessione, che sono stati affrontati in maniera costruttiva portando a soluzioni condivise e discussioni interessanti.
 
