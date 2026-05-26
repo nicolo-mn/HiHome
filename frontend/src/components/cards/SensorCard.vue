@@ -68,29 +68,56 @@ const unitSymbol = computed(() => {
   if (!u) return "";
   return props.reading.measureUnit;
 });
+
+const isCentered = computed(() => props.reading.type === "weather");
 </script>
 
 <template>
   <div
     :class="[
-      'min-h-[100px] md:min-h-[104px] rounded-[26px] md:rounded-[32px] px-5 md:px-6 py-4 flex flex-row items-center gap-3 overflow-hidden',
+      'rounded-[26px] md:rounded-[32px] px-5 md:px-6 py-4 overflow-hidden',
+      isCentered
+        ? 'min-h-[100px] md:min-h-[104px] flex flex-col items-center justify-center gap-3'
+        : 'min-h-[100px] md:min-h-[104px] flex flex-row items-center gap-3',
       accentClasses.tint,
     ]"
   >
     <span
-      class="w-12 md:w-14 h-12 md:h-14 flex items-center justify-center shrink-0"
-      :class="accentClasses.text"
+      :class="[
+        'flex items-center justify-center shrink-0',
+        isCentered ? 'w-16 md:w-20 h-16 md:h-20' : 'w-12 md:w-14 h-12 md:h-14',
+        accentClasses.text,
+      ]"
       v-html="icon"
     />
-    <div class="flex flex-col gap-1 min-w-0 flex-1">
+    <div
+      :class="[
+        'flex flex-col gap-1 min-w-0',
+        isCentered ? 'items-center' : 'flex-1',
+      ]"
+    >
       <span
         class="font-bold text-[19px] md:text-[20px] leading-6 break-words whitespace-normal"
         :class="accentClasses.text"
       >
         {{ label }}
       </span>
+      <span
+        v-if="isCentered"
+        class="font-medium text-[20px] md:text-[24px] leading-7 tabular-nums"
+        :class="accentClasses.text"
+      >
+        {{ displayValue
+        }}<span
+          v-if="unitSymbol"
+          class="text-base ml-1"
+          :class="accentClasses.text"
+          >{{ unitSymbol }}</span
+        >
+      </span>
     </div>
     <span
+      v-if="!isCentered"
       class="font-medium text-[20px] md:text-[24px] leading-7 tabular-nums shrink-0"
       :class="accentClasses.text"
     >
