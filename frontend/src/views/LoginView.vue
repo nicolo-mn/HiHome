@@ -3,7 +3,9 @@ import { computed, reactive, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useAsyncAction } from "@/composables/useAsyncAction";
+import { ApiError, NetworkError, TimeoutError } from "@/api/errors";
 import BaseIcon from "@/components/BaseIcon.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -27,19 +29,34 @@ const valid = computed(
     password.value.length >= 4,
 );
 
-const {
-  run: submit,
-  isLoading,
-  error,
-} = useAsyncAction(
+const submitError = ref<unknown>(null);
+
+const { run: submit, isLoading } = useAsyncAction(
   async () => {
-    await authStore.login(homeId.value, username.value, password.value);
+    submitError.value = null;
+    try {
+      await authStore.login(homeId.value, username.value, password.value);
+    } catch (e) {
+      submitError.value = e;
+      throw e;
+    }
     const redirect = route.query.redirect;
     router.push(
       typeof redirect === "string" ? redirect : { name: "dashboard" },
     );
   },
-  { onError: () => "Invalid credentials. Please try again." },
+  { action: "sign in" },
+);
+
+const credentialsError = computed(
+  () =>
+    submitError.value instanceof ApiError && submitError.value.status === 401,
+);
+
+const networkError = computed(
+  () =>
+    submitError.value instanceof NetworkError ||
+    submitError.value instanceof TimeoutError,
 );
 
 function handleLogin() {
@@ -268,9 +285,42 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
             </div>
           </div>
 
-          <p v-if="error" class="text-rose-500 text-sm text-center">
-            {{ error }}
-          </p>
+          <div
+            v-if="credentialsError"
+            role="alert"
+            aria-live="polite"
+            class="rounded-[20px] border-2 border-rose-500/30 bg-rose-500/[0.08] px-4 py-3.5 flex gap-3 items-start"
+          >
+            <div
+              class="w-9 h-9 rounded-2xl bg-gray-900/40 flex items-center justify-center text-rose-500 shrink-0"
+            >
+              <BaseIcon name="info" :size="20" />
+            </div>
+            <div class="min-w-0">
+              <div class="font-semibold text-[14px] text-rose-500">
+                We couldn't sign you in
+              </div>
+              <div class="text-[13px] text-gray-300 mt-0.5">
+                The Home ID, username or password don't match.
+              </div>
+              <div class="text-[12px] text-gray-400 mt-1">
+                Double-check each field and try again.
+              </div>
+            </div>
+          </div>
+
+          <ErrorBanner
+            v-else-if="submitError && networkError"
+            :error="submitError"
+            action="sign in"
+            :on-retry="() => submit()"
+          />
+
+          <ErrorBanner
+            v-else-if="submitError"
+            :error="submitError"
+            action="sign in"
+          />
 
           <button
             type="submit"

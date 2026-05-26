@@ -5,13 +5,16 @@ import {
   getHourlyTemperatures,
   setHourlyTemperatures,
 } from "@/api/thermostatPlan";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 
 const authStore = useAuthStore();
 const temperatures = ref<number[]>(new Array(24).fill(20));
 const loading = ref(true);
 const saving = ref(false);
+const loadError = ref<unknown>(null);
 const saveError = ref<string | null>(null);
 
 const MIN_TEMP = 10;
@@ -23,10 +26,11 @@ let isDragging = false;
 async function load() {
   if (!authStore.homeId) return;
   loading.value = true;
+  loadError.value = null;
   try {
     temperatures.value = await getHourlyTemperatures(authStore.homeId);
   } catch (e) {
-    console.error(e);
+    loadError.value = e;
   } finally {
     loading.value = false;
   }
@@ -39,7 +43,7 @@ async function save() {
   try {
     await setHourlyTemperatures(authStore.homeId, temperatures.value);
   } catch (e) {
-    saveError.value = e instanceof Error ? e.message : "Failed to save plan";
+    saveError.value = humanizeErrorMessage(e, "save the plan");
   } finally {
     saving.value = false;
   }
@@ -86,7 +90,13 @@ onUnmounted(() => {
       @action="save"
     />
 
-    <p v-if="saveError" class="text-rose-500 text-sm">{{ saveError }}</p>
+    <ErrorBanner
+      v-if="loadError"
+      :error="loadError"
+      action="load your daily plan"
+      :on-retry="() => load()"
+    />
+    <ErrorBanner v-if="saveError" :error="saveError" />
 
     <div v-if="loading" class="flex justify-center py-16">
       <div class="text-gray-400">Loading plan…</div>

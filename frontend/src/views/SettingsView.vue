@@ -16,6 +16,7 @@ import {
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
 import BaseToggle from "@/components/BaseToggle.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 import { ACCENT } from "@/utils/accents";
 import type { Accent, IconName } from "@/types/ui";
 
@@ -154,9 +155,12 @@ const initial = computed(() =>
             </button>
           </template>
         </div>
-        <p v-if="prefsStore.error" class="text-sm text-rose-500 mt-2">
-          {{ prefsStore.error }}
-        </p>
+        <ErrorBanner
+          v-if="prefsStore.error"
+          :error="prefsStore.error"
+          action="save your notification settings"
+          class="mt-3"
+        />
       </section>
 
       <section v-if="authStore.isAdmin">
@@ -209,9 +213,12 @@ const initial = computed(() =>
             </template>
           </template>
         </div>
-        <p v-if="usersStore.error" class="text-sm text-rose-500 mt-2">
-          {{ usersStore.error }}
-        </p>
+        <ErrorBanner
+          v-if="usersStore.error"
+          :error="usersStore.error"
+          action="update users"
+          class="mt-3"
+        />
       </section>
 
       <section>

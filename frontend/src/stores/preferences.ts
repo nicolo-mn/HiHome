@@ -5,6 +5,7 @@ import {
   ALL_NOTIFICATION_TYPES,
   type NotificationType,
 } from "@/api";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 import { useAuthStore } from "@/stores/auth";
 
 export const usePreferencesStore = defineStore("preferences", () => {
@@ -28,8 +29,7 @@ export const usePreferencesStore = defineStore("preferences", () => {
       preferences.value = await preferencesApi.getPreferences(homeId.value);
       loadedHomeId.value = homeId.value;
     } catch (e) {
-      error.value =
-        e instanceof Error ? e.message : "Failed to load preferences";
+      error.value = humanizeErrorMessage(e, "load your notification settings");
     } finally {
       isLoading.value = false;
     }
@@ -49,8 +49,10 @@ export const usePreferencesStore = defineStore("preferences", () => {
         types,
       );
     } catch (e) {
-      error.value =
-        e instanceof Error ? e.message : "Failed to update preferences";
+      error.value = humanizeErrorMessage(
+        e,
+        "update your notification settings",
+      );
     }
   }
 

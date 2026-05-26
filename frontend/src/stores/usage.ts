@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { usageApi } from "@/api";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 import type { UsageRange, UsageReport } from "@/api/usage";
 import { useAuthStore } from "@/stores/auth";
 
@@ -21,7 +22,7 @@ export const useUsageStore = defineStore("usage", () => {
     try {
       report.value = await usageApi.getUsage(homeId.value, range.value);
     } catch (e) {
-      error.value = e instanceof Error ? e.message : "Failed to load usage";
+      error.value = humanizeErrorMessage(e, "load usage insights");
       report.value = null;
     } finally {
       isLoading.value = false;

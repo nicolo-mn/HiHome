@@ -43,15 +43,24 @@ async function parseBody(res: Response): Promise<unknown> {
 }
 
 function extractErrorMessage(body: unknown, fallback: string): string {
-  if (
-    body &&
-    typeof body === "object" &&
-    "message" in body &&
-    typeof (body as { message: unknown }).message === "string"
-  ) {
-    return (body as { message: string }).message;
+  if (body && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    if (typeof record.error === "string" && record.error.length > 0) {
+      return record.error;
+    }
+    if (typeof record.message === "string" && record.message.length > 0) {
+      return record.message;
+    }
   }
-  if (typeof body === "string" && body.length > 0) return body;
+  if (typeof body === "string" && body.length > 0) {
+    const trimmed = body.trim();
+    // Upstream proxies (nginx, Cloudflare) return HTML error pages on 5xx —
+    // showing them verbatim leaks markup into the UI. Fall back instead.
+    if (trimmed.startsWith("<") || /<html[\s>]/i.test(trimmed)) {
+      return fallback;
+    }
+    return trimmed;
+  }
   return fallback;
 }
 

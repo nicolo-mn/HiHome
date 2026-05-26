@@ -10,6 +10,7 @@ import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
 import BasePickerRow from "@/components/BasePickerRow.vue";
 import BaseBottomSheet from "@/components/BaseBottomSheet.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 import { ACCENT } from "@/utils/accents";
 import type { Accent, IconName } from "@/types/ui";
 
@@ -173,10 +174,13 @@ const authStore = useAuthStore();
 const homeId = computed(() => authStore.homeId);
 
 const components = ref<HomeComponent[]>([]);
-const { run: loadComponents, error: loadError } = useAsyncAction(async () => {
-  if (!homeId.value) return;
-  components.value = await componentsApi.getComponents(homeId.value);
-});
+const { run: loadComponents, error: loadError } = useAsyncAction(
+  async () => {
+    if (!homeId.value) return;
+    components.value = await componentsApi.getComponents(homeId.value);
+  },
+  { action: "load your devices" },
+);
 
 onMounted(loadComponents);
 
@@ -333,7 +337,7 @@ const {
     });
     router.push({ name: "rules" });
   },
-  { onError: (err) => getApiErrorMessage(err) },
+  { action: "save the rule", onError: (err) => getApiErrorMessage(err) },
 );
 
 type SheetState =
@@ -455,8 +459,13 @@ function bgFor(accent: Accent) {
       @back="router.push({ name: 'rules' })"
     />
 
-    <p v-if="loadError" class="text-rose-500 text-sm">{{ loadError }}</p>
-    <p v-if="saveError" class="text-rose-500 text-sm">{{ saveError }}</p>
+    <ErrorBanner
+      v-if="loadError"
+      :error="loadError"
+      action="load your devices"
+      :on-retry="() => loadComponents()"
+    />
+    <ErrorBanner v-if="saveError" :error="saveError" action="save the rule" />
 
     <div class="max-w-[720px] flex flex-col gap-7">
       <section>

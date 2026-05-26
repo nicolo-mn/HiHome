@@ -1,6 +1,8 @@
 import { ref } from "vue";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 
 export interface UseAsyncActionOptions {
+  action?: string;
   onError?: (e: unknown) => string | null;
 }
 
@@ -17,8 +19,8 @@ export function useAsyncAction<TArgs extends unknown[], TResult>(
     try {
       return await fn(...args);
     } catch (e) {
-      error.value =
-        opts.onError?.(e) ?? (e instanceof Error ? e.message : "Action failed");
+      const custom = opts.onError?.(e);
+      error.value = custom ?? humanizeErrorMessage(e, opts.action);
       return undefined;
     } finally {
       isLoading.value = false;

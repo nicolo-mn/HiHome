@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import { useNotificationsStore } from "@/stores/notifications";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 import RuleExecutionRecapModal from "@/components/RuleExecutionRecapModal.vue";
 import { ACCENT } from "@/utils/accents";
 import type { Accent, IconName } from "@/types/ui";
@@ -156,17 +157,13 @@ onMounted(() => store.fetchAll());
       </button>
     </div>
 
-    <div v-if="error && notifications.length === 0" class="flex flex-col gap-2">
-      <p class="text-rose-500 text-sm">{{ error }}</p>
-      <button
-        type="button"
-        class="self-start px-4 py-2 rounded-2xl bg-gray-800/50 border-2 border-gray-800 text-gray-200 text-sm"
-        @click="store.fetchAll()"
-      >
-        Retry
-      </button>
-    </div>
-    <p v-else-if="error" class="text-rose-500 text-sm">{{ error }}</p>
+    <ErrorBanner
+      v-if="error && notifications.length === 0"
+      :error="error"
+      action="load your notifications"
+      :on-retry="() => store.fetchAll()"
+    />
+    <ErrorBanner v-else-if="error" :error="error" />
 
     <p
       v-if="isLoading && notifications.length === 0"
