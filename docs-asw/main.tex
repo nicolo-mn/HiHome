@@ -427,9 +427,97 @@ Per garantire il corretto funzionamento delle funzionalità principali, sono sta
 Per assicurarsi la compatibilità cross-browser, l'applicazione è stata testata regolarmente su Google Chrome e Mozilla Firefox. Grazie alla possibilità di cambiare il tipo di device simulato all'interno degli strumenti di sviluppo, è stato possibile testare l'applicazione su una vasta gamma di dispositivi, dando la priorità ai dispositivi mobile, in ottima mobile-first.
 
 \subsection{Test di usabilità}
+Per validare il nostro design e la nostra progettazione, abbiamo svolto dei test di usabilità con utenti reali. Sono stati individuati cinque task e tre metriche principali per valutare l'esperienza utente.
+\subsubsection{Metriche}
+\begin{itemize}
+    \item \textbf{Reattività}: giudizio assegnato dagli utenti al termine di ogni task (da 1 a 5), in base alla reattività del sistema.
+    \item \textbf{Facilità percepita}: giudizio che va da 1 (molto difficile da usare) a 5 (molto facile da usare), assegnato dagli utenti per valutare la facilità d'uso dell'applicazione.
+    \item \textbf{Estetica}: giudizio che va da 1 (poco piacevole) a 5 (molto piacevole), assegnato dagli utenti per valutare l'estetica dell'interfaccia.
+\end{itemize}
+
+\subsubsection{Elenco dei task}
+\begin{itemize}
+    \item \textbf{Aggiunta dispositivo}: l'utente (Admin) deve aggiungere una nuova lampadina smart in salotto. Successivamente, deve accenderla e spegnerla tramite l'app.
+    \item \textbf{Verifica previsioni meteo}: l'utente deve chiedere al chatbot le previsioni meteo per la settimana successiva.
+    \item \textbf{Creazione automazione}: l'utente (Admin) deve creare una regola di automazione che prevede l'apertura della finestra in soggiorno quando la temperatura interna supera i 25 gradi.
+    \item \textbf{Verifica interazioni su dispositivo}: l'utente (Admin) deve verificare chi ha spento per ultimo la luce in cucina.
+    \item \textbf{Programmazione giornaliera}: l'utente deve modificare la programmazione giornaliera, impostando la temperatura tra le 11 e le 12 a 17 gradi.
+    \item \textbf{Storico qualità dell'aria}: l'utente deve visualizzare il l'andamento della qualità dell'aria durante la settimana precedente.
+\end{itemize}
+\subsubsection{Dati rilevati}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\multicolumn{6}{|c|}{\textbf{Reattività}} \\ \hline
+\textbf{Task} & \textbf{Riccardo} & \textbf{Nicolas} & \textbf{Matteo} & \textbf{Agostino} & \textbf{Livia} \\ \hline
+Aggiunta dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Verifica previsioni meteo & 3 & 4 & 4 & 4 & 5 \\ \hline
+Creazione automazione & 4 & 5 & 4 & 5 & 4 \\ \hline
+Verifica interazioni su dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Programmazione giornaliera & 5 & 5 & 4 & 5 & 5 \\ \hline
+Storico qualità dell'aria & 5 & 5 & 5 & 5 & 5 \\ \hline
+\end{tabular}
+\caption{Valutazione degli utenti sulla Reattività}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\multicolumn{6}{|c|}{\textbf{Facilità percepita}} \\ \hline
+\textbf{Task} & \textbf{Riccardo} & \textbf{Nicolas} & \textbf{Matteo} & \textbf{Agostino} & \textbf{Livia} \\ \hline
+Aggiunta dispositivo & 5 & 4 & 5 & 4 & 5 \\ \hline
+Verifica previsioni meteo & 4 & 5 & 4 & 5 & 5 \\ \hline
+Creazione automazione & 4 & 5 & 5 & 5 & 4 \\ \hline
+Verifica interazioni su dispositivo & 5 & 5 & 4 & 5 & 5 \\ \hline
+Programmazione giornaliera & 4 & 5 & 5 & 4 & 5 \\ \hline
+Storico qualità dell'aria & 5 & 5 & 5 & 5 & 5 \\ \hline
+\end{tabular}
+\caption{Valutazione degli utenti sulla Facilità percepita}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\multicolumn{6}{|c|}{\textbf{Estetica}} \\ \hline
+\textbf{Task} & \textbf{Riccardo} & \textbf{Nicolas} & \textbf{Matteo} & \textbf{Agostino} & \textbf{Livia} \\ \hline
+Aggiunta dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Verifica previsioni meteo & 4 & 4 & 5 & 5 & 4 \\ \hline
+Creazione automazione & 5 & 5 & 4 & 5 & 5 \\ \hline
+Verifica interazioni su dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Programmazione giornaliera & 5 & 4 & 5 & 5 & 5 \\ \hline
+Storico qualità dell'aria & 5 & 5 & 5 & 5 & 5 \\ \hline
+\end{tabular}
+\caption{Valutazione degli utenti sull'Estetica}
+\end{table}
+
+Come si può vedere dalle tabelle, l'applicazione è risultata molto apprezzata dagli utenti, con giudizi molto positivi su tutte le metriche. I test hanno sollevato qualche piccolo problema di usabilità, principalmente riguardante l'implementazione della chat, che ci sono serviti come spunto di discussione e che sono stati poi risolti.
+
+In particolare:
+\begin{itemize}
+    \item Alcuni utenti hanno segnalato che, nel momento in cui viene inviato un messaggio, il tempo di attesa è troppo lungo prima di vedere un feedback dal modello AI.
+    \item E' stata segnalata la mancanza di un messaggio di benvenuto nella chat che fosse in grado di guidare l'utente su come interagire con il modello AI e su quali tipi di domande fosse possibile fare.
+    \item Alcuni utenti hanno evidenziato come l'interazione del chatbot con il sistema di HiHome potesse essere resa più trasparente, ad esempio mostrando le azioni che il modello AI sta eseguendo in tempo reale, in modo da rendere più chiaro il collegamento tra le risposte del modello e le azioni che vengono eseguite sui dispositivi smart.
+\end{itemize}
+
+Per fare fronte a questi problemi abbiamo implementato le seguenti modifiche:
+\begin{itemize}
+    \item E' stato introdotto lo streaming delle risposte del modello AI, utilizzando la connessione websocket, in modo da restituire all'utente un feedback continuo. Inoltre, nel momento in cui la risposta viene processata, è stato inserito un placeholder di caricamento ("Thinking...").
+    \item E' stato aggiunto un messaggio di benvenuto nella chat, che guida l'utente su come interagire con il modello AI e su quali tipi di domande fosse possibile fare.
+    \item Ogni volta che un tool viene chiamato, appare sulla chat, sempre attraverso il websocket, il nome del tool, per dare trasparenza all'interazione del modello AI con il sistema di HiHome.
+\end{itemize}
+
+\newpage
+\section{Deployment ed esecuzione locale}
+
+\newpage
+\section{Conclusioni}
 
 \newpage
 \section{Screenshots}
+Sono di seguito allegati gli screenshot finali dell'applicazione, sia in versione mobile che in versione desktop.
 
 % TODO: aggiungi appendice in fondo con tutte le schermate sia mobile che web
 \end{document}
