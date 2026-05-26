@@ -7,7 +7,7 @@ import cors from "cors";
 import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
-import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
+import { InMemoryHomeRepository } from "./home-context/infrastructure/repositories/InMemoryHomeRepository";
 import { MongoHomeRepository } from "./home-context/infrastructure/repositories/MongoHomeRepository";
 import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOSensorUpdateAdapter";
 import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOComponentUpdateAdapter";
@@ -30,9 +30,9 @@ import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
 } from "./home-context/infrastructure/middlewares/WebSocketMiddlewares";
-import { RuleService } from "./rule-context/application/RuleService";
-import { InMemoryRuleRepository } from "./rule-context/infrastructure/InMemoryRuleRepository";
-import { MongoRuleRepository } from "./rule-context/infrastructure/MongoRuleRepository";
+import { RuleService } from "./rule-context/application/services/RuleService";
+import { InMemoryRuleRepository } from "./rule-context/infrastructure/repositories/InMemoryRuleRepository";
+import { MongoRuleRepository } from "./rule-context/infrastructure/repositories/MongoRuleRepository";
 import { RuleController } from "./rule-context/infrastructure/controllers/RuleController";
 import { RuleRouter } from "./rule-context/infrastructure/routes/RuleRouter";
 import { NotificationController } from "./notification-context/infrastructure/controllers/NotificationController";
@@ -41,9 +41,9 @@ import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/ActionExecutionAdapter";
 import { NotificationContextAdapter as RuleNotificationContextAdapter } from "./rule-context/infrastructure/NotificationContextAdapter";
-import { HomeServiceComponentNameResolver } from "./rule-context/infrastructure/HomeServiceComponentNameResolver";
+import { HomeServiceComponentNameResolver } from "./rule-context/infrastructure/adapters/HomeServiceComponentNameResolver";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
-import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/InMemoryHistoricalWeatherRepository";
+import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/repositories/InMemoryHistoricalWeatherRepository";
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/adapters/AsyncBusRuleServiceAdapter";
 import { NotificationContextAdapter } from "./home-context/infrastructure/adapters/NotificationPortAdapter";

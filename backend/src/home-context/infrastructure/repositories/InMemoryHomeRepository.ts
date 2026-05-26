@@ -1,5 +1,5 @@
-import { Home, Light, Room, SensorUpdatePort, Component } from "../domain";
-import { HomeRepository } from "../domain/HomeRepository";
+import { Home, Light, Room, SensorUpdatePort, Component } from "../../domain";
+import { HomeRepository } from "../../domain/HomeRepository";
 
 export class InMemoryHomeRepository implements HomeRepository {
   private homes: Map<string, Home> = new Map();

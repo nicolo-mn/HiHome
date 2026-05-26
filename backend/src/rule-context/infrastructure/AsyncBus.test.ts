@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { EventEmitter } from "events";
 import { AsyncBus } from "./AsyncBus";
-import { RuleService } from "../application/RuleService";
+import { RuleService } from "../application/services/RuleService";
 import {
   ObservablesUpdatedDomainEvent,
   WeatherForecast,

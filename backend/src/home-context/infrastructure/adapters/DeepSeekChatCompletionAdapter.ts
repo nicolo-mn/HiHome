@@ -8,8 +8,8 @@ import type {
 } from "../application/ForecastPort";
 import { HomeService } from "../../application/services/HomeService";
 import { ComponentTypes } from "../../domain";
-import type { AddRuleDto } from "../../../rule-context/application/RuleService";
-import { RuleService } from "../../../rule-context/application/RuleService";
+import type { AddRuleDto } from "../../../rule-context/application/services/RuleService";
+import { RuleService } from "../../../rule-context/application/services/RuleService";
 type DeepSeekOptions = {
   apiKey: string;
   apiBaseUrl: string;

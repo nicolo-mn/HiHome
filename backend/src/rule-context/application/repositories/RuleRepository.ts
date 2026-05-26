@@ -1,7 +1,7 @@
-import { ObservableCondition } from "../domain/Observables";
-import { ComponentAction } from "../domain/Actions";
-import { Rule } from "../domain/Rule";
-import { HomeRuleSet } from "../domain/HomeRuleSet";
+import { ObservableCondition } from "../../domain/Observables";
+import { ComponentAction } from "../../domain/Actions";
+import { Rule } from "../../domain/Rule";
+import { HomeRuleSet } from "../../domain/HomeRuleSet";
 
 export interface RuleRepository {
   addRule(

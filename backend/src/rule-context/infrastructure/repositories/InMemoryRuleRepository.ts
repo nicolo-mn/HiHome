@@ -1,8 +1,8 @@
-import { ObservableCondition } from "../domain/Observables";
-import { ComponentAction } from "../domain/Actions";
+import { ObservableCondition } from "../../domain/Observables";
+import { ComponentAction } from "../../domain/Actions";
 import { RuleRepository } from "../application/RuleRepository";
-import { Rule } from "../domain/Rule";
-import { HomeRuleSet } from "../domain/HomeRuleSet";
+import { Rule } from "../../domain/Rule";
+import { HomeRuleSet } from "../../domain/HomeRuleSet";
 
 export class InMemoryRuleRepository implements RuleRepository {
   private rules: Map<string, Rule[]> = new Map();

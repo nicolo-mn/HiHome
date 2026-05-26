@@ -11,7 +11,7 @@ import {
   AirQualityCondition,
   WeatherCondition,
   InternalTemperatureCondition,
-} from "../domain/Observables";
+} from "../../domain/Observables";
 import {
   ComponentAction,
   LightTurnOnAction,
@@ -19,14 +19,14 @@ import {
   WindowOpenAction,
   WindowCloseAction,
   ThermostatSetTemperatureAction,
-} from "../domain/Actions";
-import { RuleRepository } from "./RuleRepository";
-import { Rule } from "../domain/Rule";
-import { ComponentActionExecutionVisitor } from "./ComponentActionExecutionVisitor";
-import { ActionExecutionPort } from "../domain/ActionExecutionPort";
-import { RuleNotificationPort } from "./RuleNotificationPort";
-import { ActionDescriptionVisitor } from "./ActionDescriptionVisitor";
-import { ComponentNameResolverPort } from "./ComponentNameResolverPort";
+} from "../../domain/Actions";
+import { RuleRepository } from "../repositories/RuleRepository";
+import { Rule } from "../../domain/Rule";
+import { ComponentActionExecutionVisitor } from "../ComponentActionExecutionVisitor";
+import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
+import { RuleNotificationPort } from "../ports/RuleNotificationPort";
+import { ActionDescriptionVisitor } from "../ActionDescriptionVisitor";
+import { ComponentNameResolverPort } from "../ports/ComponentNameResolverPort";
 
 export type RuleActionDto = {
   componentType: "light" | "window" | "thermostat";

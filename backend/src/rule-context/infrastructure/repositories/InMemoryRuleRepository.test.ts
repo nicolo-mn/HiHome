@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { InMemoryRuleRepository } from "./InMemoryRuleRepository";
-import { ObservableCondition } from "../domain/Observables";
-import { ComponentAction } from "../domain/Actions";
+import { ObservableCondition } from "../../domain/Observables";
+import { ComponentAction } from "../../domain/Actions";
 import { RuleRepository } from "../application/RuleRepository";
 
 describe("RuleRepository", () => {

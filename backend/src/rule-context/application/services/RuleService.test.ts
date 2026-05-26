@@ -1,18 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RuleService } from "./RuleService";
-import { RuleRepository } from "./RuleRepository";
-import { Rule } from "../domain/Rule";
-import { HomeRuleSet } from "../domain/HomeRuleSet";
+import { RuleRepository } from "../repositories/RuleRepository";
+import { Rule } from "../../domain/Rule";
+import { HomeRuleSet } from "../../domain/HomeRuleSet";
 import {
   ObservablesUpdatedDomainEvent,
   ObservableCondition,
   WeatherForecast,
   WeatherCondition,
-} from "../domain/Observables";
-import { ComponentAction, LightTurnOnAction } from "../domain/Actions";
+} from "../../domain/Observables";
+import { ComponentAction, LightTurnOnAction } from "../../domain/Actions";
 import { AddRuleDto } from "./RuleService";
-import { ActionExecutionPort } from "../domain/ActionExecutionPort";
-import { RuleNotificationPort } from "./RuleNotificationPort";
+import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
+import { RuleNotificationPort } from "../ports/RuleNotificationPort";
 
 function makeRule(partial: Partial<Rule> & Pick<Rule, "id" | "order">): Rule {
   return {

@@ -10,7 +10,7 @@ import {
   NumericGreaterOperator,
   NumericLowerOperator,
   NumericEqualityOperator,
-} from "../domain/Observables";
+} from "../../domain/Observables";
 import {
   ComponentAction,
   LightTurnOnAction,
@@ -18,11 +18,11 @@ import {
   WindowOpenAction,
   WindowCloseAction,
   ThermostatSetTemperatureAction,
-} from "../domain/Actions";
+} from "../../domain/Actions";
 import { RuleRepository } from "../application/RuleRepository";
-import { Rule } from "../domain/Rule";
-import { HomeRuleSet } from "../domain/HomeRuleSet";
-import { RuleModel } from "./models/RuleModel";
+import { Rule } from "../../domain/Rule";
+import { HomeRuleSet } from "../../domain/HomeRuleSet";
+import { RuleModel } from "../models/RuleModel";
 
 const WEATHER_TYPE = "weather";
 const EXTERNAL_TEMP_TYPE = "external-thermometer";
