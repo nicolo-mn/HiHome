@@ -275,6 +275,7 @@ Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, V
     \item \textbf{Socket.io}: libreria per la comunicazione in tempo reale tra client e server, utilizzata per l'invio di notifiche, aggiornamenti in tempo reale e streaming delle risposte del modello AI.
     \item \textbf{express-validator}: libreria per la convalida degli input degli utenti all'interno di Middleware, utilizzata per garantire la qualità e la sicurezza dei dati inseriti.
     \item \textbf{Vitest}: framework per i test unitari, utilizzato per assicurare il corretto funzionamento delle funzionalità principali.
+    \item \textbf{Prettier}: strumento di formattazione del codice, utilizzato per mantenere uno stile di codice coerente e leggibile.
 \end{itemize}
 
 \subsection{Frontend}
@@ -511,7 +512,56 @@ Per fare fronte a questi problemi abbiamo implementato le seguenti modifiche:
 
 \newpage
 \section{Deployment ed esecuzione locale}
+Il sistema \texttt{HiHome} può essere facilmente distribuito ed eseguito localmente sia in modalità di "produzione" che di sviluppo (con hot-reloading abilitato per consentire lo sviluppo attivo) grazie all'utilizzo di Docker Compose.
 
+\subsection{Comandi per il Deployment}
+Di seguito sono descritti i comandi principali per gestire il ciclo di vita dell'applicazione localmente.
+
+\subsubsection{Esecuzione Container (Produzione)}
+Per compilare ed avviare l'intero stack in modalità di produzione:
+\begin{lstlisting}[language=bash]
+# Avvio di tutti i servizi in primo piano
+docker compose up
+
+# Arresto dei servizi con rimozione dei volumi associati (es. database)
+docker compose down -v
+\end{lstlisting}
+
+Inoltre, è possibile scaricare direttamente le immagini dei container dalla sezione "Releases" del repository GitHub, poiché la pipeline di CI è configurata per effettuare il push delle immagini Docker ad ogni commit sul main.
+
+\subsubsection{Esecuzione con Hot Reloading}
+Per lo sviluppo, è presente una configurazione dedicata che monta i file locali come volumi all'interno dei container, consentendo il live reloading del codice ad ogni modifica effettuata.
+\begin{lstlisting}[language=bash]
+# Avvio dei container in dev mode
+docker compose -f docker-compose.dev.yml up
+
+# Arresto dei container in dev mode
+docker compose -f docker-compose.dev.yml down -v
+\end{lstlisting}
+
+\subsubsection{Esecuzione dei Test}
+Per verificare la correttezza del codice ed eseguire gli unit test:
+\begin{lstlisting}[language=bash]
+# Esecuzione unit test per il backend Node.js
+pnpm run test
+
+# coverage per il backend Node.js
+pnpm run test:coverage
+
+# Esecuzione dei test per il servizio Go
+go test -C ext-api-service -v ./...
+
+# Coverage per il servizio Go
+go test -C ext-api-service -coverprofile=coverage.out -v ./...
+\end{lstlisting}
+
+\subsection{Endpoint e Indirizzi Locali}
+Una volta che l'applicazione è in esecuzione con successo, i vari moduli ed endpoint esposti possono essere interrogati localmente tramite i seguenti indirizzi web:
+\begin{itemize}
+    \item \textbf{Frontend Application (Vue 3)}: Raggiungibile all'indirizzo \href{http://localhost:8080}{http://localhost:8080}. Costituisce l'interfaccia utente principale per l'interazione con la smart home.
+    \item \textbf{Backend REST API (Node.js/Express)}: Raggiungibile all'indirizzo \href{http://localhost:3000}{http://localhost:3000}. Ad esempio, è possibile testare lo stato di salute del backend effettuando una richiesta GET su \href{http://localhost:3000/api/health}{http://localhost:3000/api/health}.
+    \item \textbf{External API Service (Go)}: Raggiungibile esternamente all'indirizzo \href{http://localhost:8081}{http://localhost:8081}. L'endpoint di health check per verificare lo stato di questo modulo è accessibile a \href{http://localhost:8081/health}{http://localhost:8081/health}.
+\end{itemize}
 \newpage
 \section{Conclusioni}
 
