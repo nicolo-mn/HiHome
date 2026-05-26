@@ -199,5 +199,72 @@ In Figura \ref{ref:backend-apis} sono riportati i principali endpoint esposti da
     \end{itemize}
 \end{itemize}
 
+\subsection{Analisi degli Utenti Target}
+La fase di progettazione è stata preceduta da un'analisi del target di riferimento, volta a identificare le diverse tipologie di attori che interagiscono con l'applicazione e i loro requisiti.
+
+Per prima cosa, è stata fatta la definizione di specifiche Personas. Ogni profilo rappresenta un utente caratterizzato da obiettivi e competenze tecnologiche peculiari, nonché dal ruolo che ricoprono all'interno dell'abitazione (Admin o Utente Standard).
+
+Ogni Persona è associata a use case che descrivono la loro interazione con il sistema. Questi use case sono stati poi utilizzati come riferimento durante la fase di progettazione dell'interfaccia utente e delle funzionalità dell'applicazione, al fine di garantire che l'esperienza utente fosse adeguata alle esigenze specifiche di ogni tipologia di utente.
+
+\subsection{Definizione delle Personas e Scenari d'Uso}
+Di seguito vengono presentati i profili utente identificati e le situazioni tipiche in cui si trovano a interagire con il sistema.
+
+\subsubsection{Persona 1: Marco, il padre di famiglia}
+\textbf{Profilo:} 45 anni, impiegato. Ricopre il ruolo di amministratore della smart home.
+
+\textbf{Obiettivo:} Gestire la casa in modo efficiente, ottimizzando i consumi energetici e garantendo il benessere della famiglia.
+
+\textbf{Scenario 1: Configurazione e automazioni.} In vista dell'estate, Marco decide di ottimizzare la gestione della temperatura all'interno della casa. Accede alla sezione delle automazioni e crea una nuova regola: se la temperatura esterna sale sopra i 30 gradi, le finestre devono essere aperte. 
+
+\subsubsection{Persona 2: Giulia, la ragazza tecnologica}
+\textbf{Profilo:} 21 anni, studentessa universitaria, esperta di tecnologia. Si è da poco trasferita.
+
+\textbf{Obiettivo:} Aggiungere dispositivi alla smart home.
+
+\textbf{Scenario 2: Controllo dei dispositivi.} Giulia ha acquistato diversi dispositivi smart e vuole aggiungerli alla sua casa. Accede alla sezione di gestione dei dispositivi, seleziona "Aggiungi dispositivo" e segue la procedura guidata per configurare ogni nuovo dispositivo, assegnandolo alla stanza corretta. Una volta aggiunti, interagisce con essi tramite l'app, accendendo le luci, regolando il termostato e chiudendo le finestre direttamente dal suo smartphone.
+
+\subsubsection{Persona 3: Elena, la madre attenta al benessere}
+\textbf{Profilo:} 42 anni, insegnante, utilizza lo smartphone ma non è un'esperta di domotica.
+
+\textbf{Obiettivo:} Monitorare il benessere abitativo e tenere sotto controllo l'utilizzo della casa.
+
+\textbf{Scenario 3: Monitoraggio ambientale e notifiche.} Elena soffre di allergie ed è particolarmente attenta alla qualità dell'aria. Ha configurato l'app per ricevere notifiche push nel caso in cui i livelli di inquinanti esterni superino la soglia di guardia. Ricevuta una notifica di allerta inquinamento, decide di chiudere le finestre di casa tramite l'app per evitare che l'aria esterna comprometta l'ambiente domestico. Consulta inoltre i grafici della qualità dell'aria per capire l'andamento della settimana.
+
+\section{Tecnologie}
+Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, Vue.js, Node.js), con l'aggiunta di un servizio esterno in Go per ottenere dati meteo e sulla qualità dell'aria. Sono di seguito descritte le principali tecnologie e librerie principali utilizzate. 
+
+\subsection{Backend}
+\begin{itemize}
+    \item \textbf{Typescript}: utilizzato in altenativa a JavaScript per lo sviluppo del backend, in quanto offre tipizzazione statica e una migliore manutenibilità del codice.
+    \item \textbf{Express.js}: framework per Node.js utilizzato per la realizzazione del server backend, che espone API RESTful per la comunicazione con i client.
+    \item \textbf{Socket.io}: libreria per la comunicazione in tempo reale tra client e server, utilizzata per l'invio di notifiche, aggiornamenti in tempo reale e streaming delle risposte del modello AI.
+    \item \textbf{express-validator}: libreria per la convalida degli input degli utenti all'interno di Middleware, utilizzata per garantire la qualità e la sicurezza dei dati inseriti.
+\end{itemize}
+
+\subsection{Frontend}
+\begin{itemize}
+    \item \textbf{Vue 3}: framework JavaScript utilizzato per la realizzazione dell'interfaccia utente, con un'architettura basata su componenti.
+    \item \textbf{Tailwind CSS}: framework CSS utilizzato per lo styling dell'applicazione, che consente di creare interfacce responsive e moderne in modo efficiente.
+\end{itemize}
+
+\subsection{Database}
+\begin{itemize}
+    \item \textbf{MongoDB}: database NoSQL utilizzato per la memorizzazione dei dati dell'applicazione, come informazioni sulle case, dispositivi smart, automazioni e utenti.
+    \item \textbf{Mongoose}: libreria per Node.js che fornisce un'interfaccia di modellazione degli oggetti per MongoDB, semplificando l'interazione con il database e la definizione degli schemi dei dati.
+\end{itemize}
+
+\subsection{Infrastruttura}
+\begin{itemize}
+    \item \textbf{Nginx}: utilizzato come server web per servire l'applicazione frontend e come reverse proxy per il backend.
+    \item \textbf{Docker}: utilizzato per la containerizzazione dell'applicazione (backend, frontend, servizio API meteo), facilitando lo sviluppo e la distribuzione su diversi ambienti.
+    \item \textbf{Docker Compose}: utilizzato per orchestrare i container Docker, semplificando la gestione dei servizi e delle dipendenze tra di essi.
+    \begin{itemize}
+        \item Utilizzo di due compose file distinti, uno per la produzione ed uno per lo sviluppo, quest'ultimo con funzionalità aggiuntive come il live reloading per facilitare lo sviluppo.
+        \item Implementazione di healthcheck per ogni servizio, in modo da verificare lo stato di ogni servizio e gestire al meglio la dipendenza tra i servizi (es. il backend dipende dal servizio meteo, quindi è stato configurato in modo che venga avviato solo dopo che il servizio meteo è risultato healthy).
+    \end{itemize}
+\end{itemize}
+
+\section{Codice}
+
 % TODO: aggiungi appendice in fondo con tutte le schermate sia mobile che web
 \end{document}
