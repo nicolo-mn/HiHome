@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useUsageStore } from "@/stores/usage";
 import AppHeader from "@/components/AppHeader.vue";
@@ -73,6 +73,19 @@ const peakHour = computed(() =>
 );
 
 const totalDay = computed(() => hours.value.reduce((sum, n) => sum + n, 0));
+
+const hoveredBar = ref<number | null>(null);
+
+const tooltipPos = computed(() => {
+  if (hoveredBar.value === null) return { x: 0, y: 0 };
+  const i = hoveredBar.value;
+  const cx = xFor(i) + barWidth.value / 2;
+  const barH = hForCount(hours.value[i] ?? 0);
+  return {
+    x: Math.min(Math.max(cx, 38), W - 38),
+    y: Math.max(padT + innerH - barH - 10, padT + 14),
+  };
+});
 
 const historicalDays = computed(
   () => report.value?.historicalWeather?.days ?? [],
@@ -221,6 +234,7 @@ onMounted(() => store.load());
             :viewBox="`0 0 ${W} ${H}`"
             preserveAspectRatio="none"
             class="w-full h-full overflow-visible"
+            @mouseleave="hoveredBar = null"
           >
             <g stroke="rgba(229,231,235,0.06)" stroke-width="1">
               <line
@@ -233,7 +247,20 @@ onMounted(() => store.load());
               />
             </g>
 
-            <g v-for="(count, i) in hours" :key="i">
+            <g
+              v-for="(count, i) in hours"
+              :key="i"
+              style="cursor: pointer"
+              @mouseenter="hoveredBar = i"
+              @mouseleave="hoveredBar = null"
+            >
+              <rect
+                :x="xFor(i)"
+                :y="padT"
+                :width="barWidth + 2"
+                :height="innerH"
+                fill="transparent"
+              />
               <rect
                 :x="xFor(i) + 1"
                 :y="padT + innerH - hForCount(count)"
@@ -241,7 +268,7 @@ onMounted(() => store.load());
                 :height="hForCount(count)"
                 rx="2"
                 fill="#0EA5E9"
-                :opacity="i === peakHourIndex ? 1 : 0.55"
+                :opacity="i === peakHourIndex || i === hoveredBar ? 1 : 0.55"
               />
             </g>
 
@@ -251,6 +278,29 @@ onMounted(() => store.load());
               <text :x="padL + innerW * 0.5" :y="H - 10">12</text>
               <text :x="padL + innerW * 0.75" :y="H - 10">18</text>
               <text :x="padL + innerW" :y="H - 10">23</text>
+            </g>
+
+            <g v-if="hoveredBar !== null" style="pointer-events: none">
+              <rect
+                :x="tooltipPos.x - 36"
+                :y="tooltipPos.y - 14"
+                width="72"
+                height="16"
+                rx="3"
+                fill="#111827"
+                opacity="0.92"
+              />
+              <text
+                :x="tooltipPos.x"
+                :y="tooltipPos.y - 3"
+                text-anchor="middle"
+                font-size="10"
+                fill="#F9FAFB"
+              >
+                {{
+                  `${String(hoveredBar).padStart(2, "0")}:00 · ${hours[hoveredBar]}`
+                }}
+              </text>
             </g>
           </svg>
         </div>
