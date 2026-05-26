@@ -1,4 +1,4 @@
-import { AuthInboundPort } from "./application/AuthInboundPort";
+import { AuthInboundPort } from "./application/ports/AuthInboundPort";
 import { AuthFacade } from "./application/AuthFacade";
 import { AuthService } from "./application/AuthService";
 import { UserManagementService } from "./application/UserManagementService";

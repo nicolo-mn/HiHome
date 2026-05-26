@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { UserManagementService } from "./UserManagementService";
-import { UserRepository } from "../domain/UserRepository";
-import { Role } from "../domain/Role";
-import { User } from "../domain/User";
+import { UserManagementService } from "../UserManagementService";
+import { UserRepository } from "../../domain/UserRepository";
+import { Role } from "../../domain/Role";
+import { User } from "../../domain/User";
 
 const userOf = (
   id: string,
