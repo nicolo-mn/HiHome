@@ -104,7 +104,9 @@ export class OnOffIntervalCalculator {
       if (event.eventType === this.pair.onType) {
         if (cursor === null) cursor = event.createdAt;
       } else {
-        intervals.push([cursor ?? rangeStart, event.createdAt]);
+        if (cursor !== null) {
+          intervals.push([cursor, event.createdAt]);
+        }
         cursor = null;
       }
     }

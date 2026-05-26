@@ -375,7 +375,7 @@ onMounted(() => store.load());
         />
         <MetricCard
           :icon="windowIcon"
-          label="Windows open"
+          label="Windows open / week"
           :value="fmt(report.windowOpenHours, 1)"
           unit="hours"
           subtitle="Total in period"
