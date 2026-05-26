@@ -1,4 +1,5 @@
-import { User } from "../domain/Entities";
+import { Role } from "../domain/Role";
+import { User } from "../domain/User";
 import { UserRepository } from "../domain/UserRepository";
 import {
   PreferencesRepository,
@@ -37,7 +38,7 @@ export class MongoUserRepository
   }
 
   async findAdminsByHome(homeId: string): Promise<User[]> {
-    const docs = await UserModel.find({ homeId, role: "Admin" })
+    const docs = await UserModel.find({ homeId, role: Role.admin().name })
       .lean<UserRecord[]>()
       .exec();
     return docs.map((d) => this.toUser(d));
@@ -53,8 +54,7 @@ export class MongoUserRepository
       { id: user.id },
       {
         $set: {
-          role: user.role,
-          password: user.password,
+          role: user.role.name,
           notificationPreferences: user.notificationPreferences,
         },
       },
@@ -62,14 +62,14 @@ export class MongoUserRepository
   }
 
   private toUser(doc: UserRecord): User {
-    return {
-      id: doc.id,
-      homeId: doc.homeId,
-      username: doc.username,
-      password: doc.password,
-      role: doc.role,
-      notificationPreferences: doc.notificationPreferences,
-    };
+    return new User(
+      doc.id,
+      doc.homeId,
+      doc.username,
+      doc.password,
+      Role.parse(doc.role),
+      doc.notificationPreferences ?? [],
+    );
   }
 
   async findAllByHome(homeId: string): Promise<UserPrefsRecord[]> {

@@ -1,4 +1,5 @@
-import { User } from "../domain/Entities";
+import { Role } from "../domain/Role";
+import { User } from "../domain/User";
 import { UserRepository } from "../domain/UserRepository";
 import {
   PreferencesRepository,
@@ -10,22 +11,12 @@ export class InMemoryUserRepository
   implements UserRepository, PreferencesRepository
 {
   private users: User[] = [
-    {
-      id: "1",
-      username: "mockuser",
-      password: "mockpassword",
-      homeId: "1",
-      role: "StandardUser",
-      notificationPreferences: [...ALL_NOTIFICATION_TYPES],
-    },
-    {
-      id: "2",
-      username: "adminuser",
-      password: "mockpassword",
-      homeId: "1",
-      role: "Admin",
-      notificationPreferences: [...ALL_NOTIFICATION_TYPES],
-    },
+    new User("1", "1", "mockuser", "mockpassword", Role.standard(), [
+      ...ALL_NOTIFICATION_TYPES,
+    ]),
+    new User("2", "1", "adminuser", "mockpassword", Role.admin(), [
+      ...ALL_NOTIFICATION_TYPES,
+    ]),
   ];
 
   async findByUsernameAndHomeId(
@@ -43,7 +34,7 @@ export class InMemoryUserRepository
   }
 
   async findAdminsByHome(homeId: string): Promise<User[]> {
-    return this.users.filter((u) => u.homeId === homeId && u.role === "Admin");
+    return this.users.filter((u) => u.homeId === homeId && u.role.isAdmin());
   }
 
   async listUsersOfHome(homeId: string): Promise<User[]> {
@@ -64,10 +55,11 @@ export class InMemoryUserRepository
       .filter((u) => u.homeId === homeId)
       .map((u) => ({
         username: u.username,
-        role: u.role,
-        notificationPreferences: u.notificationPreferences ?? [
-          ...ALL_NOTIFICATION_TYPES,
-        ],
+        role: u.role.name,
+        notificationPreferences:
+          u.notificationPreferences.length > 0
+            ? [...u.notificationPreferences]
+            : [...ALL_NOTIFICATION_TYPES],
       }));
   }
 
@@ -79,7 +71,9 @@ export class InMemoryUserRepository
       (u) => u.homeId === homeId && u.username === username,
     );
     if (!user) return null;
-    return user.notificationPreferences ?? [...ALL_NOTIFICATION_TYPES];
+    return user.notificationPreferences.length > 0
+      ? [...user.notificationPreferences]
+      : [...ALL_NOTIFICATION_TYPES];
   }
 
   async updatePreferences(
@@ -91,7 +85,7 @@ export class InMemoryUserRepository
       (u) => u.homeId === homeId && u.username === username,
     );
     if (user) {
-      (user as User).notificationPreferences = types;
+      user.updateNotificationPreferences(types);
     }
   }
 }

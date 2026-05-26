@@ -1,4 +1,4 @@
-import { User } from "./Entities";
+import { User } from "./User";
 
 export interface UserRepository {
   findByUsernameAndHomeId(
