@@ -6,6 +6,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\usepackage{subcaption}
 \usepackage{hyperref}
 \usepackage{geometry}
 \usepackage{enumitem}
@@ -151,19 +152,225 @@ L'interfaccia utente è progettata per essere intuitiva e facile da navigare, co
 \end{figure}
 Di seguito sono riportati i mockup delle principali schermate dell'applicazione, sia per la versione mobile che per la versione desktop. Sebbene siano state apportate lievi modifiche durante la fase di implementazione, l'interfaccia grafica è rimasta sostanzialmente fedele a questi mockup.
 
-% TODO: inserisci mockup effettivi (e magari descrivi più nel dettaglio le scelte di design?)
-\begin{figure}[h]
+% TODO:  magari descrivi più nel dettaglio le scelte di design?
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{img/moodboard.png}
-    \caption{Schermata di login}
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:dashboard-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:dashboard-desktop-mockup}
+    \end{subfigure}
+    \caption{Dashboard}
+    \label{fig:dashboard-mockup}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{img/moodboard.png}
-    \caption{Schermata dashboard}
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:devices-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:devices-desktop-mockup}
+    \end{subfigure}
+    \caption{Lista device}
+    \label{fig:devices-mockup}
 \end{figure}
 
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:add-device-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:add-device-desktop-mockup}
+    \end{subfigure}
+    \caption{Aggiunta di un nuovo device}
+    \label{fig:add-device-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:chatbot-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:chatbot-desktop-mockup}
+    \end{subfigure}
+    \caption{Chatbot}
+    \label{fig:chatbot-mockup}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:rules-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:rules-desktop-mockup}
+    \end{subfigure}
+    \caption{Regole di automazione}
+    \label{fig:rules-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:new-rule-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:new-rule-desktop-mockup}
+    \end{subfigure}
+    \caption{Creazione nuova regola di automazione}
+    \label{fig:new-rule-mockup}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:activity-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:activity-desktop-mockup}
+    \end{subfigure}
+    \caption{Notifiche}
+    \label{fig:activity-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:insights-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:insights-desktop-mockup}
+    \end{subfigure}
+    \caption{Report settimanale}
+    \label{fig:insights-mockup}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/plan-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:plan-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/plan-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:plan-desktop-mockup}
+    \end{subfigure}
+    \caption{Programmazione settimanale del termostato}
+    \label{fig:plan-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:event-log-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:event-log-desktop-mockup}
+    \end{subfigure}
+    \caption{Log di eventi}
+    \label{fig:event-log-mockup}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:settings-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:settings-desktop-mockup}
+    \end{subfigure}
+    \caption{Impostazioni}
+    \label{fig:settings-mockup}
+\end{figure}
 \subsection{Design Architetturale}
 Il progetto è stato realizzato seguendo la filosofia di design \textbf{Domain-Driven Design (DDD)}. Come pattern architetturale, è stata adottata un'architettura esagonale (ports and adapters) per ogni bounded context identificato. In particolare, sono stati identificati i seguenti bounded contexts:
 \begin{itemize}
@@ -578,5 +785,222 @@ Gli sviluppi futuri includono l'estensione dei dispositivi supportati e l'integr
 \section{Screenshots}
 Sono di seguito allegati gli screenshot finali dell'applicazione, sia in versione mobile che in versione desktop.
 
-% TODO: aggiungi appendice in fondo con tutte le schermate sia mobile che web
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:dashboard-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:dashboard-desktop-screenshot}
+    \end{subfigure}
+    \caption{Dashboard}
+    \label{fig:dashboard-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:devices-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:devices-desktop-screenshot}
+    \end{subfigure}
+    \caption{Lista device}
+    \label{fig:devices-screenshot}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:add-device-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:add-device-desktop-screenshot}
+    \end{subfigure}
+    \caption{Aggiunta di un nuovo device}
+    \label{fig:add-device-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:chatbot-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:chatbot-desktop-screenshot}
+    \end{subfigure}
+    \caption{Chatbot}
+    \label{fig:chatbot-screenshot}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:rules-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:rules-desktop-screenshot}
+    \end{subfigure}
+    \caption{Regole di automazione}
+    \label{fig:rules-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:new-rule-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:new-rule-desktop-screenshot}
+    \end{subfigure}
+    \caption{Creazione nuova regola di automazione}
+    \label{fig:new-rule-screenshot}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:activity-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:activity-desktop-screenshot}
+    \end{subfigure}
+    \caption{Notifiche}
+    \label{fig:activity-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:insights-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:insights-desktop-screenshot}
+    \end{subfigure}
+    \caption{Report settimanale}
+    \label{fig:insights-screenshot}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/plan-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:plan-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/plan-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:plan-desktop-screenshot}
+    \end{subfigure}
+    \caption{Programmazione settimanale del termostato}
+    \label{fig:plan-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:event-log-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:event-log-desktop-screenshot}
+    \end{subfigure}
+    \caption{Log di eventi}
+    \label{fig:event-log-screenshot}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:settings-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:settings-desktop-screenshot}
+    \end{subfigure}
+    \caption{Impostazioni}
+    \label{fig:settings-screenshot}
+\end{figure}
 \end{document}
