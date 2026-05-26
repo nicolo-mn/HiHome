@@ -274,6 +274,7 @@ Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, V
     \item \textbf{Express.js}: framework per Node.js utilizzato per la realizzazione del server backend, che espone API RESTful per la comunicazione con i client.
     \item \textbf{Socket.io}: libreria per la comunicazione in tempo reale tra client e server, utilizzata per l'invio di notifiche, aggiornamenti in tempo reale e streaming delle risposte del modello AI.
     \item \textbf{express-validator}: libreria per la convalida degli input degli utenti all'interno di Middleware, utilizzata per garantire la qualità e la sicurezza dei dati inseriti.
+    \item \textbf{Vitest}: framework per i test unitari, utilizzato per assicurare il corretto funzionamento delle funzionalità principali.
 \end{itemize}
 
 \subsection{Frontend}
@@ -404,6 +405,31 @@ async streamChat(
   );
 }
 \end{lstlisting}
+
+\newpage
+\section{Test}
+\subsection{Euristiche di Nielsen}
+Per quanto riguarda la produzione di mockup e l'implementazione del frontend, è stato prestata particolare attenzione alle \textbf{Euristiche di Nielsen} per l'usabilità, al fine di garantire un'esperienza utente ottimale. Di seguito sono riportati alcuni esempi di come queste euristiche sono state applicate durante la progettazione dell'interfaccia utente:
+\begin{itemize}
+    \item \textbf{Visibilità dello stato del sistema}: sono state implementate notifiche in tempo reale per informare gli utenti su eventi importanti. Sono stati inseriti feedback visivi immediati quando lo stato di un dispositivo smart viene modificato, ad esempio agendo sul toogle corrispondente.
+    \item \textbf{Corrispondenza tra il sistema e il mondo reale}: sono stati utilizzati termini e icone familiari agli utenti per rappresentare i dispositivi smart e le azioni disponibili, ad esempio un'icona di una lampadina per rappresentare una luce.
+    \item \textbf{Controllo e libertà dell'utente}: è stata implementata la possibilità di annullare azioni semplicemente, come il cambio istantaneo del toggle di dispositivi smart o la possibiltà di eliminare facilemente regole di automazione. Inoltre, la navbar permette una navigazione semplice e veloce tra le diverse sezioni dell'applicazione.
+    \item \textbf{Coerenza e standard}: è stata mantenuta una coerenza visiva e funzionale in tutte le pagine dell'applicazione, utilizzando la stessa palette colori, lo stesso stile dei pulsanti e lo stesso layout per elementi simili.
+    \item \textbf{Prevenzione dell'errore}: abbiamo implementato meccanismi di prevenzione di errori, ad esempio, nel momento in cui l'utente agisce sul termostato, la temperatura viene modificata attraverso pulsanti di incremento/decremento, che sono disabilitati quando viene raggiunta la temperatura massima o minima consentita, evitando così l'inserimento di valori non validi.
+    \item \textbf{Riconoscimento piuttosto che ricordo}: sono stati utilizzati menu a tendina, icone e pulsanti chiaramente etichettati per facilitare la navigazione e l'interazione, riducendo la necessità per gli utenti di ricordare comandi o percorsi specifici. Ad esempio, nella creazione di una regola di automazione, i campi per la condizione e l'azione sono presentati come menu a tendina con opzioni predefinite, facilitando la selezione e riducendo la possibilità di errori, come l'inserimento di device non esistenti o azioni non valide.
+    \item \textbf{Flessibilità e efficienza d'uso}: l'applicazione è stata progettata per essere utilizzata sia da utenti esperti che da utenti meno esperti. Ad esempio, una regola di automazione può essere creata tramite un'interfaccia guidata per utenti meno esperti, ma anche attraverso linguaggio naturale via chat, offrendo così un trade-off tra flessibilità e intuitività.
+    \item \textbf{Estetica e design minimalista}: seguendo una filosofia "less is more", l'interfaccia è stata progettata per essere pulita, evitando elementi pesanti e ricchi di testo a favore di icone intuitive all'interno di layout semplici.
+    \item \textbf{Aiutare gli utenti a riconoscere, diagnosticare e recuperare gli errori}: sono stati implementati messaggi di errore chiari e specifici, ad esempio, se un utente tenta di eseguire un'azione non consentita, viene visualizzato un messaggio che spiega il motivo del blocco e suggerisce come risolvere il problema.
+    \item \textbf{Aiuto e documentazione}: dando la priorità a un design intuitivo ed a un'interfaccia auto-esplicativa, abbiamo ritenuto che l'applicazione non necessitasse di una sezione di aiuto dedicata.
+\end{itemize}
+\subsection{Unit Testing e Strumenti di sviluppo}
+Per garantire il corretto funzionamento delle funzionalità principali, sono stati utilizzati test unitari per il backend. Questo permette di verificare frequentemente lo stato dell'applicazione e di avere sempre a disposizione test regressivi da effettuare ad ogni cambiamento o estensione delle funzionalità. Per i test unitari, sono stati utilizzati \textbf{Supertest} e \textbf{Vitest}. I test sono stati inseriti nella pipeline di Continuous Integration e nei Git Hook, perciò sono eseguiti automaticamente ad ogni push, ad ogni pull request e ad ogni commit sul branch principale, garantendo così che il codice presente in questi branch sia sempre coperto da test e che eventuali errori vengano individuati tempestivamente. Inoltre, i test ci hanno anche permesso di tenere sotto controllo la copertura del codice.
+Per assicurarsi la compatibilità cross-browser, l'applicazione è stata testata regolarmente su Google Chrome e Mozilla Firefox. Grazie alla possibilità di cambiare il tipo di device simulato all'interno degli strumenti di sviluppo, è stato possibile testare l'applicazione su una vasta gamma di dispositivi, dando la priorità ai dispositivi mobile, in ottima mobile-first.
+
+\subsection{Test di usabilità}
+
+\newpage
+\section{Screenshots}
 
 % TODO: aggiungi appendice in fondo con tutte le schermate sia mobile che web
 \end{document}
