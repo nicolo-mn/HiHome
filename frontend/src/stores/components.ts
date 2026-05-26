@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { io, type Socket } from "socket.io-client";
 import { componentsApi } from "@/api";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 import { getRooms } from "@/api/rooms";
 import type {
   HomeComponent,
@@ -72,8 +73,7 @@ export const useComponentsStore = defineStore("components", () => {
       components.value = loaded.map(enrichRoomName);
       loadedHomeId.value = homeId.value;
     } catch (e) {
-      error.value =
-        e instanceof Error ? e.message : "Failed to load components";
+      error.value = humanizeErrorMessage(e, "load your devices");
     } finally {
       isLoading.value = false;
     }
@@ -149,7 +149,7 @@ export const useComponentsStore = defineStore("components", () => {
       );
     } catch (e) {
       if (!error.value) {
-        error.value = e instanceof Error ? e.message : "Action failed";
+        error.value = humanizeErrorMessage(e, "control that device");
       }
     } finally {
       busy.remove(componentId);
@@ -184,7 +184,7 @@ export const useComponentsStore = defineStore("components", () => {
       components.value = [...components.value, resolved];
       return created;
     } catch (e) {
-      error.value = e instanceof Error ? e.message : "Failed to add component";
+      error.value = humanizeErrorMessage(e, "add the device");
       throw e;
     }
   }

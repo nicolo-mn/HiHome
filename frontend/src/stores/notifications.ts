@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { notificationsApi } from "@/api";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 import type { NotificationDTO } from "@/api/notifications";
 import { useAuthStore } from "@/stores/auth";
 
@@ -27,8 +28,7 @@ export const useNotificationsStore = defineStore("notifications", () => {
       );
       loadedHomeId.value = homeId.value;
     } catch (e) {
-      error.value =
-        e instanceof Error ? e.message : "Failed to load notifications";
+      error.value = humanizeErrorMessage(e, "load your notifications");
     } finally {
       isLoading.value = false;
     }

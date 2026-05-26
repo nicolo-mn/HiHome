@@ -13,6 +13,7 @@ import ComponentCard from "@/components/cards/ComponentCard.vue";
 import AddComponentCard from "@/components/cards/AddComponentCard.vue";
 import BaseButton from "@/components/BaseButton.vue";
 import BaseInput from "@/components/BaseInput.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 
 const auth = useAuthStore();
 const store = useComponentsStore();
@@ -145,7 +146,11 @@ onMounted(() => {
         </button>
       </div>
 
-      <p v-if="createError" class="text-rose-500 text-sm">{{ createError }}</p>
+      <ErrorBanner
+        v-if="createError"
+        :error="createError"
+        action="add the device"
+      />
       <p v-if="!hasRooms" class="text-gray-400 text-sm">
         Add a room before creating devices.
       </p>
@@ -204,11 +209,13 @@ onMounted(() => {
       </div>
     </section>
 
-    <div v-if="error && components.length === 0" class="flex flex-col gap-2">
-      <p class="text-rose-500 text-sm">{{ error }}</p>
-      <BaseButton label="Retry" variant="secondary" @click="load" />
-    </div>
-    <p v-else-if="error" class="text-rose-500 text-sm">{{ error }}</p>
+    <ErrorBanner
+      v-if="error && components.length === 0"
+      :error="error"
+      action="load your devices"
+      :on-retry="() => load()"
+    />
+    <ErrorBanner v-else-if="error" :error="error" />
 
     <p
       v-if="isLoading && components.length === 0"

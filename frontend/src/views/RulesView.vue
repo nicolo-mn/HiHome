@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import AppHeader from "@/components/AppHeader.vue";
 import RuleCard from "@/components/RuleCard.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -24,15 +25,18 @@ const {
   run: load,
   isLoading,
   error,
-} = useAsyncAction(async () => {
-  if (!homeId.value) return;
-  const [rulesData, componentsData] = await Promise.all([
-    rulesApi.getRules(homeId.value),
-    componentsApi.getComponents(homeId.value),
-  ]);
-  rules.value = rulesData;
-  components.value = componentsData;
-});
+} = useAsyncAction(
+  async () => {
+    if (!homeId.value) return;
+    const [rulesData, componentsData] = await Promise.all([
+      rulesApi.getRules(homeId.value),
+      componentsApi.getComponents(homeId.value),
+    ]);
+    rules.value = rulesData;
+    components.value = componentsData;
+  },
+  { action: "load your rules" },
+);
 
 const { run: remove, error: deleteError } = useAsyncAction(
   async (ruleId: string) => {
@@ -40,6 +44,7 @@ const { run: remove, error: deleteError } = useAsyncAction(
     await rulesApi.deleteRule(homeId.value, ruleId);
     await load();
   },
+  { action: "delete the rule" },
 );
 
 const { run: reorder, error: reorderError } = useAsyncAction(
@@ -59,6 +64,7 @@ const { run: reorder, error: reorderError } = useAsyncAction(
       throw err;
     }
   },
+  { action: "reorder your rules" },
 );
 
 function swap(ids: string[], i: number, j: number) {
@@ -92,9 +98,22 @@ onMounted(load);
       @action="router.push({ name: 'rule-create' })"
     />
 
-    <p v-if="error" class="text-rose-500 text-sm">{{ error }}</p>
-    <p v-if="deleteError" class="text-rose-500 text-sm">{{ deleteError }}</p>
-    <p v-if="reorderError" class="text-rose-500 text-sm">{{ reorderError }}</p>
+    <ErrorBanner
+      v-if="error"
+      :error="error"
+      action="load your rules"
+      :on-retry="() => load()"
+    />
+    <ErrorBanner
+      v-if="deleteError"
+      :error="deleteError"
+      action="delete the rule"
+    />
+    <ErrorBanner
+      v-if="reorderError"
+      :error="reorderError"
+      action="reorder your rules"
+    />
 
     <p v-if="isLoading && rules.length === 0" class="text-gray-400 text-sm">
       Loading rules…

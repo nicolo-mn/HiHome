@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import { useUsageStore } from "@/stores/usage";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
+import ErrorBanner from "@/components/ErrorBanner.vue";
 import MetricCard from "@/components/cards/MetricCard.vue";
 import lightIcon from "@/assets/icons/light.svg?raw";
 import windowIcon from "@/assets/icons/window.svg?raw";
@@ -185,7 +186,12 @@ onMounted(() => store.load());
   <div class="flex flex-col gap-6 md:gap-8">
     <AppHeader title="Insights" />
 
-    <p v-if="error" class="text-rose-500 text-sm">{{ error }}</p>
+    <ErrorBanner
+      v-if="error"
+      :error="error"
+      action="load usage insights"
+      :on-retry="() => store.load()"
+    />
 
     <div v-if="isLoading && !report" class="text-gray-400 text-sm">
       Loading insights…

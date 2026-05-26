@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { usersApi, type RoleName, type UserSummary } from "@/api";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 import { useAuthStore } from "@/stores/auth";
 
 export const useUsersStore = defineStore("users", () => {
@@ -28,7 +29,7 @@ export const useUsersStore = defineStore("users", () => {
       loadedHomeId.value = targetHomeId;
     } catch (e) {
       if (targetHomeId !== homeId.value) return;
-      error.value = e instanceof Error ? e.message : "Failed to load users";
+      error.value = humanizeErrorMessage(e, "load the user list");
     } finally {
       if (targetHomeId === homeId.value) isLoading.value = false;
     }
@@ -51,7 +52,7 @@ export const useUsersStore = defineStore("users", () => {
       if (idx !== -1) users.value[idx] = updated;
     } catch (e) {
       if (targetHomeId !== homeId.value) return;
-      error.value = e instanceof Error ? e.message : "Failed to change role";
+      error.value = humanizeErrorMessage(e, "change that user's role");
     } finally {
       if (targetHomeId === homeId.value) isLoading.value = false;
     }

@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { eventLogApi } from "@/api";
+import { humanizeErrorMessage } from "@/utils/humanizeError";
 import type { ComponentEventDTO } from "@/api/event-log";
 import { useAuthStore } from "@/stores/auth";
 
@@ -25,7 +26,7 @@ export const useEventLogStore = defineStore("event-log", () => {
       events.value = await eventLogApi.getComponentEvents(homeId.value);
       loadedHomeId.value = homeId.value;
     } catch (e) {
-      error.value = e instanceof Error ? e.message : "Failed to load event log";
+      error.value = humanizeErrorMessage(e, "load the event log");
     } finally {
       isLoading.value = false;
     }
