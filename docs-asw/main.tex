@@ -10,7 +10,6 @@
 \usepackage{geometry}
 \usepackage{enumitem}
 \usepackage{longtable}
-\usepackage{svg}
 \usepackage{xcolor}
 \usepackage{listings}
 \definecolor{blue}{rgb}{0.13, 0.13, 1}
@@ -187,19 +186,21 @@ Per quanto riguarda i concetti di dominio, si definiscono di seguito i principal
 \end{itemize}
 \subsection{Progettazione API}
 % TODO: IMPORTANTE modifica i grafici e le descrizioni degli endpoint quando li cambi
+
 \begin{figure}[h]
     \centering
-    \includesvg[width=0.8\textwidth]{graphs/backend}
-    \caption{API Endpoints per il backend Node.js}
+    \includegraphics[width=0.8\textwidth]{graphs/backend.png}
+    \caption{API Backend Node.js}
     \label{ref:backend-apis}
 \end{figure}
 
 \begin{figure}[h]
     \centering
-    \includesvg[width=0.8\textwidth]{graphs/ext-api-service}
-    \caption{API Endpoints per il servizio esterno Go per il meteo}
+    \includegraphics[width=0.8\textwidth]{graphs/ext-api-service.png}
+    \caption{API Servizio Esterno Go (Meteo e Qualità dell'Aria)}
     \label{ref:weather-apis}
 \end{figure}
+
 
 In Figura \ref{ref:backend-apis} sono riportati i principali endpoint esposti dal backend Node.js, mentre in Figura \ref{ref:weather-apis} sono riportati i principali endpoint esposti dal servizio esterno Go per il meteo. Di seguito è riportata una breve descrizione di ogni endpoint:
 \begin{itemize}
