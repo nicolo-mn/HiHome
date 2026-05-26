@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Request, Response } from "express";
 import { HomeController } from "./HomeController";
-import { HomeService } from "../../application/HomeService";
+import { HomeService } from "../../application/services/HomeService";
 import { InMemoryHomeRepository } from "../InMemoryHomeRepository";
 import { InMemorySensorRegistry } from "../InMemorySensorRegistry";
 

@@ -9,8 +9,8 @@ import {
   Thermostat,
   Window,
   ComponentEvent,
-} from "../domain";
-import { HomeModel } from "./models/HomeModel";
+} from "../../domain";
+import { HomeModel } from "../models/HomeModel";
 
 type ComponentRecord = {
   id: string;

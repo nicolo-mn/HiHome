@@ -10,7 +10,7 @@ import {
   createComponent,
   ComponentTypes,
   WeatherForecast,
-} from "../domain";
+} from "../../domain";
 
 describe("SocketIOSensorUpdateAdapter", () => {
   let io: Server;

@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
-import { Component, Home } from "../domain";
-import { ComponentUpdatePort } from "../domain/ComponentUpdatePort";
-import { ComponentStateSerializer } from "./ComponentStateSerializer";
+import { Component, Home } from "../../domain";
+import { ComponentUpdatePort } from "../../domain/ComponentUpdatePort";
+import { ComponentStateSerializer } from "../ComponentStateSerializer";
 
 export class SocketIOComponentUpdateAdapter implements ComponentUpdatePort {
   private serializer = new ComponentStateSerializer();

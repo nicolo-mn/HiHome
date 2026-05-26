@@ -3,7 +3,7 @@ import {
   ChatStreamEventType,
   type ChatStreamEvent,
   type ChatStreamPort,
-} from "../application/ChatStreamPort";
+} from "../../application/ports/ChatStreamPort";
 
 export class SocketIOChatStreamAdapter implements ChatStreamPort {
   constructor(private socket: Socket) {}

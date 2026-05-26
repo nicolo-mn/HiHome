@@ -1,4 +1,4 @@
-import { HomeService } from "../../home-context/application/HomeService";
+import { HomeService } from "../../home-context/application/services/HomeService";
 import { ComponentNameResolverPort } from "../application/ComponentNameResolverPort";
 
 export class HomeServiceComponentNameResolver implements ComponentNameResolverPort {

@@ -16,12 +16,12 @@ import {
   Room,
   createComponent,
   ComponentUpdatePort,
-} from "../domain";
+} from "../../domain";
 import { ActionService } from "./ActionService";
-import { SensorRegistry } from "./SensorRegistry";
-import { ExternalSensorsDataPort } from "./ExternalSensorsDataPort";
-import { RuleServicePort } from "./RuleServicePort";
-import { CreateComponentInput } from "./dtos/ComponentDTO";
+import { SensorRegistry } from "../SensorRegistry";
+import { ExternalSensorsDataPort } from "../ports/ExternalSensorsDataPort";
+import { RuleServicePort } from "../ports/RuleServicePort";
+import { CreateComponentInput } from "../dtos/ComponentDTO";
 
 export class HomeService implements ActionService {
   constructor(

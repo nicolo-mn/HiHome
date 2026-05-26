@@ -6,7 +6,7 @@ import {
   WindowCloseAction,
   WindowOpenAction,
 } from "../domain/Actions";
-import { ActionService } from "../../home-context/application/ActionService";
+import { ActionService } from "../../home-context/application/services/ActionService";
 
 export class ActionExecutionAdapter implements ActionExecutionPort {
   constructor(private actionService: ActionService) {}

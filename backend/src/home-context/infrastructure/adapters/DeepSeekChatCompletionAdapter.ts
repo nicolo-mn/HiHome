@@ -1,15 +1,15 @@
 import type { ChatCompletionPort } from "../application/ChatCompletionPort";
-import type { ChatMessage } from "../application/ChatService";
-import type { ChatStreamPort } from "../application/ChatStreamPort";
-import { ChatStreamEventType } from "../application/ChatStreamPort";
+import type { ChatMessage } from "../../application/services/ChatService";
+import type { ChatStreamPort } from "../../application/ports/ChatStreamPort";
+import { ChatStreamEventType } from "../../application/ports/ChatStreamPort";
 import type {
   ForecastPort,
   ForecastSummary,
 } from "../application/ForecastPort";
-import { HomeService } from "../application/HomeService";
-import { ComponentTypes } from "../domain";
-import type { AddRuleDto } from "../../rule-context/application/RuleService";
-import { RuleService } from "../../rule-context/application/RuleService";
+import { HomeService } from "../../application/services/HomeService";
+import { ComponentTypes } from "../../domain";
+import type { AddRuleDto } from "../../../rule-context/application/RuleService";
+import { RuleService } from "../../../rule-context/application/RuleService";
 type DeepSeekOptions = {
   apiKey: string;
   apiBaseUrl: string;

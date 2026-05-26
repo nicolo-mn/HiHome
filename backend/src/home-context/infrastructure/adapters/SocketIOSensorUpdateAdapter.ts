@@ -1,13 +1,13 @@
 import { Server } from "socket.io";
-import { SensorUpdatePort } from "../domain/SensorUpdatePort";
-import { HomeNotificationOutboundPort } from "../application/HomeNotificationPort";
+import { SensorUpdatePort } from "../../domain/SensorUpdatePort";
+import { HomeNotificationOutboundPort } from "../../application/ports/HomeNotificationPort";
 import {
   Home,
   TemperatureState,
   AirQualityState,
   WindState,
   WeatherState,
-} from "../domain";
+} from "../../domain";
 
 export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
   constructor(

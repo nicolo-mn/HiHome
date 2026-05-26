@@ -3,13 +3,13 @@ import type {
   ForecastPort,
   ForecastSummary,
 } from "../application/ForecastPort";
-import type { HistoricalWeatherSummary } from "../application/dtos/UsageDTO";
+import type { HistoricalWeatherSummary } from "../../application/dtos/UsageDTO";
 import {
   ExternalSensorsUpdate,
   Home,
   WeatherForecast,
   Coordinates,
-} from "../domain";
+} from "../../domain";
 
 type ExtApiServiceResponse = {
   temperature: number;

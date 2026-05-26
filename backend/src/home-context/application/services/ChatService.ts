@@ -1,5 +1,5 @@
-import type { ChatCompletionPort } from "./ChatCompletionPort";
-import type { ChatStreamPort } from "./ChatStreamPort";
+import type { ChatCompletionPort } from "../ChatCompletionPort";
+import type { ChatStreamPort } from "../ports/ChatStreamPort";
 import { HomeService } from "./HomeService";
 
 type ChatRole = "system" | "user" | "assistant";

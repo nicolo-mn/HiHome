@@ -8,10 +8,10 @@ import { UserContextFactory } from "./user-context/UserContextFactory";
 import { UserController } from "./user-context/infrastructure/UserController";
 import { authMiddleware } from "./home-context/infrastructure/middlewares/RoutesMiddlewares";
 import { InMemoryHomeRepository } from "./home-context/infrastructure/InMemoryHomeRepository";
-import { MongoHomeRepository } from "./home-context/infrastructure/MongoHomeRepository";
-import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/SocketIOSensorUpdateAdapter";
-import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/SocketIOComponentUpdateAdapter";
-import { HomeService } from "./home-context/application/HomeService";
+import { MongoHomeRepository } from "./home-context/infrastructure/repositories/MongoHomeRepository";
+import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOSensorUpdateAdapter";
+import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOComponentUpdateAdapter";
+import { HomeService } from "./home-context/application/services/HomeService";
 import { UsageService } from "./home-context/application/services/UsageService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
 import { UsageController } from "./home-context/infrastructure/controllers/UsageController";
@@ -21,11 +21,11 @@ import { PreferencesController } from "./user-context/infrastructure/controllers
 import { PreferencesRouter } from "./user-context/infrastructure/routes/PreferencesRouter";
 import { UserManagementController } from "./user-context/infrastructure/controllers/UserManagementController";
 import { UserRouter } from "./user-context/infrastructure/routes/UserRouter";
-import { ChatService } from "./home-context/application/ChatService";
+import { ChatService } from "./home-context/application/services/ChatService";
 
 import { HomeRouter } from "./home-context/infrastructure/routes/HomeRouter";
-import { ExtApiServiceDataAdapter } from "./home-context/infrastructure/ExtApiServiceDataAdapter";
-import { DeepSeekChatCompletionAdapter } from "./home-context/infrastructure/DeepSeekChatCompletionAdapter";
+import { ExtApiServiceDataAdapter } from "./home-context/infrastructure/adapters/ExtApiServiceDataAdapter";
+import { DeepSeekChatCompletionAdapter } from "./home-context/infrastructure/adapters/DeepSeekChatCompletionAdapter";
 import {
   wsAuthMiddleware,
   wsHomeIdMiddleware,
@@ -45,10 +45,10 @@ import { HomeServiceComponentNameResolver } from "./rule-context/infrastructure/
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/InMemoryHistoricalWeatherRepository";
 import { seedDatabase } from "./bootstrap/seedDatabase";
-import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/AsyncBusRuleServiceAdapter";
-import { NotificationContextAdapter } from "./home-context/infrastructure/NotificationPortAdapter";
-import { SocketIOChatStreamAdapter } from "./home-context/infrastructure/SocketIOChatStreamAdapter";
-import { ChatStreamEventType } from "./home-context/application/ChatStreamPort";
+import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/adapters/AsyncBusRuleServiceAdapter";
+import { NotificationContextAdapter } from "./home-context/infrastructure/adapters/NotificationPortAdapter";
+import { SocketIOChatStreamAdapter } from "./home-context/infrastructure/adapters/SocketIOChatStreamAdapter";
+import { ChatStreamEventType } from "./home-context/application/ports/ChatStreamPort";
 
 const app = express();
 const server = http.createServer(app);

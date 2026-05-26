@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { HomeService } from "../../application/HomeService";
+import { HomeService } from "../../application/services/HomeService";
 import { ComponentStateSerializer } from "../ComponentStateSerializer";
-import { HomeNotificationOutboundPort } from "../../application/HomeNotificationPort";
+import { HomeNotificationOutboundPort } from "../../application/ports/HomeNotificationPort";
 import { CreateComponentInput } from "../../application/dtos/ComponentDTO";
 import { ComponentTypes } from "../../domain";
 

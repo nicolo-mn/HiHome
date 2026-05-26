@@ -1,14 +1,14 @@
 import EventEmitter from "events";
-import { RuleServicePort } from "../application/RuleServicePort";
+import { RuleServicePort } from "../../application/ports/RuleServicePort";
 import {
   ExternalSensorsUpdate,
   TemperatureState,
   WeatherForecast,
-} from "../domain";
+} from "../../domain";
 import {
   ObservablesUpdatedDomainEvent,
   WeatherForecast as RuleWeatherForecast,
-} from "../../rule-context/domain/Observables";
+} from "../../../rule-context/domain/Observables";
 
 // TODO: evaluate shared kernel usage here
 export class AsyncBusRuleServiceAdapter implements RuleServicePort {
