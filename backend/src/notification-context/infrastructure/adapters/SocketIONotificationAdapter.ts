@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
-import { Notification } from "../domain/Notification";
-import { NotificationDeliveryPort } from "../domain/NotificationDeliveryPort";
+import { Notification } from "../../domain/Notification";
+import { NotificationDeliveryPort } from "../../domain/NotificationDeliveryPort";
 
 export class SocketIONotificationPort implements NotificationDeliveryPort {
   constructor(private io: Server) {}

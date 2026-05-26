@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { NotificationInboundPort } from "../../application/NotificationInboundPort";
+import { NotificationInboundPort } from "../../application/ports/NotificationInboundPort";
 
 export class NotificationController {
   constructor(private notificationPort: NotificationInboundPort) {}

@@ -3,7 +3,7 @@ import {
   HomeNotificationOutboundPort,
   SensorUpdateEvent,
 } from "../../application/ports/HomeNotificationPort";
-import { NotificationInboundPort } from "../../../notification-context/application/NotificationInboundPort";
+import { NotificationInboundPort } from "../../../notification-context/application/ports/NotificationInboundPort";
 
 export class NotificationContextAdapter implements HomeNotificationOutboundPort {
   constructor(private notificationPort: NotificationInboundPort) {}

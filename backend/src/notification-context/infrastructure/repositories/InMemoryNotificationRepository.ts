@@ -1,5 +1,5 @@
-import { Notification } from "../domain/Notification";
-import { NotificationRepository } from "../domain/NotificationRepository";
+import { Notification } from "../../domain/Notification";
+import { NotificationRepository } from "../../domain/NotificationRepository";
 
 export class InMemoryNotificationRepository implements NotificationRepository {
   private store: Notification[] = [];

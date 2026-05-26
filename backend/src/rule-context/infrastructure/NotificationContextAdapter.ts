@@ -1,4 +1,4 @@
-import { NotificationInboundPort } from "../../notification-context/application/NotificationInboundPort";
+import { NotificationInboundPort } from "../../notification-context/application/ports/NotificationInboundPort";
 import {
   RuleNotificationPort,
   RulesExecutedEvent,

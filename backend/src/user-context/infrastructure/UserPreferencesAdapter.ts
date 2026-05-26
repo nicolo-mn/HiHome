@@ -1,4 +1,4 @@
-import { UserPreferencesPort } from "../../notification-context/application/UserPreferencesPort";
+import { UserPreferencesPort } from "../../notification-context/application/ports/UserPreferencesPort";
 import {
   PreferencesRepository,
   ALL_NOTIFICATION_TYPES,
