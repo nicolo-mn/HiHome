@@ -85,9 +85,21 @@ export class UsageService {
       if (event.createdAt < rangeStart || event.createdAt > rangeEnd) continue;
       if (event.actor) manual += 1;
       else automated += 1;
-      activityByHour[event.createdAt.getHours()] += 1;
+      activityByHour[this.hourInRome(event.createdAt)] += 1;
     }
     return { manual, automated, activityByHour };
+  }
+
+  private hourInRome(date: Date): number {
+    return (
+      Number(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "Europe/Rome",
+          hour: "2-digit",
+          hour12: false,
+        }).format(date),
+      ) % 24
+    );
   }
 
   private round(value: number, decimals: number): number {
