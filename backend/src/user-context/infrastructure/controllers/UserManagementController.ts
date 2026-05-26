@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { UserManagementService } from "../../application/UserManagementService";
-import { parseRole, RoleName } from "../../domain/RoleAssignmentPolicy";
+import { Role } from "../../domain/Role";
 
 type AuthenticatedRequest = Request & {
   user?: { username?: string; homeId?: string; role?: string };
@@ -17,7 +17,7 @@ export class UserManagementController {
         users: users.map((u) => ({
           id: u.id,
           username: u.username,
-          role: u.role,
+          role: u.role.name,
         })),
       });
     } catch (e: any) {
@@ -29,9 +29,9 @@ export class UserManagementController {
     const homeId = req.params.id as string;
     const targetUserId = req.params.userId as string;
 
-    let role: RoleName;
+    let role: Role;
     try {
-      role = parseRole(req.body?.role);
+      role = Role.parse(req.body?.role);
     } catch (e: any) {
       res.status(400).json({ error: e?.message ?? "Invalid role" });
       return;
@@ -55,7 +55,7 @@ export class UserManagementController {
           id: updated.id,
           homeId: updated.homeId,
           username: updated.username,
-          role: updated.role,
+          role: updated.role.name,
         },
       });
     } catch (e: any) {

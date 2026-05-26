@@ -1,6 +1,6 @@
-import { User } from "../domain/Entities";
+import { Role } from "../domain/Role";
+import { User } from "../domain/User";
 import { UserRepository } from "../domain/UserRepository";
-import { RoleAssignmentPolicy, RoleName } from "../domain/RoleAssignmentPolicy";
 
 export class UserManagementService {
   constructor(private userRepo: UserRepository) {}
@@ -13,7 +13,7 @@ export class UserManagementService {
     actorHomeId: string,
     actorUsername: string,
     targetUserId: string,
-    newRole: RoleName,
+    newRole: Role,
   ): Promise<User> {
     const actor = await this.userRepo.findByUsernameAndHomeId(
       actorHomeId,
@@ -28,11 +28,16 @@ export class UserManagementService {
       throw new Error("Target user not found");
     }
 
-    const admins = await this.userRepo.findAdminsByHome(target.homeId);
-    RoleAssignmentPolicy.assertCanAssign(actor, target, newRole, admins);
+    const isDemotionFromAdmin = target.role.isAdmin() && !newRole.isAdmin();
+    const otherAdmins = isDemotionFromAdmin
+      ? (await this.userRepo.findAdminsByHome(target.homeId)).filter(
+          (u) => u.id !== target.id,
+        )
+      : [];
 
-    const updated: User = { ...target, role: newRole };
-    await this.userRepo.save(updated);
-    return updated;
+    target.changeRoleTo(newRole, actor, otherAdmins);
+
+    await this.userRepo.save(target);
+    return target;
   }
 }

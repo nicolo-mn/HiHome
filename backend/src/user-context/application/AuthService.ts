@@ -28,7 +28,7 @@ export class AuthService implements AuthInboundPort {
     const payload = {
       homeId: user.homeId,
       username: user.username,
-      role: user.role,
+      role: user.role.name,
     };
 
     const secret = process.env.JWT_SECRET as string;
