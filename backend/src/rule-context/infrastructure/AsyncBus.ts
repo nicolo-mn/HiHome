@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { RuleService } from "../application/RuleService";
+import { RuleService } from "../application/services/RuleService";
 import { ObservablesUpdatedDomainEvent } from "../domain/Observables";
 
 export class AsyncBus {

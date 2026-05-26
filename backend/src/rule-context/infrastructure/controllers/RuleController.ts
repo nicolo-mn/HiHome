@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { RuleService, AddRuleDto } from "../../application/RuleService";
+import {
+  RuleService,
+  AddRuleDto,
+} from "../../application/services/RuleService";
 import {
   NumericGreaterOperator,
   NumericLowerOperator,

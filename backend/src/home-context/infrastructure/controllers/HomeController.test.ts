@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { Request, Response } from "express";
 import { HomeController } from "./HomeController";
-import { HomeService } from "../../application/HomeService";
-import { InMemoryHomeRepository } from "../InMemoryHomeRepository";
+import { HomeService } from "../../application/services/HomeService";
+import { InMemoryHomeRepository } from "../repositories/InMemoryHomeRepository";
 import { InMemorySensorRegistry } from "../InMemorySensorRegistry";
 
 const createResponse = (): Response =>

@@ -1,11 +1,11 @@
 import { Server } from "socket.io";
-import { NotificationInboundPort } from "./application/NotificationInboundPort";
+import { NotificationInboundPort } from "./application/ports/NotificationInboundPort";
 import { DefaultNotificationPolicy } from "./application/NotificationPolicy";
-import { NotificationService } from "./application/NotificationService";
-import { UserPreferencesPort } from "./application/UserPreferencesPort";
-import { InMemoryNotificationRepository } from "./infrastructure/InMemoryNotificationRepository";
-import { MongoNotificationRepository } from "./infrastructure/MongoNotificationRepository";
-import { SocketIONotificationPort } from "./infrastructure/SocketIONotificationPort";
+import { NotificationService } from "./application/services/NotificationService";
+import { UserPreferencesPort } from "./application/ports/UserPreferencesPort";
+import { InMemoryNotificationRepository } from "./infrastructure/repositories/InMemoryNotificationRepository";
+import { MongoNotificationRepository } from "./infrastructure/repositories/MongoNotificationRepository";
+import { SocketIONotificationPort } from "./infrastructure/adapters/SocketIONotificationAdapter";
 
 export interface NotificationContext {
   notificationPort: NotificationInboundPort;
