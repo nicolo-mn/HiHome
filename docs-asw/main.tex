@@ -11,6 +11,40 @@
 \usepackage{enumitem}
 \usepackage{longtable}
 \usepackage{svg}
+\usepackage{xcolor}
+\usepackage{listings}
+\definecolor{blue}{rgb}{0.13, 0.13, 1}
+\definecolor{green}{rgb}{0, 0.5, 0}
+\definecolor{red}{rgb}{0.9, 0, 0}
+\definecolor{gray}{rgb}{0.46,0.45,0.48}
+\lstdefinelanguage{TypeScript}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break, const, let, export, import, from, async, await, class, constructor, implements, interface, extends, type, readonly, public, private, protected, Promise, string, number, boolean, void, any},
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywords={export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{gray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{green}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+\lstset{
+   language=TypeScript,
+   extendedchars=true,
+   basicstyle=\footnotesize\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   numbers=left,
+   numberstyle=\footnotesize\color{gray},
+   numbersep=9pt,
+   tabsize=2,
+   breaklines=true,
+   showtabs=false,
+   captionpos=b
+}
 \geometry{margin=1in}
 
 \title{HiHome}
@@ -106,6 +140,7 @@ Il progetto HiHome consiste in un applicativo per gestire dispositivi all'intern
     \item Git e Semantic Commit per la gestione del codice sorgente
 \end{itemize}
 
+\newpage
 \section{Design}
 \subsection{User Interface}
 L'interfaccia utente è progettata per essere intuitiva e facile da navigare, con un design moderno e pulito. Il design si è basato su un approccio mobile-first. L'usabilità su dispositivi mobile è stata quindi una priorità, e le interfacce grafiche sono state poi estese a schermi desktop tramite layout responsive. Per prima cosa, è stata realizzata una moodboard per identificare la palette colori da utilizzare e il tono generale dell'applicazione, visibile in Figura \ref{fig:moodboard}.
@@ -229,7 +264,7 @@ Di seguito vengono presentati i profili utente identificati e le situazioni tipi
 \textbf{Obiettivo:} Monitorare il benessere abitativo e tenere sotto controllo l'utilizzo della casa.
 
 \textbf{Scenario 3: Monitoraggio ambientale e notifiche.} Elena soffre di allergie ed è particolarmente attenta alla qualità dell'aria. Ha configurato l'app per ricevere notifiche push nel caso in cui i livelli di inquinanti esterni superino la soglia di guardia. Ricevuta una notifica di allerta inquinamento, decide di chiudere le finestre di casa tramite l'app per evitare che l'aria esterna comprometta l'ambiente domestico. Consulta inoltre i grafici della qualità dell'aria per capire l'andamento della settimana.
-
+\newpage
 \section{Tecnologie}
 Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, Vue.js, Node.js), con l'aggiunta di un servizio esterno in Go per ottenere dati meteo e sulla qualità dell'aria. Sono di seguito descritte le principali tecnologie e librerie principali utilizzate. 
 
@@ -264,7 +299,111 @@ Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, V
     \end{itemize}
 \end{itemize}
 
+\newpage
 \section{Codice}
+
+\subsection{Logica di Autorizzazione}
+Questo middleware rappresenta un componente fondamentale per la sicurezza delle API esposte. Tramite questo codice, il backend si assicura che solo gli utenti con privilegi di "Admin" possano eseguire determinate operazioni, come la manipolazione di regole e l'aggiunta di dispositivi. Il token JWT viene estratto dall'header della richiesta HTTP, decodificato e verificato, permettendo al controller di procedere solo se l'utente risulta avere il ruolo di amministratore.
+\begin{lstlisting}
+export const adminMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const token = getTokenFromHeader(req);
+  if (!token) {
+    res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
+    return;
+  }
+
+  try {
+    const decoded = verifyAuthToken(token) as JwtPayload;
+    (req as any).user = decoded;
+    if (decoded.role !== "Admin") {
+      res.status(403).json({ error: "Forbidden: Admin access required" });
+      return;
+    }
+    next();
+  } catch (error) {
+    res.status(401).json({ error: "Unauthorized: Invalid token" });
+  }
+};
+\end{lstlisting}
+
+\subsection{Validazione Input tramite Middleware}
+Questo blocco di codice illustra l'utilizzo della libreria \texttt{express-validator} per convalidare i parametri in ingresso alle API prima che vengano elaborati dai controller. Attraverso una catena di controlli dichiarativi, il middleware garantisce l'integrità dei dati: ad esempio, verifica che il parametro \texttt{temperature} sia un numero compreso tra 5 e 40 e che venga fornito solo se l'azione richiesta è effettivamente \texttt{setTemperature}. Questo approccio previene errori logici, iniezioni di dati malformati e disaccoppia la validazione sintattica dalla business logic.
+\begin{lstlisting}
+export const temperatureValidator = [
+  body("temperature")
+    .if((_value, { req }) => req.params?.action === "setTemperature")
+    .notEmpty()
+    .withMessage("temperature is required when action is setTemperature")
+    .isNumeric()
+    .withMessage("temperature must be a number")
+    .isFloat({ min: 5, max: 40 })
+    .withMessage("temperature must be between 5 and 40"),
+
+  body("temperature")
+    .if((_value, { req }) => req.params?.action !== "setTemperature")
+    .isEmpty()
+    .withMessage(
+      'temperature should only be provided when action is "setTemperature"',
+    ),
+
+  validate,
+];
+\end{lstlisting}
+
+\subsection{Notifiche Real-Time con Socket.io}
+Questo breve snippet mostra l'adattatore utilizzato per inviare aggiornamenti di stato dei dispositivi in tempo reale ai client connessi. Quando lo stato di un sensore viene aggiornato nel backend, questo adapter utilizza Socket.io per emetter un evento specifico a tutti i client connessi della casa interessata, garantendo così che le interfacce utente riflettano immediatamente i cambiamenti senza necessità di refresh manuali. Il metodo \texttt{broadcast} centralizza la logica di invio dei messaggi, semplificando l'implementazione di notifiche per i vari tipi di eventi.
+\begin{lstlisting}
+export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
+  constructor(
+    private io: Server,
+    private notificationPort?: HomeNotificationOutboundPort,
+  ) {}
+
+  private broadcast(homeId: string, event: string, payload: object): void {
+    console.log(
+      `SocketIOSensorUpdateAdapter: Broadcasting ${event} to home-${homeId}`,
+    );
+    this.io.to(`home-${homeId}`).emit(event, payload);
+  }
+
+  sendInternalTemperatureUpdate(home: Home, update: TemperatureState): void {
+    this.broadcast(home.id, "sensor:internal-temperature", {
+      temperature: update.temperature,
+    });
+  }
+}
+\end{lstlisting}
+
+\subsection{Integrazione con Modello AI (Streaming)}
+Questo snippet mostra come viene gestita la comunicazione con il modello AI in tempo reale. Invece di attendere la generazione completa della risposta, il metodo inoltra progressivamente i frammenti di testo generati al client tramite una porta dedicata (\texttt{ChatStreamPort}, che utilizza Socket.io). Prima di interrogare il modello, il contesto viene costruito dinamicamente generando un system prompt che include le direttive specifiche per il modello AI.
+\begin{lstlisting}
+async streamChat(
+  homeId: string,
+  username: string,
+  userMessage: string,
+  history: ChatMessage[],
+  streamPort: ChatStreamPort,
+  isAdmin: boolean,
+): Promise<string> {
+  if (!userMessage.trim()) {
+    throw new Error("Message is required");
+  }
+
+  const messages = await this.buildMessages(homeId, userMessage, history);
+
+  return this.chatCompletionPort.streamChat(
+    messages,
+    this.options.model,
+    homeId,
+    streamPort,
+    isAdmin,
+  );
+}
+\end{lstlisting}
 
 % TODO: aggiungi appendice in fondo con tutte le schermate sia mobile che web
 \end{document}
