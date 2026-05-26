@@ -128,14 +128,13 @@ describe("UsageService", () => {
       expect(r.lightsOnHoursPerWeek).toBeCloseTo(3);
     });
 
-    it("treats off-without-prior-on as light being on since range start", async () => {
+    it("ignores off-without-prior-on (orphan off event)", async () => {
       const events: ComponentEvent[] = [
         ev("LightTurnedOff", "light-1", hoursAgo(4)),
       ];
       const svc = makeService(events);
       const r = await svc.getUsage("1", 7, NOW);
-      const expectedHours = 7 * 24 - 4;
-      expect(r.lightsOnHoursPerWeek).toBeCloseTo(expectedHours);
+      expect(r.lightsOnHoursPerWeek).toBe(0);
     });
 
     it("carries over an 'on' that began before the range", async () => {
