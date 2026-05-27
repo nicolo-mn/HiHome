@@ -18,13 +18,13 @@ import {
   ComponentUpdatePort,
   SmartLock,
 } from "../../domain";
-import { ActionService } from "./ActionService";
 import { SensorRegistry } from "../SensorRegistry";
 import { ExternalSensorsDataPort } from "../ports/ExternalSensorsDataPort";
 import { RuleServicePort } from "../ports/RuleServicePort";
 import { CreateComponentInput } from "../dtos/ComponentDTO";
+import { ensureHomeExists, persistAndBroadcast } from "./ServiceHelpers";
 
-export class HomeService implements ActionService {
+export class HomeService {
   constructor(
     private homeRepo: HomeRepository,
     private sensorRegistry: SensorRegistry,
@@ -35,21 +35,21 @@ export class HomeService implements ActionService {
   ) {}
 
   async getComponents(homeId: string): Promise<Component[]> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     return home.getAllComponents();
   }
 
   async getComponentsWithRoomNames(
     homeId: string,
   ): Promise<{ component: Component; roomName: string }[]> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     return home.rooms.flatMap((room) =>
       room.components.map((component) => ({ component, roomName: room.name })),
     );
   }
 
   async getRooms(homeId: string): Promise<Room[]> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     return home.rooms;
   }
 
@@ -60,7 +60,7 @@ export class HomeService implements ActionService {
   }
 
   async getComponentEvents(homeId: string): Promise<ComponentEvent[]> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     return [...home.eventLog].sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
@@ -70,7 +70,7 @@ export class HomeService implements ActionService {
     homeId: string,
     input: CreateComponentInput,
   ): Promise<Component> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     const room = home.rooms.find((r) => r.id === input.roomId);
     if (!room) throw new Error("Room not found");
 
@@ -87,7 +87,7 @@ export class HomeService implements ActionService {
     param?: number,
     actor?: ComponentEventActor,
   ): Promise<Component> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
 
     const component = home.getComponentById(componentId);
     if (!component) {
@@ -107,7 +107,12 @@ export class HomeService implements ActionService {
     console.log(
       `Executing component action ${action} for home ${homeId} on component ${componentId}`,
     );
-    await this.persistAndBroadcast(home, component);
+    await persistAndBroadcast(
+      this.homeRepo,
+      home,
+      component,
+      this.componentUpdatePort,
+    );
     const event = (component as any)[action](param) as ComponentEvent;
     if (event) {
       home.addComponentEvent({ ...event, actor });
@@ -137,12 +142,12 @@ export class HomeService implements ActionService {
 
   async getHomeCoordinates(homeId: string): Promise<Coordinates> {
     console.log(`Fetching coordinates for home ${homeId}`);
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     return home.coordinates;
   }
 
   async getHourlyTemperatures(homeId: string): Promise<number[]> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     return home.hourlyTemperatures;
   }
 
@@ -150,7 +155,7 @@ export class HomeService implements ActionService {
     homeId: string,
     temperatures: number[],
   ): Promise<void> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
     if (temperatures.length !== 24) {
       throw new Error("Hourly temperatures must have exactly 24 values");
     }
@@ -187,174 +192,8 @@ export class HomeService implements ActionService {
     );
   }
 
-  async lightTurnOn(homeId: string, lightId: string): Promise<void> {
-    const componentType = ComponentTypes.LIGHT;
-
-    const home = await this.ensureHomeExists(homeId);
-
-    const component = home.getComponentByIdAndType(lightId, componentType);
-    if (!component) {
-      console.error(
-        `Failed to execute lightTurnOn: Component ${lightId} of type ${componentType} not found in home ${homeId}`,
-      );
-      throw new Error(
-        `Component ${lightId} of type ${componentType} not found`,
-      );
-    }
-
-    console.log(`Executing lightTurnOn for home ${homeId} on light ${lightId}`);
-    const light = component as Light;
-    const event = light.turnOn();
-    home.addComponentEvent(event);
-
-    await this.persistAndBroadcast(home, light);
-  }
-
-  async lightTurnOff(homeId: string, lightId: string): Promise<void> {
-    const componentType = ComponentTypes.LIGHT;
-
-    const home = await this.ensureHomeExists(homeId);
-
-    const component = home.getComponentByIdAndType(lightId, componentType);
-    if (!component) {
-      console.error(
-        `Failed to execute lightTurnOff: Component ${lightId} of type ${componentType} not found in home ${homeId}`,
-      );
-      throw new Error(
-        `Component ${lightId} of type ${componentType} not found`,
-      );
-    }
-
-    console.log(
-      `Executing lightTurnOff for home ${homeId} on light ${lightId}`,
-    );
-    const light = component as Light;
-    const event = light.turnOff();
-    home.addComponentEvent(event);
-
-    await this.persistAndBroadcast(home, light);
-  }
-
-  async windowOpen(homeId: string, windowId: string): Promise<void> {
-    const componentType = ComponentTypes.WINDOW;
-
-    const home = await this.ensureHomeExists(homeId);
-
-    const component = home.getComponentByIdAndType(windowId, componentType);
-    if (!component) {
-      console.error(
-        `Failed to execute windowOpen: Component ${windowId} of type ${componentType} not found in home ${homeId}`,
-      );
-      throw new Error(
-        `Component ${windowId} of type ${componentType} not found`,
-      );
-    }
-
-    console.log(
-      `Executing windowOpen for home ${homeId} on window ${windowId}`,
-    );
-    const window = component as Window;
-    const event = window.open();
-    home.addComponentEvent(event);
-
-    await this.persistAndBroadcast(home, window);
-  }
-
-  async windowClose(homeId: string, windowId: string): Promise<void> {
-    const componentType = ComponentTypes.WINDOW;
-
-    const home = await this.ensureHomeExists(homeId);
-
-    const component = home.getComponentByIdAndType(windowId, componentType);
-    if (!component) {
-      console.error(
-        `Failed to execute windowClose: Component ${windowId} of type ${componentType} not found in home ${homeId}`,
-      );
-      throw new Error(
-        `Component ${windowId} of type ${componentType} not found`,
-      );
-    }
-
-    console.log(
-      `Executing windowClose for home ${homeId} on window ${windowId}`,
-    );
-    const window = component as Window;
-    const event = window.close();
-    home.addComponentEvent(event);
-
-    await this.persistAndBroadcast(home, window);
-  }
-
-  async thermostatSetTemperature(
-    homeId: string,
-    thermostatId: string,
-    temperature: number,
-  ): Promise<void> {
-    const componentType = ComponentTypes.THERMOSTAT;
-
-    const home = await this.ensureHomeExists(homeId);
-    const component = home.getComponentByIdAndType(thermostatId, componentType);
-    if (!component) {
-      console.error(
-        `Failed to execute thermostatSetTemperature: Component ${thermostatId} of type ${componentType} not found in home ${homeId}`,
-      );
-      throw new Error(
-        `Component ${thermostatId} of type ${componentType} not found`,
-      );
-    }
-
-    console.log(
-      `Executing thermostatSetTemperature for home ${homeId} on thermostat ${thermostatId} to ${temperature}`,
-    );
-    const thermostat = component as Thermostat;
-    const event = thermostat.setTemperature(temperature);
-    home.addComponentEvent(event);
-
-    await this.persistAndBroadcast(home, thermostat);
-  }
-
-  async lockLock(homeId: string, lockId: string): Promise<void> {
-    const componentType = ComponentTypes.LOCK;
-
-    const home = await this.ensureHomeExists(homeId);
-    const component = home.getComponentByIdAndType(lockId, componentType);
-    if (!component) {
-      console.error(
-        `Failed to execute lockLock: Component ${lockId} of type ${componentType} not found in home ${homeId}`,
-      );
-      throw new Error(`Component ${lockId} of type ${componentType} not found`);
-    }
-
-    console.log(`Executing lockLock for home ${homeId} on lock ${lockId}`);
-    const lock = component as SmartLock;
-    const event = lock.lock();
-    home.addComponentEvent(event);
-
-    await this.persistAndBroadcast(home, lock);
-  }
-
-  async lockUnlock(homeId: string, lockId: string): Promise<void> {
-    const componentType = ComponentTypes.LOCK;
-
-    const home = await this.ensureHomeExists(homeId);
-    const component = home.getComponentByIdAndType(lockId, componentType);
-    if (!component) {
-      console.error(
-        `Failed to execute lockUnlock: Component ${lockId} of type ${componentType} not found in home ${homeId}`,
-      );
-      throw new Error(`Component ${lockId} of type ${componentType} not found`);
-    }
-
-    console.log(`Executing lockUnlock for home ${homeId} on lock ${lockId}`);
-    const lock = component as SmartLock;
-    const event = lock.unlock();
-    home.addComponentEvent(event);
-
-    await this.persistAndBroadcast(home, lock);
-  }
-
   async sendExternalSensorsUpdate(homeId: string): Promise<void> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
 
     const resolvedUpdate =
       this.sensorRegistry.getState(homeId)?.externalSensors;
@@ -364,7 +203,7 @@ export class HomeService implements ActionService {
   }
 
   async sendInternalSensorsUpdate(homeId: string): Promise<void> {
-    const home = await this.ensureHomeExists(homeId);
+    const home = await ensureHomeExists(this.homeRepo, homeId);
 
     const resolvedTemperature =
       this.sensorRegistry.getState(homeId)?.internalTemperature;
@@ -452,19 +291,5 @@ export class HomeService implements ActionService {
     update: TemperatureState,
   ): void {
     this.sensorUpdatePort.sendInternalTemperatureUpdate(home, update);
-  }
-
-  private async persistAndBroadcast(
-    home: Home,
-    component: Component,
-  ): Promise<void> {
-    await this.homeRepo.saveHome(home);
-    this.componentUpdatePort?.sendComponentUpdate(home, component);
-  }
-
-  private async ensureHomeExists(homeId: string) {
-    const home = await this.homeRepo.getHome(homeId);
-    if (!home) throw new Error(`Home ${homeId} not found`);
-    return home;
   }
 }
