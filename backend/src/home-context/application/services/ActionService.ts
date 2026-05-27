@@ -8,4 +8,6 @@ export interface ActionService {
     thermostatId: string,
     temperature: number,
   ): Promise<void>;
+  lockLock(homeId: string, lockId: string): Promise<void>;
+  lockUnlock(homeId: string, lockId: string): Promise<void>;
 }

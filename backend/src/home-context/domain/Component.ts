@@ -5,6 +5,8 @@ import {
   ComponentEventBase,
   LightTurnedOffEvent,
   LightTurnedOnEvent,
+  LockLockedEvent,
+  LockUnlockedEvent,
   ThermostatSetEvent,
   WindowClosedEvent,
   WindowOpenedEvent,
@@ -14,6 +16,7 @@ export enum ComponentTypes {
   LIGHT = "light",
   WINDOW = "window",
   THERMOSTAT = "thermostat",
+  LOCK = "lock",
 }
 
 export function createComponent(
@@ -27,6 +30,8 @@ export function createComponent(
       return new Window(id, input.name, input.roomId);
     case ComponentTypes.THERMOSTAT:
       return new Thermostat(id, input.name, input.roomId);
+    case ComponentTypes.LOCK:
+      return new SmartLock(id, input.name, input.roomId);
     default:
       throw new Error("Unsupported component type");
   }
@@ -153,6 +158,42 @@ export class Thermostat implements Component {
       eventType: "ThermostatSet",
       componentType: ComponentTypes.THERMOSTAT,
       targetTemperature: temp,
+    };
+  }
+}
+
+export class SmartLock implements Component {
+  private type: ComponentTypes = ComponentTypes.LOCK;
+  constructor(
+    public id: string,
+    public name: string,
+    public roomId: string,
+    public isLocked: boolean = true,
+  ) {}
+
+  getType(): ComponentTypes {
+    return this.type;
+  }
+
+  accept<T>(visitor: ComponentVisitor<T>): T {
+    return visitor.visitLock(this);
+  }
+
+  lock(actor?: ComponentEventActor): LockLockedEvent {
+    this.isLocked = true;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "LockLocked",
+      componentType: ComponentTypes.LOCK,
+    };
+  }
+
+  unlock(actor?: ComponentEventActor): LockUnlockedEvent {
+    this.isLocked = false;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "LockUnlocked",
+      componentType: ComponentTypes.LOCK,
     };
   }
 }

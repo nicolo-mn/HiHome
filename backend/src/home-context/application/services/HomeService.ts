@@ -16,6 +16,7 @@ import {
   Room,
   createComponent,
   ComponentUpdatePort,
+  SmartLock,
 } from "../../domain";
 import { ActionService } from "./ActionService";
 import { SensorRegistry } from "../SensorRegistry";
@@ -129,6 +130,7 @@ export class HomeService implements ActionService {
       if (type === ComponentTypes.LIGHT) return c instanceof Light;
       if (type === ComponentTypes.WINDOW) return c instanceof Window;
       if (type === ComponentTypes.THERMOSTAT) return c instanceof Thermostat;
+      if (type === ComponentTypes.LOCK) return c instanceof SmartLock;
       return false;
     });
   }
@@ -309,6 +311,46 @@ export class HomeService implements ActionService {
     home.addComponentEvent(event);
 
     await this.persistAndBroadcast(home, thermostat);
+  }
+
+  async lockLock(homeId: string, lockId: string): Promise<void> {
+    const componentType = ComponentTypes.LOCK;
+
+    const home = await this.ensureHomeExists(homeId);
+    const component = home.getComponentByIdAndType(lockId, componentType);
+    if (!component) {
+      console.error(
+        `Failed to execute lockLock: Component ${lockId} of type ${componentType} not found in home ${homeId}`,
+      );
+      throw new Error(`Component ${lockId} of type ${componentType} not found`);
+    }
+
+    console.log(`Executing lockLock for home ${homeId} on lock ${lockId}`);
+    const lock = component as SmartLock;
+    const event = lock.lock();
+    home.addComponentEvent(event);
+
+    await this.persistAndBroadcast(home, lock);
+  }
+
+  async lockUnlock(homeId: string, lockId: string): Promise<void> {
+    const componentType = ComponentTypes.LOCK;
+
+    const home = await this.ensureHomeExists(homeId);
+    const component = home.getComponentByIdAndType(lockId, componentType);
+    if (!component) {
+      console.error(
+        `Failed to execute lockUnlock: Component ${lockId} of type ${componentType} not found in home ${homeId}`,
+      );
+      throw new Error(`Component ${lockId} of type ${componentType} not found`);
+    }
+
+    console.log(`Executing lockUnlock for home ${homeId} on lock ${lockId}`);
+    const lock = component as SmartLock;
+    const event = lock.unlock();
+    home.addComponentEvent(event);
+
+    await this.persistAndBroadcast(home, lock);
   }
 
   async sendExternalSensorsUpdate(homeId: string): Promise<void> {

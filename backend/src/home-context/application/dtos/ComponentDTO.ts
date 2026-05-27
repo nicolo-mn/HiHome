@@ -6,7 +6,11 @@ export type CreateComponentInput = {
   roomId: string;
 };
 
-export type ComponentSerialization = LightDTO | WindowDTO | ThermostatDTO;
+export type ComponentSerialization =
+  | LightDTO
+  | WindowDTO
+  | ThermostatDTO
+  | SmartLockDTO;
 
 export type ComponentDTO = {
   id: string;
@@ -28,4 +32,9 @@ export type WindowDTO = ComponentDTO & {
 export type ThermostatDTO = ComponentDTO & {
   type: ComponentTypes;
   temperature: number;
+};
+
+export type SmartLockDTO = ComponentDTO & {
+  type: ComponentTypes;
+  isLocked: boolean;
 };
