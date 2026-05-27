@@ -7,10 +7,13 @@ export type ConditionDto = {
   target: string | number;
 };
 
+export type FanMode = "off" | "low" | "medium" | "high";
+
 export type ActionDto = {
   type: string;
   componentId: string;
   targetTemperature?: number;
+  mode?: FanMode;
 };
 
 export type RuleDto = {
