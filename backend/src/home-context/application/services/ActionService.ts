@@ -2,6 +2,8 @@ import {
   ComponentEventActor,
   ComponentTypes,
   ComponentUpdatePort,
+  Fan,
+  FanMode,
   HomeRepository,
   Light,
   SmartLock,
@@ -192,6 +194,34 @@ export class ActionService {
       this.homeRepo,
       home,
       lock,
+      this.componentUpdatePort,
+    );
+  }
+
+  async fanSetMode(
+    homeId: string,
+    fanId: string,
+    mode: FanMode,
+  ): Promise<void> {
+    const componentType = ComponentTypes.FAN;
+    const home = await ensureHomeExists(this.homeRepo, homeId);
+    const component = home.getComponentByIdAndType(fanId, componentType);
+    if (!component) {
+      console.error(
+        `Failed to execute fanSetMode: Component ${fanId} of type ${componentType} not found in home ${homeId}`,
+      );
+      throw new Error(`Component ${fanId} of type ${componentType} not found`);
+    }
+    console.log(
+      `Executing fanSetMode for home ${homeId} on fan ${fanId} to ${mode}`,
+    );
+    const fan = component as Fan;
+    const event = fan.setMode(mode);
+    home.addComponentEvent(event);
+    await persistAndBroadcast(
+      this.homeRepo,
+      home,
+      fan,
       this.componentUpdatePort,
     );
   }

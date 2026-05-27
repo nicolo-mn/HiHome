@@ -50,6 +50,14 @@ export type LockUnlockedEvent = ComponentEventBase & {
   componentType: ComponentTypes.LOCK;
 };
 
+export type FanMode = "off" | "low" | "medium" | "high";
+
+export type FanModeSetEvent = ComponentEventBase & {
+  eventType: "FanModeSet";
+  componentType: ComponentTypes.FAN;
+  mode: FanMode;
+};
+
 export type ComponentEvent =
   | LightTurnedOnEvent
   | LightTurnedOffEvent
@@ -57,4 +65,5 @@ export type ComponentEvent =
   | WindowClosedEvent
   | ThermostatSetEvent
   | LockLockedEvent
-  | LockUnlockedEvent;
+  | LockUnlockedEvent
+  | FanModeSetEvent;

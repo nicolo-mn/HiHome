@@ -1,6 +1,7 @@
 import {
   ComponentTypes,
   ComponentVisitor,
+  Fan,
   Light,
   SmartLock,
   Thermostat,
@@ -46,6 +47,16 @@ export class ComponentStateSerializer implements ComponentVisitor<ComponentSeria
       roomId: lock.roomId,
       type: ComponentTypes.LOCK,
       isLocked: lock.isLocked,
+    };
+  }
+
+  visitFan(fan: Fan): ComponentSerialization {
+    return {
+      id: fan.id,
+      name: fan.name,
+      roomId: fan.roomId,
+      type: ComponentTypes.FAN,
+      mode: fan.mode,
     };
   }
 }

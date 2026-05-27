@@ -1,4 +1,4 @@
-import { ComponentTypes } from "../../domain";
+import { ComponentTypes, FanMode } from "../../domain";
 
 export type CreateComponentInput = {
   name: string;
@@ -10,7 +10,8 @@ export type ComponentSerialization =
   | LightDTO
   | WindowDTO
   | ThermostatDTO
-  | SmartLockDTO;
+  | SmartLockDTO
+  | FanDTO;
 
 export type ComponentDTO = {
   id: string;
@@ -37,4 +38,9 @@ export type ThermostatDTO = ComponentDTO & {
 export type SmartLockDTO = ComponentDTO & {
   type: ComponentTypes;
   isLocked: boolean;
+};
+
+export type FanDTO = ComponentDTO & {
+  type: ComponentTypes;
+  mode: FanMode;
 };

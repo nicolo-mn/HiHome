@@ -3,6 +3,8 @@ import { ComponentVisitor } from "./ComponentVisitor";
 import {
   ComponentEventActor,
   ComponentEventBase,
+  FanMode,
+  FanModeSetEvent,
   LightTurnedOffEvent,
   LightTurnedOnEvent,
   LockLockedEvent,
@@ -17,6 +19,7 @@ export enum ComponentTypes {
   WINDOW = "window",
   THERMOSTAT = "thermostat",
   LOCK = "lock",
+  FAN = "fan",
 }
 
 export function createComponent(
@@ -32,6 +35,8 @@ export function createComponent(
       return new Thermostat(id, input.name, input.roomId);
     case ComponentTypes.LOCK:
       return new SmartLock(id, input.name, input.roomId);
+    case ComponentTypes.FAN:
+      return new Fan(id, input.name, input.roomId);
     default:
       throw new Error("Unsupported component type");
   }
@@ -194,6 +199,34 @@ export class SmartLock implements Component {
       ...buildEventBase(this, actor),
       eventType: "LockUnlocked",
       componentType: ComponentTypes.LOCK,
+    };
+  }
+}
+
+export class Fan implements Component {
+  private type: ComponentTypes = ComponentTypes.FAN;
+  constructor(
+    public id: string,
+    public name: string,
+    public roomId: string,
+    public mode: FanMode = "off",
+  ) {}
+
+  getType(): ComponentTypes {
+    return this.type;
+  }
+
+  accept<T>(visitor: ComponentVisitor<T>): T {
+    return visitor.visitFan(this);
+  }
+
+  setMode(mode: FanMode, actor?: ComponentEventActor): FanModeSetEvent {
+    this.mode = mode;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "FanModeSet",
+      componentType: ComponentTypes.FAN,
+      mode,
     };
   }
 }

@@ -17,6 +17,7 @@ import {
   createComponent,
   ComponentUpdatePort,
   SmartLock,
+  Fan,
 } from "../../domain";
 import { SensorRegistry } from "../SensorRegistry";
 import { ExternalSensorsDataPort } from "../ports/ExternalSensorsDataPort";
@@ -84,7 +85,7 @@ export class HomeService {
     homeId: string,
     componentId: string,
     action: string,
-    param?: number,
+    param?: number | string,
     actor?: ComponentEventActor,
   ): Promise<{ component: Component; roomName: string }> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
@@ -137,6 +138,7 @@ export class HomeService {
       if (type === ComponentTypes.WINDOW) return c instanceof Window;
       if (type === ComponentTypes.THERMOSTAT) return c instanceof Thermostat;
       if (type === ComponentTypes.LOCK) return c instanceof SmartLock;
+      if (type === ComponentTypes.FAN) return c instanceof Fan;
       return false;
     });
   }
