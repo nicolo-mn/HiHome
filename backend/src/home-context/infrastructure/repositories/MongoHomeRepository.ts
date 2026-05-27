@@ -239,13 +239,20 @@ export class MongoHomeRepository implements HomeRepository {
           componentType: ComponentTypes.FAN,
           mode: record.mode ?? "off",
         };
-      default:
+      case "LockLocked":
         return {
           ...base,
-          eventType: "LightTurnedOn",
-          componentType: ComponentTypes.LIGHT,
+          eventType,
+          componentType: ComponentTypes.LOCK,
+        };
+      case "LockUnlocked":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.LOCK,
         };
     }
+    throw new Error(`Unsupported event type: ${eventType}`);
   }
 
   private toComponentEventRecord(event: ComponentEvent): ComponentEventRecord {
@@ -298,8 +305,14 @@ export class MongoHomeRepository implements HomeRepository {
         return "WindowClosed";
       case "setTemperature":
         return "ThermostatSet";
+      case "lock":
+        return "LockLocked";
+      case "unlock":
+        return "LockUnlocked";
+      case "setMode":
+        return "FanModeSet";
       default:
-        return "LightTurnedOn";
+        throw new Error(`Unsupported event action: ${record.action}`);
     }
   }
 

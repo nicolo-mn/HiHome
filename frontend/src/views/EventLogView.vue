@@ -20,6 +20,8 @@ const TYPE_META: Record<string, { icon: IconName; accent: Accent }> = {
   light: { icon: "lamp", accent: "yellow" },
   window: { icon: "window", accent: "emerald" },
   thermostat: { icon: "device_thermostat", accent: "orange" },
+  lock: { icon: "lock", accent: "blue" },
+  fan: { icon: "fan", accent: "sky" },
 };
 
 function metaFor(type: string) {
@@ -44,6 +46,12 @@ function formatAction(e: ComponentEventDTO): string {
       return "Closed";
     case "ThermostatSet":
       return `Set temperature to ${e.targetTemperature.toFixed(1)}°C`;
+    case "LockLocked":
+      return "Locked";
+    case "LockUnlocked":
+      return "Unlocked";
+    case "FanModeSet":
+      return `Set mode to ${e.mode}`;
     default:
       return "Unknown action";
   }

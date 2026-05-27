@@ -40,12 +40,33 @@ export type ThermostatSetEventDTO = ComponentEventDTOBase & {
   targetTemperature: number;
 };
 
+export type LockLockedEventDTO = ComponentEventDTOBase & {
+  eventType: "LockLocked";
+  componentType: "lock";
+};
+
+export type LockUnlockedEventDTO = ComponentEventDTOBase & {
+  eventType: "LockUnlocked";
+  componentType: "lock";
+};
+
+export type FanMode = "off" | "low" | "medium" | "high";
+
+export type FanModeSetEventDTO = ComponentEventDTOBase & {
+  eventType: "FanModeSet";
+  componentType: "fan";
+  mode: FanMode;
+};
+
 export type ComponentEventDTO =
   | LightTurnedOnEventDTO
   | LightTurnedOffEventDTO
   | WindowOpenedEventDTO
   | WindowClosedEventDTO
-  | ThermostatSetEventDTO;
+  | ThermostatSetEventDTO
+  | LockLockedEventDTO
+  | LockUnlockedEventDTO
+  | FanModeSetEventDTO;
 
 export async function getComponentEvents(
   homeId: string,
