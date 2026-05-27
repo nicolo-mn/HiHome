@@ -1,7 +1,10 @@
 import {
   ComponentActionVisitor,
+  FanSetModeAction,
   LightTurnOffAction,
   LightTurnOnAction,
+  LockLockAction,
+  LockUnlockAction,
   ThermostatSetTemperatureAction,
   WindowCloseAction,
   WindowOpenAction,
@@ -33,5 +36,17 @@ export class ComponentActionExecutionVisitor implements ComponentActionVisitor<
     action: ThermostatSetTemperatureAction,
   ): Promise<void> {
     await this.actionPort.executeThermostatSetTemperature(action);
+  }
+
+  async visitLockLockAction(action: LockLockAction): Promise<void> {
+    await this.actionPort.executeLockLock(action);
+  }
+
+  async visitLockUnlockAction(action: LockUnlockAction): Promise<void> {
+    await this.actionPort.executeLockUnlock(action);
+  }
+
+  async visitFanSetModeAction(action: FanSetModeAction): Promise<void> {
+    await this.actionPort.executeFanSetMode(action);
   }
 }

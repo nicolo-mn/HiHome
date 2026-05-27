@@ -1,3 +1,5 @@
+export type FanMode = "off" | "low" | "medium" | "high";
+
 export interface ComponentActionVisitor<T> {
   visitLightTurnOnAction(action: LightTurnOnAction): T;
   visitLightTurnOffAction(action: LightTurnOffAction): T;
@@ -6,6 +8,9 @@ export interface ComponentActionVisitor<T> {
   visitThermostatSetTemperatureAction(
     action: ThermostatSetTemperatureAction,
   ): T;
+  visitLockLockAction(action: LockLockAction): T;
+  visitLockUnlockAction(action: LockUnlockAction): T;
+  visitFanSetModeAction(action: FanSetModeAction): T;
 }
 
 export interface ComponentAction {
@@ -107,5 +112,63 @@ export class ThermostatSetTemperatureAction implements ComponentAction {
 
   accept<T>(visitor: ComponentActionVisitor<T>): T {
     return visitor.visitThermostatSetTemperatureAction(this);
+  }
+}
+
+export class LockLockAction implements ComponentAction {
+  constructor(
+    private homeId: string,
+    private componentId: string,
+  ) {}
+
+  getHomeId(): string {
+    return this.homeId;
+  }
+
+  getComponentId(): string {
+    return this.componentId;
+  }
+
+  accept<T>(visitor: ComponentActionVisitor<T>): T {
+    return visitor.visitLockLockAction(this);
+  }
+}
+
+export class LockUnlockAction implements ComponentAction {
+  constructor(
+    private homeId: string,
+    private componentId: string,
+  ) {}
+
+  getHomeId(): string {
+    return this.homeId;
+  }
+
+  getComponentId(): string {
+    return this.componentId;
+  }
+
+  accept<T>(visitor: ComponentActionVisitor<T>): T {
+    return visitor.visitLockUnlockAction(this);
+  }
+}
+
+export class FanSetModeAction implements ComponentAction {
+  constructor(
+    private homeId: string,
+    public componentId: string,
+    public mode: FanMode,
+  ) {}
+
+  getHomeId(): string {
+    return this.homeId;
+  }
+
+  getComponentId(): string {
+    return this.componentId;
+  }
+
+  accept<T>(visitor: ComponentActionVisitor<T>): T {
+    return visitor.visitFanSetModeAction(this);
   }
 }

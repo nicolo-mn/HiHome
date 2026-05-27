@@ -6,7 +6,7 @@ import { useComponentsStore } from "@/stores/components";
 import { useRoomGroups } from "@/composables/useRoomGroups";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import { ApiError } from "@/api/errors";
-import type { ToggleableType } from "@/api/components";
+import type { CreatableType } from "@/api/components";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
 import ComponentCard from "@/components/cards/ComponentCard.vue";
@@ -18,21 +18,23 @@ import ErrorBanner from "@/components/ErrorBanner.vue";
 const auth = useAuthStore();
 const store = useComponentsStore();
 const { components, isLoading, error } = storeToRefs(store);
-const { load, toggle, step, isBusy, addComponent } = store;
+const { load, toggle, step, setFanMode, isBusy, addComponent } = store;
 
 const roomGroups = useRoomGroups(components);
 
 const fieldClass =
   "bg-gray-800/50 rounded-2xl px-5 py-3.5 text-gray-200 placeholder:text-gray-600 outline-none border-2 border-gray-800 focus:border-yellow-500 transition-colors";
 
-const typeOptions: { value: ToggleableType; label: string }[] = [
+const typeOptions: { value: CreatableType; label: string }[] = [
   { value: "light", label: "Light" },
   { value: "window", label: "Window" },
+  { value: "lock", label: "Smart Lock" },
+  { value: "fan", label: "Fan" },
 ];
 
 const addFormOpen = ref(false);
 const draftName = ref("");
-const draftType = ref<ToggleableType>("light");
+const draftType = ref<CreatableType>("light");
 const roomSelection = ref("");
 
 const roomOptions = computed(() => {
@@ -249,6 +251,7 @@ onMounted(() => {
           :busy="isBusy(item.id)"
           @toggle="toggle"
           @step="step"
+          @fan-mode="setFanMode"
         />
         <AddComponentCard
           v-if="auth.isAdmin"

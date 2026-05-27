@@ -18,10 +18,14 @@ export type {
   ThermostatComponent,
   ToggleableComponent,
   ToggleableType,
+  FanComponent,
+  FanMode,
+  CreatableType,
   BaseComponent,
   ComponentType,
   CreateComponentInput,
 } from "./components";
+export { FAN_MODES } from "./components";
 export * as notificationsApi from "./notifications";
 export type { NotificationDTO } from "./notifications";
 export * as preferencesApi from "./preferences";

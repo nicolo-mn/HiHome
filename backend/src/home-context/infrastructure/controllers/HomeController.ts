@@ -125,7 +125,7 @@ export class HomeController {
 
       const user = (req as AuthenticatedRequest).user;
 
-      const component = await this.homeService.executeAction(
+      const { component, roomName } = await this.homeService.executeAction(
         req.params.id as string,
         req.params.componentId as string,
         req.params.action as string,
@@ -152,7 +152,7 @@ export class HomeController {
           );
       }
 
-      res.json(component.accept(this.stateSerializer));
+      res.json({ ...component.accept(this.stateSerializer), roomName });
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
@@ -219,13 +219,28 @@ export class HomeController {
     }
   }
 
-  private parseActionParams(action: string, body: any): number | undefined {
+  private parseActionParams(
+    action: string,
+    body: any,
+  ): number | string | undefined {
     if (action === "setTemperature") {
       const { temperature } = body;
       if (typeof temperature !== "number") {
         throw new Error("Temperature parameter must be a number");
       }
       return temperature;
+    }
+    if (action === "setMode") {
+      const { mode } = body ?? {};
+      if (
+        mode !== "off" &&
+        mode !== "low" &&
+        mode !== "medium" &&
+        mode !== "high"
+      ) {
+        throw new Error("Mode must be one of: off, low, medium, high");
+      }
+      return mode;
     }
     return undefined;
   }

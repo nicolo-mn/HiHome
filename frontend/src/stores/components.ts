@@ -8,6 +8,8 @@ import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
+  FanComponent,
+  FanMode,
   CreateComponentInput,
   RawComponent,
 } from "@/api/components";
@@ -172,6 +174,14 @@ export const useComponentsStore = defineStore("components", () => {
     );
   }
 
+  function setFanMode(component: FanComponent, mode: FanMode) {
+    if (!homeId.value) return;
+    const id = homeId.value;
+    return executeAction(component.id, () =>
+      componentsApi.setFanMode(id, component, mode),
+    );
+  }
+
   async function addComponent(input: CreateComponentInput) {
     if (!homeId.value) return;
     error.value = null;
@@ -204,6 +214,7 @@ export const useComponentsStore = defineStore("components", () => {
     reset,
     toggle,
     step,
+    setFanMode,
     addComponent,
     connect,
     disconnect,

@@ -12,6 +12,7 @@ import { MongoHomeRepository } from "./home-context/infrastructure/repositories/
 import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOSensorUpdateAdapter";
 import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOComponentUpdateAdapter";
 import { HomeService } from "./home-context/application/services/HomeService";
+import { ActionService } from "./home-context/application/services/ActionService";
 import { UsageService } from "./home-context/application/services/UsageService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
 import { UsageController } from "./home-context/infrastructure/controllers/UsageController";
@@ -132,7 +133,8 @@ const ruleRepo =
   process.env.NODE_ENV === "test"
     ? new InMemoryRuleRepository()
     : new MongoRuleRepository();
-const actionExecutor = new ActionExecutionAdapter(homeService);
+const actionService = new ActionService(homeRepo, componentUpdatePort);
+const actionExecutor = new ActionExecutionAdapter(actionService);
 const ruleNotificationAdapter = new RuleNotificationContextAdapter(
   notificationContext.notificationPort,
 );

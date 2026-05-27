@@ -3,8 +3,12 @@ import { ComponentVisitor } from "./ComponentVisitor";
 import {
   ComponentEventActor,
   ComponentEventBase,
+  FanMode,
+  FanModeSetEvent,
   LightTurnedOffEvent,
   LightTurnedOnEvent,
+  LockLockedEvent,
+  LockUnlockedEvent,
   ThermostatSetEvent,
   WindowClosedEvent,
   WindowOpenedEvent,
@@ -14,6 +18,8 @@ export enum ComponentTypes {
   LIGHT = "light",
   WINDOW = "window",
   THERMOSTAT = "thermostat",
+  LOCK = "lock",
+  FAN = "fan",
 }
 
 export function createComponent(
@@ -27,6 +33,10 @@ export function createComponent(
       return new Window(id, input.name, input.roomId);
     case ComponentTypes.THERMOSTAT:
       return new Thermostat(id, input.name, input.roomId);
+    case ComponentTypes.LOCK:
+      return new SmartLock(id, input.name, input.roomId);
+    case ComponentTypes.FAN:
+      return new Fan(id, input.name, input.roomId);
     default:
       throw new Error("Unsupported component type");
   }
@@ -153,6 +163,70 @@ export class Thermostat implements Component {
       eventType: "ThermostatSet",
       componentType: ComponentTypes.THERMOSTAT,
       targetTemperature: temp,
+    };
+  }
+}
+
+export class SmartLock implements Component {
+  private type: ComponentTypes = ComponentTypes.LOCK;
+  constructor(
+    public id: string,
+    public name: string,
+    public roomId: string,
+    public isLocked: boolean = true,
+  ) {}
+
+  getType(): ComponentTypes {
+    return this.type;
+  }
+
+  accept<T>(visitor: ComponentVisitor<T>): T {
+    return visitor.visitLock(this);
+  }
+
+  lock(actor?: ComponentEventActor): LockLockedEvent {
+    this.isLocked = true;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "LockLocked",
+      componentType: ComponentTypes.LOCK,
+    };
+  }
+
+  unlock(actor?: ComponentEventActor): LockUnlockedEvent {
+    this.isLocked = false;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "LockUnlocked",
+      componentType: ComponentTypes.LOCK,
+    };
+  }
+}
+
+export class Fan implements Component {
+  private type: ComponentTypes = ComponentTypes.FAN;
+  constructor(
+    public id: string,
+    public name: string,
+    public roomId: string,
+    public mode: FanMode = "off",
+  ) {}
+
+  getType(): ComponentTypes {
+    return this.type;
+  }
+
+  accept<T>(visitor: ComponentVisitor<T>): T {
+    return visitor.visitFan(this);
+  }
+
+  setMode(mode: FanMode, actor?: ComponentEventActor): FanModeSetEvent {
+    this.mode = mode;
+    return {
+      ...buildEventBase(this, actor),
+      eventType: "FanModeSet",
+      componentType: ComponentTypes.FAN,
+      mode,
     };
   }
 }

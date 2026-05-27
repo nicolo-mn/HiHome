@@ -52,4 +52,5 @@ export type IconName =
   | "bluetooth"
   | "qr"
   | "airwave"
-  | "swap";
+  | "swap"
+  | "fan";

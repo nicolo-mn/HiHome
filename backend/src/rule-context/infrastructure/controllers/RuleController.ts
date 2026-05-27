@@ -15,8 +15,12 @@ import {
 } from "../../domain/Observables";
 import {
   ComponentAction,
+  FanMode,
+  FanSetModeAction,
   LightTurnOnAction,
   LightTurnOffAction,
+  LockLockAction,
+  LockUnlockAction,
   WindowOpenAction,
   WindowCloseAction,
   ThermostatSetTemperatureAction,
@@ -28,6 +32,7 @@ type ActionDto = {
   type: string;
   componentId: string;
   targetTemperature?: number;
+  mode?: FanMode;
 };
 type RuleDto = {
   id: string;
@@ -83,6 +88,17 @@ function actionToDto(action: ComponentAction): ActionDto {
       type: "thermostat-set-temperature",
       componentId: action.getComponentId(),
       targetTemperature: action.targetTemperature,
+    };
+  }
+  if (action instanceof LockLockAction)
+    return { type: "lock-lock", componentId: action.getComponentId() };
+  if (action instanceof LockUnlockAction)
+    return { type: "lock-unlock", componentId: action.getComponentId() };
+  if (action instanceof FanSetModeAction) {
+    return {
+      type: "fan-set-mode",
+      componentId: action.getComponentId(),
+      mode: action.mode,
     };
   }
   throw new Error("Unsupported action type");

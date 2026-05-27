@@ -14,8 +14,12 @@ import {
 } from "../../domain/Observables";
 import {
   ComponentAction,
+  FanMode,
+  FanSetModeAction,
   LightTurnOnAction,
   LightTurnOffAction,
+  LockLockAction,
+  LockUnlockAction,
   WindowOpenAction,
   WindowCloseAction,
   ThermostatSetTemperatureAction,
@@ -29,10 +33,28 @@ import { ActionDescriptionVisitor } from "../ActionDescriptionVisitor";
 import { ComponentNameResolverPort } from "../ports/ComponentNameResolverPort";
 
 export type RuleActionDto = {
-  componentType: "light" | "window" | "thermostat";
-  command: "turnOn" | "turnOff" | "open" | "close" | "setTemperature";
+  componentType: "light" | "window" | "thermostat" | "lock" | "fan";
+  command:
+    | "turnOn"
+    | "turnOff"
+    | "open"
+    | "close"
+    | "setTemperature"
+    | "lock"
+    | "unlock"
+    | "setOff"
+    | "setLow"
+    | "setMedium"
+    | "setHigh";
   componentId: string | number;
   targetTemp?: string | number;
+};
+
+const FAN_COMMAND_TO_MODE: Record<string, FanMode> = {
+  setOff: "off",
+  setLow: "low",
+  setMedium: "medium",
+  setHigh: "high",
 };
 
 export type AddRuleDto = {
@@ -232,6 +254,20 @@ export class RuleService {
           homeId,
           actionData.componentId.toString(),
           Number.parseFloat(String(actionData.targetTemp)),
+        );
+      }
+      if (actionData.componentType === "lock") {
+        return actionData.command === "lock"
+          ? new LockLockAction(homeId, actionData.componentId.toString())
+          : new LockUnlockAction(homeId, actionData.componentId.toString());
+      }
+      if (actionData.componentType === "fan") {
+        const mode = FAN_COMMAND_TO_MODE[actionData.command];
+        if (!mode) throw new Error("Invalid action");
+        return new FanSetModeAction(
+          homeId,
+          actionData.componentId.toString(),
+          mode,
         );
       }
       throw new Error("Invalid action");

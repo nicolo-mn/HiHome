@@ -2,10 +2,13 @@ import {
   Component,
   ComponentTypes,
   Coordinates,
+  Fan,
+  FanMode,
   Home,
   HomeRepository,
   Light,
   Room,
+  SmartLock,
   Thermostat,
   Window,
   ComponentEvent,
@@ -19,7 +22,9 @@ type ComponentRecord = {
   type: ComponentTypes;
   isOn?: boolean;
   isOpen?: boolean;
+  isLocked?: boolean;
   temperature?: number;
+  mode?: FanMode;
 };
 
 type RoomRecord = {
@@ -43,6 +48,7 @@ type ComponentEventRecord = {
   componentType: ComponentTypes;
   eventType?: string;
   targetTemperature?: number;
+  mode?: FanMode;
   action?: string;
   value?: number;
   actor?: {
@@ -146,6 +152,20 @@ export class MongoHomeRepository implements HomeRepository {
           roomId,
           component.temperature ?? 20,
         );
+      case ComponentTypes.LOCK:
+        return new SmartLock(
+          component.id,
+          component.name,
+          roomId,
+          component.isLocked ?? true,
+        );
+      case ComponentTypes.FAN:
+        return new Fan(
+          component.id,
+          component.name,
+          roomId,
+          component.mode ?? "off",
+        );
       default:
         throw new Error(`Unsupported component type: ${component.type}`);
     }
@@ -212,13 +232,27 @@ export class MongoHomeRepository implements HomeRepository {
           componentType: ComponentTypes.THERMOSTAT,
           targetTemperature: record.targetTemperature ?? record.value ?? 0,
         };
-      default:
+      case "FanModeSet":
         return {
           ...base,
-          eventType: "LightTurnedOn",
-          componentType: ComponentTypes.LIGHT,
+          eventType,
+          componentType: ComponentTypes.FAN,
+          mode: record.mode ?? "off",
+        };
+      case "LockLocked":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.LOCK,
+        };
+      case "LockUnlocked":
+        return {
+          ...base,
+          eventType,
+          componentType: ComponentTypes.LOCK,
         };
     }
+    throw new Error(`Unsupported event type: ${eventType}`);
   }
 
   private toComponentEventRecord(event: ComponentEvent): ComponentEventRecord {
@@ -231,6 +265,17 @@ export class MongoHomeRepository implements HomeRepository {
           componentType: event.componentType,
           eventType: event.eventType,
           targetTemperature: event.targetTemperature,
+          actor: event.actor,
+          createdAt: event.createdAt,
+        };
+      case "FanModeSet":
+        return {
+          id: event.id,
+          componentId: event.componentId,
+          componentName: event.componentName,
+          componentType: event.componentType,
+          eventType: event.eventType,
+          mode: event.mode,
           actor: event.actor,
           createdAt: event.createdAt,
         };
@@ -260,8 +305,14 @@ export class MongoHomeRepository implements HomeRepository {
         return "WindowClosed";
       case "setTemperature":
         return "ThermostatSet";
+      case "lock":
+        return "LockLocked";
+      case "unlock":
+        return "LockUnlocked";
+      case "setMode":
+        return "FanModeSet";
       default:
-        return "LightTurnedOn";
+        throw new Error(`Unsupported event action: ${record.action}`);
     }
   }
 
@@ -292,6 +343,12 @@ export class MongoHomeRepository implements HomeRepository {
         break;
       case ComponentTypes.THERMOSTAT:
         record.temperature = (component as Thermostat).temperature;
+        break;
+      case ComponentTypes.LOCK:
+        record.isLocked = (component as SmartLock).isLocked;
+        break;
+      case ComponentTypes.FAN:
+        record.mode = (component as Fan).mode;
         break;
     }
 

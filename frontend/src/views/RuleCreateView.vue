@@ -141,8 +141,18 @@ const COMPONENT_META: Record<
   light: { icon: "lamp", accent: "yellow" },
   window: { icon: "window", accent: "emerald" },
   thermostat: { icon: "device_thermostat", accent: "orange" },
+  lock: { icon: "lock", accent: "blue" },
+  fan: { icon: "fan", accent: "sky" },
   unknown: { icon: "info", accent: "sky" },
 };
+
+const RULE_SUPPORTED_TYPES: ReadonlySet<ComponentType> = new Set([
+  "light",
+  "window",
+  "thermostat",
+  "lock",
+  "fan",
+]);
 
 const actionOptionsByType: Record<ComponentType, ActionOption[]> = {
   light: [
@@ -165,6 +175,16 @@ const actionOptionsByType: Record<ComponentType, ActionOption[]> = {
       step: 0.5,
       defaultTarget: 21,
     },
+  ],
+  lock: [
+    { value: "lock", label: "Lock" },
+    { value: "unlock", label: "Unlock" },
+  ],
+  fan: [
+    { value: "setOff", label: "Turn off" },
+    { value: "setLow", label: "Set to low" },
+    { value: "setMedium", label: "Set to medium" },
+    { value: "setHigh", label: "Set to high" },
   ],
   unknown: [],
 };
@@ -257,7 +277,7 @@ function availableComponents(actionId: string): HomeComponent[] {
   const current = actions.value.find((a) => a.id === actionId);
   if (current?.componentId) used.delete(current.componentId);
   return components.value.filter(
-    (c) => c.type !== "unknown" && !used.has(c.id),
+    (c) => RULE_SUPPORTED_TYPES.has(c.type) && !used.has(c.id),
   );
 }
 

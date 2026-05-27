@@ -1,7 +1,10 @@
 import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
 import {
+  FanSetModeAction,
   LightTurnOffAction,
   LightTurnOnAction,
+  LockLockAction,
+  LockUnlockAction,
   ThermostatSetTemperatureAction,
   WindowCloseAction,
   WindowOpenAction,
@@ -61,6 +64,37 @@ export class ActionExecutionAdapter implements ActionExecutionPort {
       action.getHomeId(),
       action.getComponentId(),
       action.targetTemperature,
+    );
+  }
+
+  async executeLockLock(action: LockLockAction): Promise<void> {
+    console.log(
+      `Rule action: LockLock home=${action.getHomeId()} component=${action.getComponentId()}`,
+    );
+    await this.actionService.lockLock(
+      action.getHomeId(),
+      action.getComponentId(),
+    );
+  }
+
+  async executeLockUnlock(action: LockUnlockAction): Promise<void> {
+    console.log(
+      `Rule action: LockUnlock home=${action.getHomeId()} component=${action.getComponentId()}`,
+    );
+    await this.actionService.lockUnlock(
+      action.getHomeId(),
+      action.getComponentId(),
+    );
+  }
+
+  async executeFanSetMode(action: FanSetModeAction): Promise<void> {
+    console.log(
+      `Rule action: FanSetMode home=${action.getHomeId()} component=${action.getComponentId()} mode=${action.mode}`,
+    );
+    await this.actionService.fanSetMode(
+      action.getHomeId(),
+      action.getComponentId(),
+      action.mode,
     );
   }
 }

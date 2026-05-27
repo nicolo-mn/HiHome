@@ -15,7 +15,10 @@ import type {
   HomeComponent,
   ToggleableComponent,
   ThermostatComponent,
+  FanComponent,
+  FanMode,
 } from "@/api/components";
+import { FAN_MODES } from "@/api/components";
 
 const MIN_SETPOINT = 5;
 const MAX_SETPOINT = 40;
@@ -28,6 +31,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "toggle", component: ToggleableComponent, nextValue: boolean): void;
   (e: "step", component: ThermostatComponent, direction: "up" | "down"): void;
+  (e: "fan-mode", component: FanComponent, mode: FanMode): void;
 }>();
 
 const TYPE_META: Record<
@@ -37,6 +41,8 @@ const TYPE_META: Record<
   light: { icon: "lamp", accent: "yellow" },
   window: { icon: "window", accent: "emerald" },
   thermostat: { icon: "device_thermostat", accent: "orange" },
+  lock: { icon: "lock", accent: "blue" },
+  fan: { icon: "fan", accent: "sky" },
   unknown: { icon: "info", accent: "sky" },
 };
 
@@ -44,14 +50,24 @@ const meta = computed(() => TYPE_META[props.component.type]);
 const accentClasses = computed(() => ACCENT[meta.value.accent]);
 
 const isOn = computed(() => {
-  if (props.component.type === "light" || props.component.type === "window") {
+  if (
+    props.component.type === "light" ||
+    props.component.type === "window" ||
+    props.component.type === "lock"
+  ) {
     return (props.component as ToggleableComponent).state;
+  }
+  if (props.component.type === "fan") {
+    return (props.component as FanComponent).mode !== "off";
   }
   return true;
 });
 
 const isToggle = computed(
-  () => props.component.type === "light" || props.component.type === "window",
+  () =>
+    props.component.type === "light" ||
+    props.component.type === "window" ||
+    props.component.type === "lock",
 );
 
 const cardClasses = computed(() => {
@@ -144,7 +160,11 @@ const canIncrease = computed(
 );
 
 function onToggle(next: boolean) {
-  if (props.component.type === "light" || props.component.type === "window") {
+  if (
+    props.component.type === "light" ||
+    props.component.type === "window" ||
+    props.component.type === "lock"
+  ) {
     emit("toggle", props.component as ToggleableComponent, next);
   }
 }
@@ -154,6 +174,14 @@ function onStep(direction: "up" | "down") {
     emit("step", props.component as ThermostatComponent, direction);
   }
 }
+
+function onSetFanMode(event: Event) {
+  if (props.component.type !== "fan") return;
+  const mode = (event.target as HTMLSelectElement).value as FanMode;
+  emit("fan-mode", props.component as FanComponent, mode);
+}
+
+const FAN_MODE_OPTIONS = FAN_MODES;
 </script>
 
 <template>
@@ -251,6 +279,24 @@ function onStep(direction: "up" | "down") {
           <BaseIcon name="add" :size="18" />
         </button>
       </div>
+
+      <select
+        v-else-if="component.type === 'fan'"
+        class="ml-auto bg-white/[0.08] text-gray-200 rounded-2xl px-3 py-2 text-sm font-medium capitalize outline-none border-0 disabled:opacity-40"
+        :disabled="busy"
+        :value="(component as FanComponent).mode"
+        :aria-label="`Set fan mode for ${component.name}`"
+        @change="onSetFanMode"
+      >
+        <option
+          v-for="opt in FAN_MODE_OPTIONS"
+          :key="opt"
+          :value="opt"
+          class="bg-gray-900 text-gray-200"
+        >
+          {{ opt }}
+        </option>
+      </select>
 
       <span
         v-else

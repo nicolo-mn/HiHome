@@ -40,9 +40,30 @@ export type ThermostatSetEvent = ComponentEventBase & {
   targetTemperature: number;
 };
 
+export type LockLockedEvent = ComponentEventBase & {
+  eventType: "LockLocked";
+  componentType: ComponentTypes.LOCK;
+};
+
+export type LockUnlockedEvent = ComponentEventBase & {
+  eventType: "LockUnlocked";
+  componentType: ComponentTypes.LOCK;
+};
+
+export type FanMode = "off" | "low" | "medium" | "high";
+
+export type FanModeSetEvent = ComponentEventBase & {
+  eventType: "FanModeSet";
+  componentType: ComponentTypes.FAN;
+  mode: FanMode;
+};
+
 export type ComponentEvent =
   | LightTurnedOnEvent
   | LightTurnedOffEvent
   | WindowOpenedEvent
   | WindowClosedEvent
-  | ThermostatSetEvent;
+  | ThermostatSetEvent
+  | LockLockedEvent
+  | LockUnlockedEvent
+  | FanModeSetEvent;

@@ -46,6 +46,9 @@ const ACTION_LABELS: Record<string, string> = {
   "window-open": "Open window",
   "window-close": "Close window",
   "thermostat-set-temperature": "Set thermostat",
+  "lock-lock": "Lock",
+  "lock-unlock": "Unlock",
+  "fan-set-mode": "Set fan mode",
 };
 
 const accent = ACCENT.yellow;
@@ -62,6 +65,9 @@ function actionSummary(action: RuleDto["actions"][number]): string {
   const label = ACTION_LABELS[action.type] ?? action.type;
   if (action.targetTemperature !== undefined) {
     return `${label} to ${action.targetTemperature}°C`;
+  }
+  if (action.mode !== undefined) {
+    return `${label} to ${action.mode}`;
   }
   return label;
 }

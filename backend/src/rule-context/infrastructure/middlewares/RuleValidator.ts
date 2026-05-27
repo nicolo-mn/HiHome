@@ -1,12 +1,20 @@
 import { body, param } from "express-validator";
 import { validate } from "../../../shared/middlewares/Validate";
 
-const COMPONENT_TYPES = ["light", "window", "thermostat"] as const;
+const COMPONENT_TYPES = [
+  "light",
+  "window",
+  "thermostat",
+  "lock",
+  "fan",
+] as const;
 
 const COMMANDS_BY_TYPE: Record<string, string[]> = {
   light: ["turnOn", "turnOff"],
   window: ["open", "close"],
   thermostat: ["setTemperature"],
+  lock: ["lock", "unlock"],
+  fan: ["setOff", "setLow", "setMedium", "setHigh"],
 };
 
 export const namingAndOwnershipValidator = [

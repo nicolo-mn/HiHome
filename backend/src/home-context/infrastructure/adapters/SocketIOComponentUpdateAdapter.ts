@@ -9,8 +9,12 @@ export class SocketIOComponentUpdateAdapter implements ComponentUpdatePort {
   constructor(private io: Server) {}
 
   sendComponentUpdate(home: Home, component: Component): void {
-    this.io
-      .to(`home-${home.id}`)
-      .emit("component:updated", component.accept(this.serializer));
+    const room = home.rooms.find((r) =>
+      r.components.some((c) => c.id === component.id),
+    );
+    this.io.to(`home-${home.id}`).emit("component:updated", {
+      ...component.accept(this.serializer),
+      roomName: room?.name,
+    });
   }
 }
