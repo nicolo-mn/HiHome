@@ -5,14 +5,22 @@ export type ComponentType =
   | "window"
   | "thermostat"
   | "lock"
+  | "fan"
   | "unknown";
 
 // Types that have a simple boolean state (on/off, open/closed, locked/unlocked).
 export type ToggleableType = "light" | "window" | "lock";
 
+// Types the user can create from the add-device form.
+export type CreatableType = ToggleableType | "fan";
+
+export type FanMode = "off" | "low" | "medium" | "high";
+
+export const FAN_MODES: FanMode[] = ["off", "low", "medium", "high"];
+
 export type CreateComponentInput = {
   name: string;
-  type: ToggleableType;
+  type: CreatableType;
   roomId: string;
 };
 
@@ -37,9 +45,15 @@ export interface ThermostatComponent extends BaseComponent {
   unit: string;
 }
 
+export interface FanComponent extends BaseComponent {
+  type: "fan";
+  mode: FanMode;
+}
+
 export type HomeComponent =
   | ToggleableComponent
   | ThermostatComponent
+  | FanComponent
   | (BaseComponent & { type: "unknown" });
 
 export interface RawComponent {
@@ -53,6 +67,7 @@ export interface RawComponent {
   isLocked?: boolean;
   temperature?: number;
   unit?: string;
+  mode?: FanMode;
 }
 export function normalizeComponent(raw: RawComponent): HomeComponent {
   const base = {
@@ -77,6 +92,8 @@ export function normalizeComponent(raw: RawComponent): HomeComponent {
         setpoint: raw.temperature ?? 0,
         unit: raw.unit ?? "°C",
       };
+    case "fan":
+      return { ...base, type: "fan", mode: raw.mode ?? "off" };
     default:
       return { ...base, type: "unknown" };
   }
@@ -132,6 +149,14 @@ export function toggle(
 ): Promise<HomeComponent> {
   const action = TOGGLE_ACTIONS[c.type][next ? "on" : "off"];
   return executeAction(homeId, c.id, action);
+}
+
+export function setFanMode(
+  homeId: string,
+  c: FanComponent,
+  mode: FanMode,
+): Promise<HomeComponent> {
+  return executeAction(homeId, c.id, "setMode", { mode });
 }
 
 export function setpointDelta(

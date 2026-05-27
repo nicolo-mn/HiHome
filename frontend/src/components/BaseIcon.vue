@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, type PropType } from "vue";
-import { ICON_PATHS } from "@/utils/icons";
+import { ICON_PATHS, ICON_VIEWBOXES } from "@/utils/icons";
 import type { IconName } from "@/types/ui";
 
 const props = defineProps({
@@ -9,6 +9,7 @@ const props = defineProps({
 });
 
 const d = computed(() => ICON_PATHS[props.name]);
+const viewBox = computed(() => ICON_VIEWBOXES[props.name] ?? "0 0 24 24");
 </script>
 
 <template>
@@ -16,7 +17,7 @@ const d = computed(() => ICON_PATHS[props.name]);
     xmlns="http://www.w3.org/2000/svg"
     :width="size"
     :height="size"
-    viewBox="0 0 24 24"
+    :viewBox="viewBox"
     fill="none"
     class="block shrink-0"
     aria-hidden="true"
