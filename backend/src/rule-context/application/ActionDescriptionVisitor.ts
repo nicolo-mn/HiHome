@@ -1,7 +1,10 @@
 import {
   ComponentActionVisitor,
+  FanSetModeAction,
   LightTurnOffAction,
   LightTurnOnAction,
+  LockLockAction,
+  LockUnlockAction,
   ThermostatSetTemperatureAction,
   WindowCloseAction,
   WindowOpenAction,
@@ -30,5 +33,14 @@ export class ActionDescriptionVisitor implements ComponentActionVisitor<string> 
     action: ThermostatSetTemperatureAction,
   ): string {
     return `Set thermostat ${this.name(action.getComponentId())} to ${action.targetTemperature}°C`;
+  }
+  visitLockLockAction(action: LockLockAction): string {
+    return `Lock ${this.name(action.getComponentId())}`;
+  }
+  visitLockUnlockAction(action: LockUnlockAction): string {
+    return `Unlock ${this.name(action.getComponentId())}`;
+  }
+  visitFanSetModeAction(action: FanSetModeAction): string {
+    return `Set fan ${this.name(action.getComponentId())} to ${action.mode}`;
   }
 }

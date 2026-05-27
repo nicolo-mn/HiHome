@@ -13,8 +13,12 @@ import {
 } from "../../domain/Observables";
 import {
   ComponentAction,
+  FanMode,
+  FanSetModeAction,
   LightTurnOnAction,
   LightTurnOffAction,
+  LockLockAction,
+  LockUnlockAction,
   WindowOpenAction,
   WindowCloseAction,
   ThermostatSetTemperatureAction,
@@ -45,6 +49,7 @@ type ActionRecord = {
   homeId: string;
   componentId: string;
   targetTemperature?: number;
+  mode?: FanMode;
 };
 
 type RuleRecord = {
@@ -272,6 +277,31 @@ export class MongoRuleRepository implements RuleRepository {
       };
     }
 
+    if (action instanceof LockLockAction) {
+      return {
+        type: "lock-lock",
+        homeId: action.getHomeId(),
+        componentId: action.getComponentId(),
+      };
+    }
+
+    if (action instanceof LockUnlockAction) {
+      return {
+        type: "lock-unlock",
+        homeId: action.getHomeId(),
+        componentId: action.getComponentId(),
+      };
+    }
+
+    if (action instanceof FanSetModeAction) {
+      return {
+        type: "fan-set-mode",
+        homeId: action.getHomeId(),
+        componentId: action.getComponentId(),
+        mode: action.mode,
+      };
+    }
+
     throw new Error("Unsupported action type");
   }
 
@@ -290,6 +320,16 @@ export class MongoRuleRepository implements RuleRepository {
           record.homeId,
           record.componentId,
           record.targetTemperature ?? 0,
+        );
+      case "lock-lock":
+        return new LockLockAction(record.homeId, record.componentId);
+      case "lock-unlock":
+        return new LockUnlockAction(record.homeId, record.componentId);
+      case "fan-set-mode":
+        return new FanSetModeAction(
+          record.homeId,
+          record.componentId,
+          record.mode ?? "off",
         );
       default:
         throw new Error(`Unsupported action type: ${record.type}`);

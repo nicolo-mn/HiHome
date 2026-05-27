@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
+  FanSetModeAction,
   LightTurnOnAction,
   LightTurnOffAction,
+  LockLockAction,
+  LockUnlockAction,
   WindowOpenAction,
   WindowCloseAction,
   ThermostatSetTemperatureAction,
@@ -16,6 +19,9 @@ describe("Actions", () => {
     visitWindowOpenAction: vi.fn().mockReturnValue("window-open"),
     visitWindowCloseAction: vi.fn().mockReturnValue("window-close"),
     visitThermostatSetTemperatureAction: vi.fn().mockReturnValue("thermo-set"),
+    visitLockLockAction: vi.fn().mockReturnValue("lock-lock"),
+    visitLockUnlockAction: vi.fn().mockReturnValue("lock-unlock"),
+    visitFanSetModeAction: vi.fn().mockReturnValue("fan-set-mode"),
   };
 
   beforeEach(() => {
@@ -87,6 +93,46 @@ describe("Actions", () => {
       expect(
         mockVisitor.visitThermostatSetTemperatureAction,
       ).toHaveBeenCalledWith(action);
+    });
+  });
+
+  describe("LockLockAction", () => {
+    const action = new LockLockAction(homeId, "comp-6");
+
+    it("should return component id", () => {
+      expect(action.getComponentId()).toBe("comp-6");
+    });
+
+    it("should accept visitor", () => {
+      expect(action.accept(mockVisitor)).toBe("lock-lock");
+      expect(mockVisitor.visitLockLockAction).toHaveBeenCalledWith(action);
+    });
+  });
+
+  describe("LockUnlockAction", () => {
+    const action = new LockUnlockAction(homeId, "comp-7");
+
+    it("should return component id", () => {
+      expect(action.getComponentId()).toBe("comp-7");
+    });
+
+    it("should accept visitor", () => {
+      expect(action.accept(mockVisitor)).toBe("lock-unlock");
+      expect(mockVisitor.visitLockUnlockAction).toHaveBeenCalledWith(action);
+    });
+  });
+
+  describe("FanSetModeAction", () => {
+    const action = new FanSetModeAction(homeId, "comp-8", "low");
+
+    it("should return component id and mode", () => {
+      expect(action.getComponentId()).toBe("comp-8");
+      expect(action.mode).toBe("low");
+    });
+
+    it("should accept visitor", () => {
+      expect(action.accept(mockVisitor)).toBe("fan-set-mode");
+      expect(mockVisitor.visitFanSetModeAction).toHaveBeenCalledWith(action);
     });
   });
 });

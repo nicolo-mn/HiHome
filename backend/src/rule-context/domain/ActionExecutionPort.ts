@@ -4,6 +4,9 @@ import {
   ThermostatSetTemperatureAction,
   LightTurnOnAction,
   LightTurnOffAction,
+  LockLockAction,
+  LockUnlockAction,
+  FanSetModeAction,
 } from "./Actions";
 
 export interface ActionExecutionPort {
@@ -14,4 +17,7 @@ export interface ActionExecutionPort {
   ): Promise<void>;
   executeLightTurnOn(action: LightTurnOnAction): Promise<void>;
   executeLightTurnOff(action: LightTurnOffAction): Promise<void>;
+  executeLockLock(action: LockLockAction): Promise<void>;
+  executeLockUnlock(action: LockUnlockAction): Promise<void>;
+  executeFanSetMode(action: FanSetModeAction): Promise<void>;
 }
