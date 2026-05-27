@@ -1,9 +1,14 @@
 import { apiFetch } from "./client";
 
-export type ComponentType = "light" | "window" | "thermostat" | "unknown";
+export type ComponentType =
+  | "light"
+  | "window"
+  | "thermostat"
+  | "lock"
+  | "unknown";
 
-// Types that have a simple boolean state (on/off, open/closed).
-export type ToggleableType = "light" | "window";
+// Types that have a simple boolean state (on/off, open/closed, locked/unlocked).
+export type ToggleableType = "light" | "window" | "lock";
 
 export type CreateComponentInput = {
   name: string;
@@ -45,6 +50,7 @@ export interface RawComponent {
   type: string;
   isOn?: boolean;
   isOpen?: boolean;
+  isLocked?: boolean;
   temperature?: number;
   unit?: string;
 }
@@ -62,6 +68,8 @@ export function normalizeComponent(raw: RawComponent): HomeComponent {
       return { ...base, type: "light", state: raw.isOn === true };
     case "window":
       return { ...base, type: "window", state: raw.isOpen === true };
+    case "lock":
+      return { ...base, type: "lock", state: raw.isLocked === true };
     case "thermostat":
       return {
         ...base,
@@ -114,6 +122,7 @@ export async function getComponentTypes(homeId: string): Promise<string[]> {
 const TOGGLE_ACTIONS: Record<ToggleableType, { on: string; off: string }> = {
   light: { on: "turnOn", off: "turnOff" },
   window: { on: "open", off: "close" },
+  lock: { on: "lock", off: "unlock" },
 };
 
 export function toggle(

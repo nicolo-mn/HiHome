@@ -37,6 +37,7 @@ const TYPE_META: Record<
   light: { icon: "lamp", accent: "yellow" },
   window: { icon: "window", accent: "emerald" },
   thermostat: { icon: "device_thermostat", accent: "orange" },
+  lock: { icon: "lock", accent: "blue" },
   unknown: { icon: "info", accent: "sky" },
 };
 
@@ -44,14 +45,21 @@ const meta = computed(() => TYPE_META[props.component.type]);
 const accentClasses = computed(() => ACCENT[meta.value.accent]);
 
 const isOn = computed(() => {
-  if (props.component.type === "light" || props.component.type === "window") {
+  if (
+    props.component.type === "light" ||
+    props.component.type === "window" ||
+    props.component.type === "lock"
+  ) {
     return (props.component as ToggleableComponent).state;
   }
   return true;
 });
 
 const isToggle = computed(
-  () => props.component.type === "light" || props.component.type === "window",
+  () =>
+    props.component.type === "light" ||
+    props.component.type === "window" ||
+    props.component.type === "lock",
 );
 
 const cardClasses = computed(() => {
@@ -144,7 +152,11 @@ const canIncrease = computed(
 );
 
 function onToggle(next: boolean) {
-  if (props.component.type === "light" || props.component.type === "window") {
+  if (
+    props.component.type === "light" ||
+    props.component.type === "window" ||
+    props.component.type === "lock"
+  ) {
     emit("toggle", props.component as ToggleableComponent, next);
   }
 }

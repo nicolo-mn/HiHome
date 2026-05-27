@@ -6,6 +6,7 @@ import {
   HomeRepository,
   Light,
   Room,
+  SmartLock,
   Thermostat,
   Window,
   ComponentEvent,
@@ -19,6 +20,7 @@ type ComponentRecord = {
   type: ComponentTypes;
   isOn?: boolean;
   isOpen?: boolean;
+  isLocked?: boolean;
   temperature?: number;
 };
 
@@ -145,6 +147,13 @@ export class MongoHomeRepository implements HomeRepository {
           component.name,
           roomId,
           component.temperature ?? 20,
+        );
+      case ComponentTypes.LOCK:
+        return new SmartLock(
+          component.id,
+          component.name,
+          roomId,
+          component.isLocked ?? true,
         );
       default:
         throw new Error(`Unsupported component type: ${component.type}`);
@@ -292,6 +301,9 @@ export class MongoHomeRepository implements HomeRepository {
         break;
       case ComponentTypes.THERMOSTAT:
         record.temperature = (component as Thermostat).temperature;
+        break;
+      case ComponentTypes.LOCK:
+        record.isLocked = (component as SmartLock).isLocked;
         break;
     }
 

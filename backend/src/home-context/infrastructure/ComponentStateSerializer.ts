@@ -43,6 +43,7 @@ export class ComponentStateSerializer implements ComponentVisitor<ComponentSeria
     return {
       id: lock.id,
       name: lock.name,
+      roomId: lock.roomId,
       type: ComponentTypes.LOCK,
       isLocked: lock.isLocked,
     };

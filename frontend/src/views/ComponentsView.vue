@@ -28,6 +28,7 @@ const fieldClass =
 const typeOptions: { value: ToggleableType; label: string }[] = [
   { value: "light", label: "Light" },
   { value: "window", label: "Window" },
+  { value: "lock", label: "Smart Lock" },
 ];
 
 const addFormOpen = ref(false);

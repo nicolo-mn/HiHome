@@ -86,7 +86,7 @@ export class HomeService {
     action: string,
     param?: number,
     actor?: ComponentEventActor,
-  ): Promise<Component> {
+  ): Promise<{ component: Component; roomName: string }> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
 
     const component = home.getComponentById(componentId);
@@ -119,7 +119,8 @@ export class HomeService {
     }
 
     await this.homeRepo.saveHome(home);
-    return component;
+    const room = home.rooms.find((r) => r.id === component.roomId);
+    return { component, roomName: room?.name ?? "" };
   }
 
   async getComponentTypes(): Promise<string[]> {

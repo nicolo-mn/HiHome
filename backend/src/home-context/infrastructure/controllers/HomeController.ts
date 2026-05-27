@@ -125,7 +125,7 @@ export class HomeController {
 
       const user = (req as AuthenticatedRequest).user;
 
-      const component = await this.homeService.executeAction(
+      const { component, roomName } = await this.homeService.executeAction(
         req.params.id as string,
         req.params.componentId as string,
         req.params.action as string,
@@ -152,7 +152,7 @@ export class HomeController {
           );
       }
 
-      res.json(component.accept(this.stateSerializer));
+      res.json({ ...component.accept(this.stateSerializer), roomName });
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
