@@ -167,7 +167,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           "Fields: ruleName (short label), observableId (weather|external-thermometer|internal-thermometer|wind-speed|air-quality). " +
           "For weather: operatorTarget must be one of Clear, Drizzle, Fog, Overcast, Cloudy, Rain, Snow, Thunderstorm and operator is omitted. " +
           "For numeric observables: operator is gt|lt|eq and operatorTarget is a number or numeric string. " +
-          "Actions is a non-empty array; each action has componentType (light|window|thermostat), command, componentId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature.",
+          "Actions is a non-empty array; each action has componentType (light|window|thermostat|lock|fan), command, componentId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature, lock -> lock|unlock, fan -> setOff|setLow|setMedium|setHigh.",
         parameters: {
           type: "object",
           properties: {
@@ -202,7 +202,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
                 properties: {
                   componentType: {
                     type: "string",
-                    enum: ["light", "window", "thermostat"],
+                    enum: ["light", "window", "thermostat", "lock", "fan"],
                   },
                   command: {
                     type: "string",
@@ -212,6 +212,12 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
                       "open",
                       "close",
                       "setTemperature",
+                      "lock",
+                      "unlock",
+                      "setOff",
+                      "setLow",
+                      "setMedium",
+                      "setHigh",
                     ],
                   },
                   componentId: { type: ["string", "number"] },
@@ -234,7 +240,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         name: "add_component",
         description:
           "Add a new smart device to a room in the current home. " +
-          "Fields: name (human-friendly label), type (light|window|thermostat), roomId (the ID of the room to place the component in).",
+          "Fields: name (human-friendly label), type (light|window|thermostat|lock|fan), roomId (the ID of the room to place the component in).",
         parameters: {
           type: "object",
           properties: {
@@ -244,7 +250,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
             },
             type: {
               type: "string",
-              enum: ["light", "window", "thermostat"],
+              enum: ["light", "window", "thermostat", "lock", "fan"],
               description: "The type of smart device to add.",
             },
             roomId: {
