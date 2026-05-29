@@ -7,6 +7,7 @@ import type { SensorReading } from "@/api/sensors";
 
 const props = defineProps<{
   reading: SensorReading;
+  subtitle?: string;
 }>();
 
 const SENSOR_LABEL: Record<string, string> = {
@@ -114,6 +115,13 @@ const isCentered = computed(() => props.reading.type === "weather");
           :class="accentClasses.text"
           >{{ unitSymbol }}</span
         >
+      </span>
+      <span
+        v-if="isCentered && subtitle"
+        class="text-sm font-medium opacity-60"
+        :class="accentClasses.text"
+      >
+        in {{ subtitle }}
       </span>
     </div>
     <span

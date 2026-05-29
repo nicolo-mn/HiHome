@@ -46,3 +46,4 @@ export type { UserSummary, RoleName } from "./users";
 export { ALL_ROLES, ROLE_LABELS } from "./users";
 export * as usageApi from "./usage";
 export type { UsageReport, UsageRange } from "./usage";
+export * as homeApi from "./home";

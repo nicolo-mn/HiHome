@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useSensorStore } from "@/stores/sensors";
+import { homeApi } from "@/api";
 import SensorCard from "@/components/cards/SensorCard.vue";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
@@ -10,6 +11,14 @@ import BaseIcon from "@/components/BaseIcon.vue";
 const auth = useAuthStore();
 const sensorStore = useSensorStore();
 const { readings } = storeToRefs(sensorStore);
+
+const locationName = ref<string | null>(null);
+
+onMounted(async () => {
+  if (auth.homeId) {
+    locationName.value = await homeApi.getLocationName(auth.homeId);
+  }
+});
 
 const sensorOrder = [
   "outdoor_temperature",
@@ -68,6 +77,7 @@ const otherOutdoorCards = computed(() =>
           v-if="weatherCard"
           :key="weatherCard.sensorId"
           :reading="weatherCard"
+          :subtitle="locationName ?? undefined"
         />
         <div class="flex flex-col gap-2 md:gap-3">
           <SensorCard
