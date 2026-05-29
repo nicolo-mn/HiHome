@@ -100,7 +100,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
             <span class="text-yellow-500">your way.</span>
           </div>
           <div
-            class="text-[18px] xl:text-[20px] text-gray-400 max-w-[520px] leading-[1.5]"
+            class="text-[18px] xl:text-[20px] text-white max-w-[520px] leading-[1.5]"
           >
             Manage devices, set rules, and keep an eye on your home — all from
             the same place, on any screen.
@@ -127,7 +127,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
                 Welcome back
               </div>
               <div
-                class="mt-2 text-[16px] sm:text-[18px] leading-[1.4] text-gray-400"
+                class="mt-2 text-[16px] sm:text-[18px] leading-[1.4] text-white"
               >
                 Sign in to your home to manage devices, rules and routines.
               </div>
@@ -140,7 +140,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
             >
               Welcome back
             </div>
-            <div class="mt-2 text-[17px] text-gray-400">
+            <div class="mt-2 text-[17px] text-white">
               Sign in to your home to continue.
             </div>
           </div>
@@ -159,7 +159,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
                     ? 'text-rose-500'
                     : focus.home
                       ? 'text-sky-500'
-                      : 'text-gray-400',
+                      : 'text-white',
                 ]"
               >
                 Home ID
@@ -202,7 +202,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
                     ? 'text-rose-500'
                     : focus.user
                       ? 'text-emerald-500'
-                      : 'text-gray-400',
+                      : 'text-white',
                 ]"
               >
                 Username
@@ -247,7 +247,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
                     ? 'text-rose-500'
                     : focus.pw
                       ? 'text-violet-500'
-                      : 'text-gray-400',
+                      : 'text-white',
                 ]"
               >
                 Password
@@ -270,7 +270,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
                 />
                 <button
                   type="button"
-                  class="text-sm font-medium text-gray-400 px-2.5 py-1.5 rounded-xl hover:bg-white/5 shrink-0"
+                  class="text-sm font-medium text-white px-2.5 py-1.5 rounded-xl hover:bg-white/5 shrink-0"
                   @click="showPw = !showPw"
                 >
                   {{ showPw ? "Hide" : "Show" }}
@@ -303,7 +303,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
               <div class="text-[13px] text-gray-300 mt-0.5">
                 The Home ID, username or password don't match.
               </div>
-              <div class="text-[12px] text-gray-400 mt-1">
+              <div class="text-[12px] text-white mt-1">
                 Double-check each field and try again.
               </div>
             </div>
@@ -329,7 +329,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
               'w-full h-[64px] md:h-[72px] rounded-[28px] md:rounded-[36px] font-bold text-[18px] md:text-[22px] tracking-tight flex items-center justify-center gap-3 transition-colors',
               valid && !isLoading
                 ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400'
-                : 'bg-yellow-500/25 text-gray-400 cursor-not-allowed',
+                : 'bg-yellow-500/25 text-white cursor-not-allowed',
             ]"
           >
             <BaseIcon name="power" :size="24" />

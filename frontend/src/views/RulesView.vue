@@ -115,11 +115,11 @@ onMounted(load);
       action="reorder your rules"
     />
 
-    <p v-if="isLoading && rules.length === 0" class="text-gray-400 text-sm">
+    <p v-if="isLoading && rules.length === 0" class="text-white text-sm">
       Loading rules…
     </p>
 
-    <p v-else-if="rules.length === 0" class="text-gray-400 text-sm">
+    <p v-else-if="rules.length === 0" class="text-white text-sm">
       No rules configured yet.
     </p>
 

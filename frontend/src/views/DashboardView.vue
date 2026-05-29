@@ -69,7 +69,7 @@ const otherOutdoorCards = computed(() =>
     />
 
     <section v-if="outdoorReadings.length" class="flex flex-col gap-3">
-      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+      <div class="font-medium text-[18px] md:text-[20px] text-white">
         Outdoor
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
@@ -90,7 +90,7 @@ const otherOutdoorCards = computed(() =>
     </section>
 
     <section v-if="indoorReadings.length" class="flex flex-col gap-3">
-      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+      <div class="font-medium text-[18px] md:text-[20px] text-white">
         Indoor
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
@@ -103,7 +103,7 @@ const otherOutdoorCards = computed(() =>
     </section>
 
     <section class="flex flex-col gap-3">
-      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+      <div class="font-medium text-[18px] md:text-[20px] text-white">
         Quick actions
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">

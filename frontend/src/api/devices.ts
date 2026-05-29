@@ -130,12 +130,6 @@ export async function executeAction(
   return normalizeDevice(raw);
 }
 
-export async function getDeviceTypes(homeId: string): Promise<string[]> {
-  return apiFetch<string[]>(
-    `/api/home/${encodeURIComponent(homeId)}/devices/types`,
-  );
-}
-
 const TOGGLE_ACTIONS: Record<ToggleableType, { on: string; off: string }> = {
   light: { on: "turnOn", off: "turnOff" },
   window: { on: "open", off: "close" },

@@ -487,7 +487,7 @@ function bgFor(accent: Accent) {
     <div class="max-w-[720px] flex flex-col gap-7">
       <section>
         <div class="flex justify-between items-baseline mb-3">
-          <span class="font-medium text-[18px] md:text-[20px] text-gray-400">
+          <span class="font-medium text-[18px] md:text-[20px] text-white">
             Rule title
           </span>
           <span class="hidden sm:inline text-sm text-gray-500">
@@ -508,7 +508,7 @@ function bgFor(accent: Accent) {
 
       <section>
         <div class="flex justify-between items-baseline mb-3">
-          <span class="font-medium text-[18px] md:text-[20px] text-gray-400">
+          <span class="font-medium text-[18px] md:text-[20px] text-white">
             When
           </span>
           <span class="hidden sm:inline text-sm text-gray-500">
@@ -545,7 +545,7 @@ function bgFor(accent: Accent) {
 
       <section>
         <div class="flex justify-between items-baseline mb-3">
-          <span class="font-medium text-[18px] md:text-[20px] text-gray-400">
+          <span class="font-medium text-[18px] md:text-[20px] text-white">
             Then
           </span>
           <span class="text-sm text-gray-500">
@@ -579,7 +579,7 @@ function bgFor(accent: Accent) {
               <button
                 v-if="actions.length > 1"
                 type="button"
-                class="w-8 h-8 rounded-2xl text-gray-400 flex items-center justify-center hover:bg-white/5"
+                class="w-8 h-8 rounded-2xl text-white flex items-center justify-center hover:bg-white/5"
                 @click="removeAction(a.id)"
               >
                 <BaseIcon name="close" :size="20" />
@@ -637,7 +637,7 @@ function bgFor(accent: Accent) {
             'flex-[2] h-16 rounded-[28px] md:rounded-[32px] font-bold text-[18px] md:text-[20px] flex items-center justify-center gap-2',
             canSave && !saving
               ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400'
-              : 'bg-yellow-500/20 text-gray-400 cursor-not-allowed',
+              : 'bg-yellow-500/20 text-white cursor-not-allowed',
           ]"
           @click="save"
         >
@@ -676,7 +676,7 @@ function bgFor(accent: Accent) {
               <div class="text-[18px] font-semibold text-gray-200">
                 {{ s.label }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5">
+              <div class="text-sm text-white mt-0.5">
                 {{ s.kind === "numeric" ? "Numeric value" : "Categorical" }}
               </div>
             </div>
@@ -714,7 +714,7 @@ function bgFor(accent: Accent) {
               <div class="text-[18px] font-semibold text-gray-200">
                 {{ o.label }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5 font-mono">
+              <div class="text-sm text-white mt-0.5 font-mono">
                 {{ o.symbol }}
               </div>
             </div>
@@ -743,7 +743,7 @@ function bgFor(accent: Accent) {
               ]"
             >
               {{ target
-              }}<span class="text-[28px] text-gray-400 ml-1.5">{{
+              }}<span class="text-[28px] text-white ml-1.5">{{
                 sensor.unit
               }}</span>
             </div>
@@ -772,7 +772,7 @@ function bgFor(accent: Accent) {
                 <BaseIcon name="add" :size="20" />
               </button>
             </div>
-            <div class="text-sm text-gray-400">
+            <div class="text-sm text-white">
               Range: {{ sensor.min }}{{ sensor.unit }} – {{ sensor.max
               }}{{ sensor.unit }}
             </div>
@@ -849,7 +849,7 @@ function bgFor(accent: Accent) {
               <div class="text-[18px] font-semibold text-gray-200 truncate">
                 {{ c.name }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5 truncate">
+              <div class="text-sm text-white mt-0.5 truncate">
                 {{ c.roomName ?? "—" }}
               </div>
             </div>
@@ -892,7 +892,7 @@ function bgFor(accent: Accent) {
               <div class="text-[18px] font-semibold text-gray-200">
                 {{ o.label }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5">
+              <div class="text-sm text-white mt-0.5">
                 {{ o.needsTarget ? "Requires parameter" : "No parameter" }}
               </div>
             </div>
@@ -922,7 +922,7 @@ function bgFor(accent: Accent) {
             ]"
           >
             {{ paramValue(actions[sheet.index]!)
-            }}<span class="text-[28px] text-gray-400 ml-1.5">{{
+            }}<span class="text-[28px] text-white ml-1.5">{{
               actionDef(actions[sheet.index]!)?.unit ?? ""
             }}</span>
           </div>

@@ -14,17 +14,17 @@ defineProps<{
   >
     <span
       v-if="icon"
-      class="absolute top-4 right-4 w-6 h-6 text-gray-400"
+      class="absolute top-4 right-4 w-6 h-6 text-white"
       v-html="icon"
     />
-    <span class="text-xs uppercase tracking-wide text-gray-400 font-medium">
+    <span class="text-xs uppercase tracking-wide text-white font-medium">
       {{ label }}
     </span>
     <div class="flex items-baseline gap-1">
       <span class="text-3xl font-bold text-gray-200 leading-none tabular-nums">
         {{ value }}
       </span>
-      <span v-if="unit" class="text-sm text-gray-400">{{ unit }}</span>
+      <span v-if="unit" class="text-sm text-white">{{ unit }}</span>
     </div>
     <span v-if="subtitle" class="text-xs text-gray-500">{{ subtitle }}</span>
     <slot />

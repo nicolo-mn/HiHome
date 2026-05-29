@@ -93,7 +93,7 @@ function onRetryClick() {
       </div>
       <div
         v-if="friendly.hint"
-        class="text-[13px] md:text-[14px] text-gray-400 mt-1.5 leading-snug"
+        class="text-[13px] md:text-[14px] text-white mt-1.5 leading-snug"
       >
         {{ friendly.hint }}
       </div>

@@ -218,7 +218,7 @@ const onlyWelcome = computed(
     <p v-else-if="!connected" class="text-gray-500 text-sm">Connecting…</p>
 
     <section v-if="onlyWelcome" class="flex flex-col gap-2">
-      <div class="font-medium text-[16px] md:text-[20px] text-gray-400">
+      <div class="font-medium text-[16px] md:text-[20px] text-white">
         Suggested actions
       </div>
       <div
@@ -321,11 +321,11 @@ const onlyWelcome = computed(
     <div
       class="md:hidden fixed left-4 right-4 bottom-32 z-40 h-14 rounded-full bg-gray-700 px-4 flex items-center gap-2 shadow-2xl"
     >
-      <BaseIcon name="search" :size="22" class="text-gray-400" />
+      <BaseIcon name="search" :size="22" class="text-white" />
       <input
         v-model="draft"
         placeholder="Ask anything…"
-        class="flex-1 bg-transparent border-0 outline-none text-gray-200 placeholder:text-gray-400 text-[15px] min-w-0"
+        class="flex-1 bg-transparent border-0 outline-none text-gray-200 placeholder:text-white text-[15px] min-w-0"
         @keydown="onDraftKeydown"
       />
       <button
@@ -341,11 +341,11 @@ const onlyWelcome = computed(
     <div
       class="hidden md:flex sticky bottom-6 z-20 h-16 rounded-full bg-gray-700 px-5 items-center gap-3 shadow-2xl border border-white/[0.04]"
     >
-      <BaseIcon name="search" :size="22" class="text-gray-400" />
+      <BaseIcon name="search" :size="22" class="text-white" />
       <input
         v-model="draft"
         placeholder="Ask anything…"
-        class="flex-1 bg-transparent border-0 outline-none text-gray-200 placeholder:text-gray-400 text-[17px] min-w-0"
+        class="flex-1 bg-transparent border-0 outline-none text-gray-200 placeholder:text-white text-[17px] min-w-0"
         @keydown="onDraftKeydown"
       />
       <button

@@ -14,7 +14,7 @@ defineEmits<{
 <template>
   <div class="flex flex-col gap-1.5">
     <label
-      class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+      class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-white"
     >
       {{ label }}
     </label>

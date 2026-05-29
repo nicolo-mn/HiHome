@@ -142,7 +142,7 @@ onMounted(() => store.fetchAll());
       <div
         class="bg-gray-800/50 border-2 border-gray-800 rounded-[24px] md:rounded-[28px] px-[18px] py-3.5 flex items-center gap-3"
       >
-        <BaseIcon name="search" :size="22" class="text-gray-400" />
+        <BaseIcon name="search" :size="22" class="text-white" />
         <input
           v-model="search"
           placeholder="Search device, user or action…"
@@ -151,7 +151,7 @@ onMounted(() => store.fetchAll());
         <button
           v-if="search"
           type="button"
-          class="text-gray-400 flex"
+          class="text-white flex"
           @click="search = ''"
         >
           <BaseIcon name="close" :size="20" />
@@ -181,21 +181,21 @@ onMounted(() => store.fetchAll());
       action="load the event log"
       :on-retry="() => store.fetchAll()"
     />
-    <p v-if="isLoading && events.length === 0" class="text-gray-400 text-sm">
+    <p v-if="isLoading && events.length === 0" class="text-white text-sm">
       Loading event log…
     </p>
 
     <div class="max-w-[820px]">
       <p
         v-if="!isLoading && !error && groups.length === 0"
-        class="text-center text-gray-400 p-16 text-[17px]"
+        class="text-center text-white p-16 text-[17px]"
       >
         No events match your filter.
       </p>
 
       <div v-for="g in groups" :key="g.date" class="mb-7">
         <div
-          class="font-medium text-base text-gray-400 mb-3 flex items-center gap-3"
+          class="font-medium text-base text-white mb-3 flex items-center gap-3"
         >
           <span>{{ g.date }}</span>
           <div class="flex-1 h-px bg-white/5" />
@@ -225,7 +225,7 @@ onMounted(() => store.fetchAll());
                 >
                   {{ formatType(e.deviceType) }}
                 </span>
-                <span class="text-[14px] md:text-[15px] text-gray-400">
+                <span class="text-[14px] md:text-[15px] text-white">
                   · {{ formatDeviceLabel(e) }}
                 </span>
               </div>
@@ -238,7 +238,7 @@ onMounted(() => store.fetchAll());
                 {{ formatAction(e) }}
               </div>
               <div
-                class="flex flex-wrap gap-2 items-center text-[13px] text-gray-400"
+                class="flex flex-wrap gap-2 items-center text-[13px] text-white"
               >
                 <span
                   :class="[

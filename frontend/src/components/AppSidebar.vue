@@ -77,7 +77,7 @@ function isActive(to: string) {
           'lg:justify-start justify-center',
           isActive(t.to)
             ? 'bg-gray-800 text-gray-100'
-            : 'text-gray-400 hover:bg-white/[0.04] hover:text-gray-200',
+            : 'text-white hover:bg-white/[0.04] hover:text-gray-200',
         ]"
       >
         <BaseIcon :name="t.icon" :size="22" />
@@ -99,7 +99,7 @@ function isActive(to: string) {
           'lg:justify-start justify-center',
           isActive(t.to)
             ? 'bg-gray-800 text-gray-100'
-            : 'text-gray-400 hover:bg-white/[0.04] hover:text-gray-200',
+            : 'text-white hover:bg-white/[0.04] hover:text-gray-200',
         ]"
       >
         <BaseIcon :name="t.icon" :size="20" />

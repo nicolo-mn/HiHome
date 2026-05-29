@@ -87,7 +87,7 @@ const iconClasses = computed(() =>
 );
 const titleClasses = computed(() =>
   props.device.type === "unknown" || !isOn.value
-    ? "text-gray-400"
+    ? "text-white"
     : accentClasses.value.text,
 );
 const subtitleClasses = computed(() =>

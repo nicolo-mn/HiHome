@@ -141,7 +141,7 @@ onMounted(() => {
         <h2 class="text-lg md:text-xl font-bold text-gray-200">Add device</h2>
         <button
           type="button"
-          class="w-9 h-9 rounded-2xl text-gray-400 hover:bg-white/5 flex items-center justify-center"
+          class="w-9 h-9 rounded-2xl text-white hover:bg-white/5 flex items-center justify-center"
           @click="closeAddDevice"
         >
           <BaseIcon name="close" :size="20" />
@@ -153,7 +153,7 @@ onMounted(() => {
         :error="createError"
         action="add the device"
       />
-      <p v-if="!hasRooms" class="text-gray-400 text-sm">
+      <p v-if="!hasRooms" class="text-white text-sm">
         Add a room before creating devices.
       </p>
 
@@ -162,7 +162,7 @@ onMounted(() => {
 
         <div class="flex flex-col gap-1.5">
           <label
-            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-white"
           >
             Type
           </label>
@@ -179,7 +179,7 @@ onMounted(() => {
 
         <div class="flex flex-col gap-1.5">
           <label
-            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-white"
           >
             Room
           </label>
@@ -219,7 +219,7 @@ onMounted(() => {
     />
     <ErrorBanner v-else-if="error" :error="error" />
 
-    <p v-if="isLoading && devices.length === 0" class="text-gray-400 text-sm">
+    <p v-if="isLoading && devices.length === 0" class="text-white text-sm">
       Loading devices…
     </p>
 
@@ -229,7 +229,7 @@ onMounted(() => {
       class="flex flex-col gap-3"
     >
       <div class="flex items-center gap-3">
-        <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+        <div class="font-medium text-[18px] md:text-[20px] text-white">
           {{ group.label }}
         </div>
         <span class="text-sm text-gray-500">

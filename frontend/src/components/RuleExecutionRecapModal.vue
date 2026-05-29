@@ -25,7 +25,7 @@ const emit = defineEmits<{
         </h2>
         <button
           type="button"
-          class="w-9 h-9 rounded-2xl text-gray-400 hover:bg-white/5 flex items-center justify-center"
+          class="w-9 h-9 rounded-2xl text-white hover:bg-white/5 flex items-center justify-center"
           @click="emit('close')"
         >
           <BaseIcon name="close" :size="20" />

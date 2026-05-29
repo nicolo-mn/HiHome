@@ -193,12 +193,12 @@ onMounted(() => store.load());
       :on-retry="() => store.load()"
     />
 
-    <div v-if="isLoading && !report" class="text-gray-400 text-sm">
+    <div v-if="isLoading && !report" class="text-white text-sm">
       Loading insights…
     </div>
 
     <template v-if="report">
-      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+      <div class="font-medium text-[18px] md:text-[20px] text-white">
         Activity (last 7 days)
       </div>
 
@@ -218,7 +218,7 @@ onMounted(() => store.load());
               >
                 Hourly activity
               </div>
-              <div class="text-sm text-gray-400 truncate">
+              <div class="text-sm text-white truncate">
                 {{ totalDay }} actions over the period
               </div>
             </div>
@@ -314,7 +314,7 @@ onMounted(() => store.load());
         <div class="grid grid-cols-3 gap-2 mt-1">
           <div class="bg-gray-900/50 rounded-2xl px-3 md:px-3.5 py-3">
             <div
-              class="text-[11px] md:text-xs text-gray-400 uppercase tracking-wider font-medium"
+              class="text-[11px] md:text-xs text-white uppercase tracking-wider font-medium"
             >
               Total
             </div>
@@ -328,7 +328,7 @@ onMounted(() => store.load());
           </div>
           <div class="bg-gray-900/50 rounded-2xl px-3 md:px-3.5 py-3">
             <div
-              class="text-[11px] md:text-xs text-gray-400 uppercase tracking-wider font-medium"
+              class="text-[11px] md:text-xs text-white uppercase tracking-wider font-medium"
             >
               Peak
             </div>
@@ -338,13 +338,13 @@ onMounted(() => store.load());
               >
                 {{ maxHour }}
               </span>
-              <span class="text-xs text-gray-400">/h</span>
+              <span class="text-xs text-white">/h</span>
             </div>
-            <div class="text-xs text-gray-400 mt-0.5">{{ peakHour }}</div>
+            <div class="text-xs text-white mt-0.5">{{ peakHour }}</div>
           </div>
           <div class="bg-gray-900/50 rounded-2xl px-3 md:px-3.5 py-3">
             <div
-              class="text-[11px] md:text-xs text-gray-400 uppercase tracking-wider font-medium"
+              class="text-[11px] md:text-xs text-white uppercase tracking-wider font-medium"
             >
               Manual %
             </div>
@@ -359,7 +359,7 @@ onMounted(() => store.load());
         </div>
       </div>
 
-      <div class="font-medium text-[18px] md:text-[20px] text-gray-400 mt-2">
+      <div class="font-medium text-[18px] md:text-[20px] text-white mt-2">
         Metrics
       </div>
       <div
@@ -413,7 +413,7 @@ onMounted(() => store.load());
         </MetricCard>
       </div>
 
-      <div class="font-medium text-[18px] md:text-[20px] text-gray-400 mt-2">
+      <div class="font-medium text-[18px] md:text-[20px] text-white mt-2">
         Weather (past week)
       </div>
 
@@ -424,7 +424,7 @@ onMounted(() => store.load());
           <div class="font-bold text-[18px] md:text-[20px] text-gray-200">
             Daily temperature range
           </div>
-          <div class="flex items-center gap-3 text-[12px] text-gray-400">
+          <div class="flex items-center gap-3 text-[12px] text-white">
             <span class="flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-sky-500" /> Max
             </span>
@@ -435,7 +435,7 @@ onMounted(() => store.load());
         </div>
         <div v-if="historicalDays.length" class="flex gap-2">
           <div
-            class="flex flex-col justify-between h-32 text-[11px] text-gray-400 leading-none tabular-nums"
+            class="flex flex-col justify-between h-32 text-[11px] text-white leading-none tabular-nums"
           >
             <span class="-mt-1">{{ fmt(tempBounds.max, 1) }}°</span>
             <span class="-mb-1">{{ fmt(tempBounds.min, 1) }}°</span>
@@ -465,16 +465,14 @@ onMounted(() => store.load());
                 vector-effect="non-scaling-stroke"
               />
             </svg>
-            <div class="flex justify-between text-[11px] text-gray-400">
+            <div class="flex justify-between text-[11px] text-white">
               <span v-for="(label, idx) in dayLabels" :key="`temp-${idx}`">
                 {{ label }}
               </span>
             </div>
           </div>
         </div>
-        <p v-else class="text-sm text-gray-400">
-          Historical data not ready yet.
-        </p>
+        <p v-else class="text-sm text-white">Historical data not ready yet.</p>
       </div>
 
       <div
@@ -485,7 +483,7 @@ onMounted(() => store.load());
         </div>
         <div v-if="historicalDays.length" class="flex gap-2">
           <div
-            class="flex flex-col justify-between h-28 text-[11px] text-gray-400 leading-none tabular-nums"
+            class="flex flex-col justify-between h-28 text-[11px] text-white leading-none tabular-nums"
           >
             <span class="-mt-1">{{ fmt(precipitationMax, 1) }} mm</span>
             <span class="-mb-1">0</span>
@@ -507,7 +505,7 @@ onMounted(() => store.load());
                 />
               </div>
             </div>
-            <div class="flex gap-2 text-[11px] text-gray-400">
+            <div class="flex gap-2 text-[11px] text-white">
               <span
                 v-for="(label, idx) in dayLabels"
                 :key="`precip-label-${idx}`"
@@ -518,9 +516,7 @@ onMounted(() => store.load());
             </div>
           </div>
         </div>
-        <p v-else class="text-sm text-gray-400">
-          Historical data not ready yet.
-        </p>
+        <p v-else class="text-sm text-white">Historical data not ready yet.</p>
       </div>
 
       <div
@@ -531,7 +527,7 @@ onMounted(() => store.load());
         </div>
         <div v-if="hourlyAqiSeries.length" class="flex gap-2">
           <div
-            class="flex flex-col justify-between h-32 text-[11px] text-gray-400 leading-none tabular-nums"
+            class="flex flex-col justify-between h-32 text-[11px] text-white leading-none tabular-nums"
           >
             <span class="-mt-1">{{ Math.round(aqiBounds.max) }}</span>
             <span class="-mb-1">{{ Math.round(aqiBounds.min) }}</span>
@@ -551,16 +547,14 @@ onMounted(() => store.load());
                 vector-effect="non-scaling-stroke"
               />
             </svg>
-            <div class="flex justify-between text-[11px] text-gray-400">
+            <div class="flex justify-between text-[11px] text-white">
               <span v-for="(label, idx) in dayLabels" :key="`aqi-${idx}`">
                 {{ label }}
               </span>
             </div>
           </div>
         </div>
-        <p v-else class="text-sm text-gray-400">
-          Historical data not ready yet.
-        </p>
+        <p v-else class="text-sm text-white">Historical data not ready yet.</p>
       </div>
 
       <div class="h-8" />

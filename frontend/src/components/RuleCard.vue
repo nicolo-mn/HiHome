@@ -89,7 +89,7 @@ function getDeviceName(deviceId: string): string {
       <div class="flex flex-col">
         <button
           type="button"
-          class="text-gray-400 hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
+          class="text-white hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
           :disabled="!canMoveUp || reorderDisabled"
           aria-label="Move rule up"
           @click="$emit('move-up')"
@@ -98,7 +98,7 @@ function getDeviceName(deviceId: string): string {
         </button>
         <button
           type="button"
-          class="text-gray-400 hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
+          class="text-white hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
           :disabled="!canMoveDown || reorderDisabled"
           aria-label="Move rule down"
           @click="$emit('move-down')"
@@ -123,14 +123,14 @@ function getDeviceName(deviceId: string): string {
             {{ rule.name }}
           </h3>
         </div>
-        <p class="text-sm text-gray-400 mt-0.5 truncate">
+        <p class="text-sm text-white mt-0.5 truncate">
           <span class="font-semibold" :class="accent.text">When</span>
           {{ conditionSummary(rule) }}
         </p>
       </div>
       <button
         type="button"
-        class="w-9 h-9 rounded-2xl text-gray-400 hover:text-rose-400 hover:bg-white/5 flex items-center justify-center shrink-0"
+        class="w-9 h-9 rounded-2xl text-white hover:text-rose-400 hover:bg-white/5 flex items-center justify-center shrink-0"
         aria-label="Delete rule"
         @click="$emit('delete')"
       >
