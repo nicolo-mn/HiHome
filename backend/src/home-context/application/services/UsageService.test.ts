@@ -2,13 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { UsageService } from "./UsageService";
 import { Home } from "../../domain/Home";
 import { Room } from "../../domain/Room";
-import {
-  Light,
-  Window,
-  Thermostat,
-  ComponentTypes,
-} from "../../domain/Component";
-import { ComponentEvent } from "../../domain/EventLog";
+import { Light, Window, Thermostat, DeviceTypes } from "../../domain/Device";
+import { DeviceEvent } from "../../domain/EventLog";
 import { HomeRepository } from "../../domain/HomeRepository";
 import { LIGHT_WATTAGE_W } from "./UsageService";
 import type { HistoricalWeatherRepository } from "../HistoricalWeatherRepository";
@@ -21,7 +16,7 @@ class FakeHomeRepository implements HomeRepository {
   async getAllHomes() {
     return [this.home];
   }
-  async getComponentById() {
+  async getDeviceById() {
     return null;
   }
   async saveHome() {}
@@ -43,7 +38,7 @@ const NOW = new Date("2026-05-22T12:00:00Z");
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3600_000);
 const daysAgo = (d: number) => new Date(NOW.getTime() - d * 24 * 3600_000);
 
-function buildHome(events: ComponentEvent[]): Home {
+function buildHome(events: DeviceEvent[]): Home {
   return new Home(
     "1",
     { latitude: 0, longitude: 0 },
@@ -60,7 +55,7 @@ function buildHome(events: ComponentEvent[]): Home {
   );
 }
 
-function makeService(events: ComponentEvent[]): UsageService {
+function makeService(events: DeviceEvent[]): UsageService {
   return new UsageService(
     new FakeHomeRepository(buildHome(events)),
     new FakeHistoricalWeatherRepository(),
@@ -68,25 +63,25 @@ function makeService(events: ComponentEvent[]): UsageService {
 }
 
 function ev(
-  eventType: ComponentEvent["eventType"],
-  componentId: string,
+  eventType: DeviceEvent["eventType"],
+  deviceId: string,
   createdAt: Date,
-  extras: Partial<ComponentEvent> = {},
-): ComponentEvent {
-  const componentType =
+  extras: Partial<DeviceEvent> = {},
+): DeviceEvent {
+  const deviceType =
     eventType === "LightTurnedOn" || eventType === "LightTurnedOff"
-      ? ComponentTypes.LIGHT
+      ? DeviceTypes.LIGHT
       : eventType === "WindowOpened" || eventType === "WindowClosed"
-        ? ComponentTypes.WINDOW
-        : ComponentTypes.THERMOSTAT;
+        ? DeviceTypes.WINDOW
+        : DeviceTypes.THERMOSTAT;
   return {
     id: `${eventType}-${createdAt.getTime()}`,
-    componentId,
-    componentType,
+    deviceId,
+    deviceType: deviceType,
     eventType,
     createdAt,
     ...extras,
-  } as ComponentEvent;
+  } as DeviceEvent;
 }
 
 describe("UsageService", () => {
@@ -109,7 +104,7 @@ describe("UsageService", () => {
 
   describe("light on/off intervals", () => {
     it("sums paired on/off intervals", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", hoursAgo(10)),
         ev("LightTurnedOff", "light-1", hoursAgo(8)),
       ];
@@ -120,7 +115,7 @@ describe("UsageService", () => {
     });
 
     it("closes dangling on at range end (now)", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", hoursAgo(3)),
       ];
       const svc = makeService(events);
@@ -129,7 +124,7 @@ describe("UsageService", () => {
     });
 
     it("ignores off-without-prior-on (orphan off event)", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOff", "light-1", hoursAgo(4)),
       ];
       const svc = makeService(events);
@@ -138,7 +133,7 @@ describe("UsageService", () => {
     });
 
     it("carries over an 'on' that began before the range", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", daysAgo(10)),
         ev("LightTurnedOff", "light-1", hoursAgo(2)),
       ];
@@ -149,7 +144,7 @@ describe("UsageService", () => {
     });
 
     it("unions overlapping light intervals (two lights on for 30min = 30min, not 1h)", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", hoursAgo(2)),
         ev("LightTurnedOn", "light-2", hoursAgo(2)),
         ev("LightTurnedOff", "light-1", hoursAgo(1)),
@@ -162,7 +157,7 @@ describe("UsageService", () => {
     });
 
     it("merges partially overlapping light intervals", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", hoursAgo(4)),
         ev("LightTurnedOn", "light-2", hoursAgo(3)),
         ev("LightTurnedOff", "light-1", hoursAgo(2)),
@@ -176,7 +171,7 @@ describe("UsageService", () => {
 
   describe("window open time", () => {
     it("sums window open intervals", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("WindowOpened", "window-1", hoursAgo(6)),
         ev("WindowClosed", "window-1", hoursAgo(5)),
       ];
@@ -188,7 +183,7 @@ describe("UsageService", () => {
 
   describe("manual vs automated", () => {
     it("counts events by presence of actor", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", hoursAgo(2), {
           actor: { username: "alice", role: "User" },
         } as any),
@@ -206,7 +201,7 @@ describe("UsageService", () => {
   describe("activity by hour", () => {
     it("buckets events by hour-of-day", async () => {
       const at = (iso: string) => new Date(iso);
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", at("2026-05-22T05:30:00Z")),
         ev("LightTurnedOff", "light-1", at("2026-05-22T05:45:00Z")),
         ev("LightTurnedOn", "light-1", at("2026-05-21T22:10:00Z")),
@@ -221,7 +216,7 @@ describe("UsageService", () => {
 
   describe("range filtering", () => {
     it("excludes events older than the range", async () => {
-      const events: ComponentEvent[] = [
+      const events: DeviceEvent[] = [
         ev("LightTurnedOn", "light-1", daysAgo(20)),
         ev("LightTurnedOff", "light-1", daysAgo(19)),
       ];

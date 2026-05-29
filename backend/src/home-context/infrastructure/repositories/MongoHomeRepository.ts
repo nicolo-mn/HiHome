@@ -1,6 +1,6 @@
 import {
-  Component,
-  ComponentTypes,
+  Device,
+  DeviceTypes,
   Coordinates,
   Fan,
   FanMode,
@@ -11,15 +11,15 @@ import {
   SmartLock,
   Thermostat,
   Window,
-  ComponentEvent,
+  DeviceEvent,
 } from "../../domain";
 import { HomeModel } from "../models/HomeModel";
 
-type ComponentRecord = {
+type DeviceRecord = {
   id: string;
   name: string;
   roomId: string;
-  type: ComponentTypes;
+  type: DeviceTypes;
   isOn?: boolean;
   isOpen?: boolean;
   isLocked?: boolean;
@@ -30,7 +30,7 @@ type ComponentRecord = {
 type RoomRecord = {
   id: string;
   name: string;
-  components: ComponentRecord[];
+  devices: DeviceRecord[];
 };
 
 type HomeRecord = {
@@ -38,14 +38,14 @@ type HomeRecord = {
   coordinates: Coordinates;
   rooms: RoomRecord[];
   hourlyTemperatures?: number[];
-  eventLog: ComponentEventRecord[];
+  eventLog: DeviceEventRecord[];
 };
 
-type ComponentEventRecord = {
+type DeviceEventRecord = {
   id: string;
-  componentId: string;
-  componentName?: string;
-  componentType: ComponentTypes;
+  deviceId: string;
+  deviceName?: string;
+  deviceType: DeviceTypes;
   eventType?: string;
   targetTemperature?: number;
   mode?: FanMode;
@@ -70,16 +70,16 @@ export class MongoHomeRepository implements HomeRepository {
     return docs.map((doc) => this.toDomain(doc));
   }
 
-  async getComponentById(id: string): Promise<Component | null> {
+  async getDeviceById(id: string): Promise<Device | null> {
     const doc = await HomeModel.findOne({
-      "rooms.components.id": id,
+      "rooms.devices.id": id,
     })
       .lean<HomeRecord>()
       .exec();
     if (!doc) return null;
 
     const home = this.toDomain(doc);
-    return home.getAllComponents().find((c) => c.id === id) || null;
+    return home.getAllDevices().find((c) => c.id === id) || null;
   }
 
   async saveHome(home: Home): Promise<void> {
@@ -102,14 +102,12 @@ export class MongoHomeRepository implements HomeRepository {
         new Room(
           room.id,
           room.name,
-          (room.components || []).map((component) =>
-            this.toComponent(component, room.id),
-          ),
+          (room.devices || []).map((device) => this.toDevice(device, room.id)),
         ),
     );
 
     const eventLog = (record.eventLog || []).map((event) =>
-      this.toComponentEvent(event),
+      this.toDeviceEvent(event),
     );
     return new Home(
       record.id,
@@ -120,54 +118,32 @@ export class MongoHomeRepository implements HomeRepository {
     );
   }
 
-  private toComponent(
-    component: ComponentRecord,
-    fallbackRoomId?: string,
-  ): Component {
-    const roomId = this.requireRoomId(
-      component.roomId,
-      fallbackRoomId,
-      component.id,
-    );
+  private toDevice(device: DeviceRecord, fallbackRoomId?: string): Device {
+    const roomId = this.requireRoomId(device.roomId, fallbackRoomId, device.id);
 
-    switch (component.type) {
-      case ComponentTypes.LIGHT:
-        return new Light(
-          component.id,
-          component.name,
-          roomId,
-          !!component.isOn,
-        );
-      case ComponentTypes.WINDOW:
-        return new Window(
-          component.id,
-          component.name,
-          roomId,
-          !!component.isOpen,
-        );
-      case ComponentTypes.THERMOSTAT:
+    switch (device.type) {
+      case DeviceTypes.LIGHT:
+        return new Light(device.id, device.name, roomId, !!device.isOn);
+      case DeviceTypes.WINDOW:
+        return new Window(device.id, device.name, roomId, !!device.isOpen);
+      case DeviceTypes.THERMOSTAT:
         return new Thermostat(
-          component.id,
-          component.name,
+          device.id,
+          device.name,
           roomId,
-          component.temperature ?? 20,
+          device.temperature ?? 20,
         );
-      case ComponentTypes.LOCK:
+      case DeviceTypes.LOCK:
         return new SmartLock(
-          component.id,
-          component.name,
+          device.id,
+          device.name,
           roomId,
-          component.isLocked ?? true,
+          device.isLocked ?? true,
         );
-      case ComponentTypes.FAN:
-        return new Fan(
-          component.id,
-          component.name,
-          roomId,
-          component.mode ?? "off",
-        );
+      case DeviceTypes.FAN:
+        return new Fan(device.id, device.name, roomId, device.mode ?? "off");
       default:
-        throw new Error(`Unsupported component type: ${component.type}`);
+        throw new Error(`Unsupported device type: ${device.type}`);
     }
   }
 
@@ -178,23 +154,21 @@ export class MongoHomeRepository implements HomeRepository {
       rooms: home.rooms.map((room) => ({
         id: room.id,
         name: room.name,
-        components: room.components.map((component) =>
-          this.toComponentRecord(component, room.id),
+        devices: room.devices.map((device) =>
+          this.toDeviceRecord(device, room.id),
         ),
       })),
       hourlyTemperatures: home.hourlyTemperatures,
-      eventLog: home.eventLog.map((event) =>
-        this.toComponentEventRecord(event),
-      ),
+      eventLog: home.eventLog.map((event) => this.toDeviceEventRecord(event)),
     };
   }
 
-  private toComponentEvent(record: ComponentEventRecord): ComponentEvent {
+  private toDeviceEvent(record: DeviceEventRecord): DeviceEvent {
     const base = {
       id: record.id,
-      componentId: record.componentId,
-      componentName: record.componentName,
-      componentType: record.componentType,
+      deviceId: record.deviceId,
+      deviceName: record.deviceName,
+      deviceType: record.deviceType,
       actor: record.actor,
       createdAt: new Date(record.createdAt),
     };
@@ -205,64 +179,64 @@ export class MongoHomeRepository implements HomeRepository {
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.LIGHT,
+          deviceType: DeviceTypes.LIGHT,
         };
       case "LightTurnedOff":
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.LIGHT,
+          deviceType: DeviceTypes.LIGHT,
         };
       case "WindowOpened":
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.WINDOW,
+          deviceType: DeviceTypes.WINDOW,
         };
       case "WindowClosed":
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.WINDOW,
+          deviceType: DeviceTypes.WINDOW,
         };
       case "ThermostatSet":
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.THERMOSTAT,
+          deviceType: DeviceTypes.THERMOSTAT,
           targetTemperature: record.targetTemperature ?? record.value ?? 0,
         };
       case "FanModeSet":
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.FAN,
+          deviceType: DeviceTypes.FAN,
           mode: record.mode ?? "off",
         };
       case "LockLocked":
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.LOCK,
+          deviceType: DeviceTypes.LOCK,
         };
       case "LockUnlocked":
         return {
           ...base,
           eventType,
-          componentType: ComponentTypes.LOCK,
+          deviceType: DeviceTypes.LOCK,
         };
     }
     throw new Error(`Unsupported event type: ${eventType}`);
   }
 
-  private toComponentEventRecord(event: ComponentEvent): ComponentEventRecord {
+  private toDeviceEventRecord(event: DeviceEvent): DeviceEventRecord {
     switch (event.eventType) {
       case "ThermostatSet":
         return {
           id: event.id,
-          componentId: event.componentId,
-          componentName: event.componentName,
-          componentType: event.componentType,
+          deviceId: event.deviceId,
+          deviceName: event.deviceName,
+          deviceType: event.deviceType,
           eventType: event.eventType,
           targetTemperature: event.targetTemperature,
           actor: event.actor,
@@ -271,9 +245,9 @@ export class MongoHomeRepository implements HomeRepository {
       case "FanModeSet":
         return {
           id: event.id,
-          componentId: event.componentId,
-          componentName: event.componentName,
-          componentType: event.componentType,
+          deviceId: event.deviceId,
+          deviceName: event.deviceName,
+          deviceType: event.deviceType,
           eventType: event.eventType,
           mode: event.mode,
           actor: event.actor,
@@ -282,9 +256,9 @@ export class MongoHomeRepository implements HomeRepository {
       default:
         return {
           id: event.id,
-          componentId: event.componentId,
-          componentName: event.componentName,
-          componentType: event.componentType,
+          deviceId: event.deviceId,
+          deviceName: event.deviceName,
+          deviceType: event.deviceType,
           eventType: event.eventType,
           actor: event.actor,
           createdAt: event.createdAt,
@@ -292,7 +266,7 @@ export class MongoHomeRepository implements HomeRepository {
     }
   }
 
-  private resolveEventType(record: ComponentEventRecord): string {
+  private resolveEventType(record: DeviceEventRecord): string {
     if (record.eventType) return record.eventType;
     switch (record.action) {
       case "turnOn":
@@ -316,39 +290,32 @@ export class MongoHomeRepository implements HomeRepository {
     }
   }
 
-  private toComponentRecord(
-    component: Component,
-    fallbackRoomId: string,
-  ): ComponentRecord {
-    const roomId = this.requireRoomId(
-      component.roomId,
-      fallbackRoomId,
-      component.id,
-    );
-    const componentType = component.getType();
+  private toDeviceRecord(device: Device, fallbackRoomId: string): DeviceRecord {
+    const roomId = this.requireRoomId(device.roomId, fallbackRoomId, device.id);
+    const deviceType = device.getType();
 
-    const record: ComponentRecord = {
-      id: component.id,
-      name: component.name,
+    const record: DeviceRecord = {
+      id: device.id,
+      name: device.name,
       roomId,
-      type: componentType,
+      type: deviceType,
     };
 
-    switch (componentType) {
-      case ComponentTypes.LIGHT:
-        record.isOn = (component as Light).isOn;
+    switch (deviceType) {
+      case DeviceTypes.LIGHT:
+        record.isOn = (device as Light).isOn;
         break;
-      case ComponentTypes.WINDOW:
-        record.isOpen = (component as Window).isOpen;
+      case DeviceTypes.WINDOW:
+        record.isOpen = (device as Window).isOpen;
         break;
-      case ComponentTypes.THERMOSTAT:
-        record.temperature = (component as Thermostat).temperature;
+      case DeviceTypes.THERMOSTAT:
+        record.temperature = (device as Thermostat).temperature;
         break;
-      case ComponentTypes.LOCK:
-        record.isLocked = (component as SmartLock).isLocked;
+      case DeviceTypes.LOCK:
+        record.isLocked = (device as SmartLock).isLocked;
         break;
-      case ComponentTypes.FAN:
-        record.mode = (component as Fan).mode;
+      case DeviceTypes.FAN:
+        record.mode = (device as Fan).mode;
         break;
     }
 
@@ -358,11 +325,11 @@ export class MongoHomeRepository implements HomeRepository {
   private requireRoomId(
     roomId: string | undefined,
     fallbackRoomId: string | undefined,
-    componentId: string,
+    deviceId: string,
   ): string {
     const resolved = roomId || fallbackRoomId;
     if (!resolved) {
-      throw new Error(`Component ${componentId} is missing roomId`);
+      throw new Error(`Device ${deviceId} is missing roomId`);
     }
     return resolved;
   }

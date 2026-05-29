@@ -13,7 +13,7 @@ import {
   InternalTemperatureCondition,
 } from "../../domain/Observables";
 import {
-  ComponentAction,
+  DeviceAction,
   FanMode,
   FanSetModeAction,
   LightTurnOnAction,
@@ -26,14 +26,14 @@ import {
 } from "../../domain/Actions";
 import { RuleRepository } from "../repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
-import { ComponentActionExecutionVisitor } from "../ComponentActionExecutionVisitor";
+import { DeviceActionExecutionVisitor } from "../DeviceActionExecutionVisitor";
 import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
 import { RuleNotificationPort } from "../ports/RuleNotificationPort";
 import { ActionDescriptionVisitor } from "../ActionDescriptionVisitor";
-import { ComponentNameResolverPort } from "../ports/ComponentNameResolverPort";
+import { DeviceNameResolverPort } from "../ports/DeviceNameResolverPort";
 
 export type RuleActionDto = {
-  componentType: "light" | "window" | "thermostat" | "lock" | "fan";
+  deviceType: "light" | "window" | "thermostat" | "lock" | "fan";
   command:
     | "turnOn"
     | "turnOff"
@@ -46,7 +46,7 @@ export type RuleActionDto = {
     | "setLow"
     | "setMedium"
     | "setHigh";
-  componentId: string | number;
+  deviceId: string | number;
   targetTemp?: string | number;
 };
 
@@ -78,7 +78,7 @@ export class RuleService {
     private ruleRepo: RuleRepository,
     private actionExecutionPort: ActionExecutionPort,
     private ruleNotificationPort?: RuleNotificationPort,
-    private componentNameResolver?: ComponentNameResolverPort,
+    private deviceNameResolver?: DeviceNameResolverPort,
   ) {}
 
   async getRulesForHome(homeId: string): Promise<Rule[]> {
@@ -118,8 +118,8 @@ export class RuleService {
   ): Promise<void> {
     console.log(`Executing rules for home ${homeId} with update:`, update);
     const rulesByPriority = await this.ruleRepo.getHomeRules(homeId);
-    const actionPerComponent = new Map<string, ComponentAction>();
-    const ruleNameByAction = new Map<ComponentAction, string>();
+    const actionPerDevice = new Map<string, DeviceAction>();
+    const ruleNameByAction = new Map<DeviceAction, string>();
     for (const rule of rulesByPriority) {
       const currentMatch = rule.condition.verify(update);
       const prevMatch = this.lastMatchByRuleId.get(rule.id) ?? false;
@@ -128,17 +128,17 @@ export class RuleService {
 
       if (shouldFire) {
         for (const action of rule.actions) {
-          if (actionPerComponent.has(action.getComponentId())) continue;
-          actionPerComponent.set(action.getComponentId(), action);
+          if (actionPerDevice.has(action.getDeviceId())) continue;
+          actionPerDevice.set(action.getDeviceId(), action);
           ruleNameByAction.set(action, rule.name);
         }
       }
     }
 
-    const actionExecutor = new ComponentActionExecutionVisitor(
+    const actionExecutor = new DeviceActionExecutionVisitor(
       this.actionExecutionPort,
     );
-    const actions = Array.from(actionPerComponent.values());
+    const actions = Array.from(actionPerDevice.values());
     await Promise.all(actions.map((a) => a.accept(actionExecutor)));
 
     if (actions.length === 0) {
@@ -149,27 +149,25 @@ export class RuleService {
     console.log(
       `Executed actions for home ${homeId}:`,
       actions.map((a) => ({
-        componentId: a.getComponentId(),
+        deviceId: a.getDeviceId(),
         actionType: a.constructor.name,
       })),
     );
 
     if (!this.ruleNotificationPort) return;
 
-    const componentIds = Array.from(
-      new Set(actions.map((a) => a.getComponentId())),
-    );
+    const deviceIds = Array.from(new Set(actions.map((a) => a.getDeviceId())));
     const nameEntries = await Promise.all(
-      componentIds.map(
+      deviceIds.map(
         async (id): Promise<[string, string]> => [
           id,
-          (await this.componentNameResolver?.getComponentName(id)) ?? id,
+          (await this.deviceNameResolver?.getDeviceName(id)) ?? id,
         ],
       ),
     );
-    const componentNameById = new Map<string, string>(nameEntries);
+    const deviceNameById = new Map<string, string>(nameEntries);
 
-    const descriptionVisitor = new ActionDescriptionVisitor(componentNameById);
+    const descriptionVisitor = new ActionDescriptionVisitor(deviceNameById);
     const actionsByRule = new Map<string, string[]>();
     for (const action of actions) {
       const ruleName = ruleNameByAction.get(action)!;
@@ -234,39 +232,39 @@ export class RuleService {
   private buildActions(
     homeId: string,
     actionsData: RuleActionDto[],
-  ): ComponentAction[] {
+  ): DeviceAction[] {
     return actionsData.map((actionData) => {
-      if (actionData.componentType === "light") {
+      if (actionData.deviceType === "light") {
         return actionData.command === "turnOn"
-          ? new LightTurnOnAction(homeId, actionData.componentId.toString())
-          : new LightTurnOffAction(homeId, actionData.componentId.toString());
+          ? new LightTurnOnAction(homeId, actionData.deviceId.toString())
+          : new LightTurnOffAction(homeId, actionData.deviceId.toString());
       }
-      if (actionData.componentType === "window") {
+      if (actionData.deviceType === "window") {
         return actionData.command === "open"
-          ? new WindowOpenAction(homeId, actionData.componentId.toString())
-          : new WindowCloseAction(homeId, actionData.componentId.toString());
+          ? new WindowOpenAction(homeId, actionData.deviceId.toString())
+          : new WindowCloseAction(homeId, actionData.deviceId.toString());
       }
       if (
-        actionData.componentType === "thermostat" &&
+        actionData.deviceType === "thermostat" &&
         actionData.command === "setTemperature"
       ) {
         return new ThermostatSetTemperatureAction(
           homeId,
-          actionData.componentId.toString(),
+          actionData.deviceId.toString(),
           Number.parseFloat(String(actionData.targetTemp)),
         );
       }
-      if (actionData.componentType === "lock") {
+      if (actionData.deviceType === "lock") {
         return actionData.command === "lock"
-          ? new LockLockAction(homeId, actionData.componentId.toString())
-          : new LockUnlockAction(homeId, actionData.componentId.toString());
+          ? new LockLockAction(homeId, actionData.deviceId.toString())
+          : new LockUnlockAction(homeId, actionData.deviceId.toString());
       }
-      if (actionData.componentType === "fan") {
+      if (actionData.deviceType === "fan") {
         const mode = FAN_COMMAND_TO_MODE[actionData.command];
         if (!mode) throw new Error("Invalid action");
         return new FanSetModeAction(
           homeId,
-          actionData.componentId.toString(),
+          actionData.deviceId.toString(),
           mode,
         );
       }

@@ -1,5 +1,5 @@
 import {
-  ComponentActionVisitor,
+  DeviceActionVisitor,
   FanSetModeAction,
   LightTurnOffAction,
   LightTurnOnAction,
@@ -11,7 +11,7 @@ import {
 } from "../domain/Actions";
 import { ActionExecutionPort } from "../domain/ActionExecutionPort";
 
-export class ComponentActionExecutionVisitor implements ComponentActionVisitor<
+export class DeviceActionExecutionVisitor implements DeviceActionVisitor<
   Promise<void>
 > {
   constructor(private actionPort: ActionExecutionPort) {}

@@ -1,9 +1,4 @@
-import {
-  Component,
-  ComponentUpdatePort,
-  Home,
-  HomeRepository,
-} from "../../domain";
+import { Device, DeviceUpdatePort, Home, HomeRepository } from "../../domain";
 
 export async function ensureHomeExists(
   homeRepo: HomeRepository,
@@ -17,9 +12,9 @@ export async function ensureHomeExists(
 export async function persistAndBroadcast(
   homeRepo: HomeRepository,
   home: Home,
-  component: Component,
-  componentUpdatePort?: ComponentUpdatePort,
+  device: Device,
+  deviceUpdatePort?: DeviceUpdatePort,
 ): Promise<void> {
   await homeRepo.saveHome(home);
-  componentUpdatePort?.sendComponentUpdate(home, component);
+  deviceUpdatePort?.sendDeviceUpdate(home, device);
 }

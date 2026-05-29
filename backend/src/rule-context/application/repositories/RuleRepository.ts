@@ -1,5 +1,5 @@
 import { ObservableCondition } from "../../domain/Observables";
-import { ComponentAction } from "../../domain/Actions";
+import { DeviceAction } from "../../domain/Actions";
 import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
 
@@ -8,7 +8,7 @@ export interface RuleRepository {
     homeId: string,
     name: string,
     condition: ObservableCondition,
-    actions: ComponentAction[],
+    actions: DeviceAction[],
     order: number,
   ): Promise<Rule>;
   // Returned rules are sorted by `order` ASC. Callers rely on this for

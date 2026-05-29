@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { HomeService } from "../../application/services/HomeService";
-import { ComponentStateSerializer } from "../ComponentStateSerializer";
+import { DeviceStateSerializer } from "../DeviceStateSerializer";
 import { HomeNotificationOutboundPort } from "../../application/ports/HomeNotificationPort";
-import { CreateComponentInput } from "../../application/dtos/ComponentDTO";
-import { ComponentTypes } from "../../domain";
+import { CreateDeviceInput } from "../../application/dtos/DeviceDTO";
+import { DeviceTypes } from "../../domain";
 
 // Extends Express Request to include user information from auth middleware
 type AuthenticatedRequest = Request & {
@@ -14,21 +14,21 @@ type AuthenticatedRequest = Request & {
 };
 
 export class HomeController {
-  private stateSerializer = new ComponentStateSerializer();
+  private stateSerializer = new DeviceStateSerializer();
 
   constructor(
     private homeService: HomeService,
     private notificationPort?: HomeNotificationOutboundPort,
   ) {}
 
-  async getComponents(req: Request, res: Response) {
+  async getDevices(req: Request, res: Response) {
     try {
-      const items = await this.homeService.getComponentsWithRoomNames(
+      const items = await this.homeService.getDevicesWithRoomNames(
         req.params.id as string,
       );
       res.json(
-        items.map(({ component, roomName }) => ({
-          ...component.accept(this.stateSerializer),
+        items.map(({ device, roomName }) => ({
+          ...device.accept(this.stateSerializer),
           roomName,
         })),
       );
@@ -46,26 +46,26 @@ export class HomeController {
     }
   }
 
-  async addComponent(req: Request, res: Response) {
-    const input = this.parseCreateComponentInput(req.body);
+  async addDevice(req: Request, res: Response) {
+    const input = this.parseCreateDeviceInput(req.body);
     if ("error" in input) {
       return res.status(400).json({ error: input.error });
     }
 
     try {
-      const component = await this.homeService.addComponent(
+      const device = await this.homeService.addDevice(
         req.params.id as string,
         input,
       );
-      res.status(201).json(component.accept(this.stateSerializer));
+      res.status(201).json(device.accept(this.stateSerializer));
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
   }
 
-  private parseCreateComponentInput(
+  private parseCreateDeviceInput(
     body: any,
-  ): CreateComponentInput | { error: string } {
+  ): CreateDeviceInput | { error: string } {
     const { name, type, roomId } = body ?? {};
     if (typeof name !== "string" || name.length === 0) {
       return { error: "name must be a non-empty string" };
@@ -73,46 +73,45 @@ export class HomeController {
     if (typeof roomId !== "string" || roomId.length === 0) {
       return { error: "roomId must be a non-empty string" };
     }
-    if (typeof type !== "string" || !this.isComponentType(type)) {
-      return { error: "Unsupported component type" };
+    if (typeof type !== "string" || !this.isDeviceType(type)) {
+      return { error: "Unsupported device type" };
     }
     return { name, type, roomId };
   }
 
-  private isComponentType(value: string): value is ComponentTypes {
-    return (Object.values(ComponentTypes) as string[]).includes(value);
+  private isDeviceType(value: string): value is DeviceTypes {
+    return (Object.values(DeviceTypes) as string[]).includes(value);
   }
 
-  async getComponentTypes(req: Request, res: Response) {
+  async getDeviceTypes(req: Request, res: Response) {
     try {
-      const types = await this.homeService.getComponentTypes();
+      const types = await this.homeService.getDeviceTypes();
       res.json(types);
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
   }
 
-  async getComponentsByType(req: Request, res: Response) {
+  async getDevicesByType(req: Request, res: Response) {
     try {
-      const components = await this.homeService.getComponentsByType(
+      const devices = await this.homeService.getDevicesByType(
         req.params.id as string,
         req.params.type as string,
       );
-      res.json(components.map((c) => c.accept(this.stateSerializer)));
+      res.json(devices.map((c) => c.accept(this.stateSerializer)));
     } catch (e: any) {
       res.status(404).json({ error: e.message });
     }
   }
 
-  async getComponent(req: Request, res: Response) {
+  async getDevice(req: Request, res: Response) {
     try {
-      const component = await this.homeService.getComponent(
-        req.params.componentId as string,
+      const device = await this.homeService.getDevice(
+        req.params.deviceId as string,
       );
-      if (!component)
-        return res.status(404).json({ error: "Component not found" });
+      if (!device) return res.status(404).json({ error: "Device not found" });
 
-      res.json(component.accept(this.stateSerializer));
+      res.json(device.accept(this.stateSerializer));
     } catch (e: any) {
       res.status(404).json({ error: e.message });
     }
@@ -125,9 +124,9 @@ export class HomeController {
 
       const user = (req as AuthenticatedRequest).user;
 
-      const { component, roomName } = await this.homeService.executeAction(
+      const { device, roomName } = await this.homeService.executeAction(
         req.params.id as string,
-        req.params.componentId as string,
+        req.params.deviceId as string,
         req.params.action as string,
         param,
         user?.username && user.role
@@ -138,9 +137,9 @@ export class HomeController {
       // Generate an event for the notification system
       if (user?.username && user.role && this.notificationPort) {
         this.notificationPort
-          .notifyComponentAction(req.params.id as string, {
-            componentId: component.id,
-            componentName: component.name,
+          .notifyDeviceAction(req.params.id as string, {
+            deviceId: device.id,
+            deviceName: device.name,
             action: req.params.action as string,
             actor: {
               username: user.username,
@@ -152,15 +151,15 @@ export class HomeController {
           );
       }
 
-      res.json({ ...component.accept(this.stateSerializer), roomName });
+      res.json({ ...device.accept(this.stateSerializer), roomName });
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }
   }
 
-  async getComponentEvents(req: Request, res: Response) {
+  async getDeviceEvents(req: Request, res: Response) {
     try {
-      const events = await this.homeService.getComponentEvents(
+      const events = await this.homeService.getDeviceEvents(
         req.params.id as string,
       );
       res.json({

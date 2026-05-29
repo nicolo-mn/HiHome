@@ -7,8 +7,8 @@ import {
   Home,
   Coordinates,
   Room,
-  createComponent,
-  ComponentTypes,
+  createDevice,
+  DeviceTypes,
   WeatherForecast,
 } from "../../domain";
 

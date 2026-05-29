@@ -1,5 +1,5 @@
 import mongoose, { Schema, model } from "mongoose";
-import { ComponentTypes } from "../../domain";
+import { DeviceTypes } from "../../domain";
 
 const coordinatesSchema = new Schema(
   {
@@ -10,7 +10,7 @@ const coordinatesSchema = new Schema(
   { _id: false },
 );
 
-const componentSchema = new Schema(
+const deviceSchema = new Schema(
   {
     id: { type: String, required: true },
     name: { type: String, required: true },
@@ -18,7 +18,7 @@ const componentSchema = new Schema(
     type: {
       type: String,
       required: true,
-      enum: Object.values(ComponentTypes),
+      enum: Object.values(DeviceTypes),
     },
     isOn: { type: Boolean },
     isOpen: { type: Boolean },
@@ -29,7 +29,7 @@ const componentSchema = new Schema(
   { _id: false },
 );
 
-const componentEventActorSchema = new Schema(
+const deviceEventActorSchema = new Schema(
   {
     username: { type: String, required: true },
     role: { type: String, required: true },
@@ -37,15 +37,15 @@ const componentEventActorSchema = new Schema(
   { _id: false },
 );
 
-const componentEventSchema = new Schema(
+const deviceEventSchema = new Schema(
   {
     id: { type: String, required: true },
-    componentId: { type: String, required: true },
-    componentName: { type: String },
-    componentType: {
+    deviceId: { type: String, required: true },
+    deviceName: { type: String },
+    deviceType: {
       type: String,
       required: true,
-      enum: Object.values(ComponentTypes),
+      enum: Object.values(DeviceTypes),
     },
     eventType: {
       type: String,
@@ -63,7 +63,7 @@ const componentEventSchema = new Schema(
     },
     targetTemperature: { type: Number },
     mode: { type: String },
-    actor: { type: componentEventActorSchema },
+    actor: { type: deviceEventActorSchema },
     createdAt: { type: Date, required: true },
   },
   { _id: false },
@@ -73,7 +73,7 @@ const roomSchema = new Schema(
   {
     id: { type: String, required: true },
     name: { type: String, required: true },
-    components: { type: [componentSchema], default: [] },
+    devices: { type: [deviceSchema], default: [] },
   },
   { _id: false },
 );
@@ -87,7 +87,7 @@ const homeSchema = new Schema(
       type: [Number],
       default: () => new Array(24).fill(20),
     },
-    eventLog: { type: [componentEventSchema], default: [] },
+    eventLog: { type: [deviceEventSchema], default: [] },
   },
   { timestamps: true },
 );

@@ -10,7 +10,7 @@ import { authMiddleware } from "./home-context/infrastructure/middlewares/Routes
 import { InMemoryHomeRepository } from "./home-context/infrastructure/repositories/InMemoryHomeRepository";
 import { MongoHomeRepository } from "./home-context/infrastructure/repositories/MongoHomeRepository";
 import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOSensorUpdateAdapter";
-import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOComponentUpdateAdapter";
+import { SocketIODeviceUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIODeviceUpdateAdapter";
 import { HomeService } from "./home-context/application/services/HomeService";
 import { ActionService } from "./home-context/application/services/ActionService";
 import { UsageService } from "./home-context/application/services/UsageService";
@@ -42,7 +42,7 @@ import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/adapters/ActionExecutionAdapter";
 import { NotificationContextAdapter as RuleNotificationContextAdapter } from "./rule-context/infrastructure/adapters/NotificationContextAdapter";
-import { HomeServiceComponentNameResolver } from "./rule-context/infrastructure/adapters/HomeServiceComponentNameResolver";
+import { HomeServiceDeviceNameResolver } from "./rule-context/infrastructure/adapters/HomeServiceDeviceNameResolver";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/repositories/InMemoryHistoricalWeatherRepository";
 import { seedDatabase } from "./bootstrap/seedDatabase";
@@ -99,7 +99,7 @@ const sensorUpdatePort = new SocketIOSensorUpdateAdapter(
   io,
   homeNotificationPort,
 );
-const componentUpdatePort = new SocketIOComponentUpdateAdapter(io);
+const deviceUpdatePort = new SocketIODeviceUpdateAdapter(io);
 const eventEmitter = new EventEmitter();
 const ruleServicePort = new AsyncBusRuleServiceAdapter(
   eventEmitter,
@@ -118,7 +118,7 @@ const homeService = new HomeService(
   sensorUpdatePort,
   ruleServicePort,
   externalSensorsDataPort,
-  componentUpdatePort,
+  deviceUpdatePort,
 );
 export const homeController = new HomeController(
   homeService,
@@ -133,17 +133,17 @@ const ruleRepo =
   process.env.NODE_ENV === "test"
     ? new InMemoryRuleRepository()
     : new MongoRuleRepository();
-const actionService = new ActionService(homeRepo, componentUpdatePort);
+const actionService = new ActionService(homeRepo, deviceUpdatePort);
 const actionExecutor = new ActionExecutionAdapter(actionService);
 const ruleNotificationAdapter = new RuleNotificationContextAdapter(
   notificationContext.notificationPort,
 );
-const componentNameResolver = new HomeServiceComponentNameResolver(homeService);
+const deviceNameResolver = new HomeServiceDeviceNameResolver(homeService);
 const ruleService = new RuleService(
   ruleRepo,
   actionExecutor,
   ruleNotificationAdapter,
-  componentNameResolver,
+  deviceNameResolver,
 );
 export const ruleController = new RuleController(ruleService);
 const ruleRouter = new RuleRouter(ruleController);

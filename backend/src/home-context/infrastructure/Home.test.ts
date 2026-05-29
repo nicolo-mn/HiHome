@@ -27,26 +27,26 @@ describe("Home Context Integration Tests", () => {
   });
 
   describe("REST Endpoints", () => {
-    it("should get component types", async () => {
+    it("should get device types", async () => {
       const res = await request(app)
-        .get("/api/home/1/components/types")
+        .get("/api/home/1/devices/types")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(res.body).toContain("light");
     });
 
-    it("should list components for home-1", async () => {
+    it("should list devices for home-1", async () => {
       const res = await request(app)
-        .get("/api/home/1/components")
+        .get("/api/home/1/devices")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
       expect(res.body[0]).toHaveProperty("id", "light-1");
     });
 
-    it("should add a new component", async () => {
+    it("should add a new device", async () => {
       const res = await request(app)
-        .post("/api/home/1/components")
+        .post("/api/home/1/devices")
         .set("Authorization", `Bearer ${token}`)
         .send({
           name: "Kitchen Light",
@@ -67,36 +67,36 @@ describe("Home Context Integration Tests", () => {
     it("should turn on a light", async () => {
       // First ensure off
       let stateRes = await request(app)
-        .get("/api/home/1/components/light-1")
+        .get("/api/home/1/devices/light-1")
         .set("Authorization", `Bearer ${token}`);
       expect(stateRes.body.isOn).toBe(false);
 
       const turnOnRes = await request(app)
-        .post("/api/home/1/components/light-1/turnOn")
+        .post("/api/home/1/devices/light-1/turnOn")
         .set("Authorization", `Bearer ${token}`);
       expect(turnOnRes.status).toBe(200);
 
       stateRes = await request(app)
-        .get("/api/home/1/components/light-1")
+        .get("/api/home/1/devices/light-1")
         .set("Authorization", `Bearer ${token}`);
       expect(stateRes.body.isOn).toBe(true);
     });
 
     it("should turn off a light", async () => {
       const turnOffRes = await request(app)
-        .post("/api/home/1/components/light-1/turnOff")
+        .post("/api/home/1/devices/light-1/turnOff")
         .set("Authorization", `Bearer ${token}`);
       expect(turnOffRes.status).toBe(200);
 
       const stateRes = await request(app)
-        .get("/api/home/1/components/light-1")
+        .get("/api/home/1/devices/light-1")
         .set("Authorization", `Bearer ${token}`);
       expect(stateRes.body.isOn).toBe(false);
     });
 
-    it("should get components by type", async () => {
+    it("should get devices by type", async () => {
       const res = await request(app)
-        .get("/api/home/1/components/types/light")
+        .get("/api/home/1/devices/types/light")
         .set("Authorization", `Bearer ${token}`);
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);

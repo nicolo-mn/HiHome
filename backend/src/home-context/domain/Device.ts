@@ -1,8 +1,8 @@
 import { randomUUID } from "crypto";
-import { ComponentVisitor } from "./ComponentVisitor";
+import { DeviceVisitor } from "./DeviceVisitor";
 import {
-  ComponentEventActor,
-  ComponentEventBase,
+  DeviceEventActor,
+  DeviceEventBase,
   FanMode,
   FanModeSetEvent,
   LightTurnedOffEvent,
@@ -14,7 +14,7 @@ import {
   WindowOpenedEvent,
 } from "./EventLog";
 
-export enum ComponentTypes {
+export enum DeviceTypes {
   LIGHT = "light",
   WINDOW = "window",
   THERMOSTAT = "thermostat",
@@ -22,50 +22,50 @@ export enum ComponentTypes {
   FAN = "fan",
 }
 
-export function createComponent(
+export function createDevice(
   id: string,
-  input: { name: string; type: ComponentTypes; roomId: string },
-): Component {
+  input: { name: string; type: DeviceTypes; roomId: string },
+): Device {
   switch (input.type) {
-    case ComponentTypes.LIGHT:
+    case DeviceTypes.LIGHT:
       return new Light(id, input.name, input.roomId);
-    case ComponentTypes.WINDOW:
+    case DeviceTypes.WINDOW:
       return new Window(id, input.name, input.roomId);
-    case ComponentTypes.THERMOSTAT:
+    case DeviceTypes.THERMOSTAT:
       return new Thermostat(id, input.name, input.roomId);
-    case ComponentTypes.LOCK:
+    case DeviceTypes.LOCK:
       return new SmartLock(id, input.name, input.roomId);
-    case ComponentTypes.FAN:
+    case DeviceTypes.FAN:
       return new Fan(id, input.name, input.roomId);
     default:
-      throw new Error("Unsupported component type");
+      throw new Error("Unsupported device type");
   }
 }
 
-export interface Component {
+export interface Device {
   id: string;
   name: string;
   roomId?: string;
-  getType(): ComponentTypes;
-  accept<T>(visitor: ComponentVisitor<T>): T;
+  getType(): DeviceTypes;
+  accept<T>(visitor: DeviceVisitor<T>): T;
 }
 
 function buildEventBase(
-  component: Component,
-  actor?: ComponentEventActor,
-): ComponentEventBase {
+  device: Device,
+  actor?: DeviceEventActor,
+): DeviceEventBase {
   return {
     id: randomUUID(),
-    componentId: component.id,
-    componentName: component.name,
-    componentType: component.getType(),
+    deviceId: device.id,
+    deviceName: device.name,
+    deviceType: device.getType(),
     actor,
     createdAt: new Date(),
   };
 }
 
-export class Light implements Component {
-  private type: ComponentTypes = ComponentTypes.LIGHT;
+export class Light implements Device {
+  private type: DeviceTypes = DeviceTypes.LIGHT;
   constructor(
     public id: string,
     public name: string,
@@ -73,35 +73,35 @@ export class Light implements Component {
     public isOn: boolean = false,
   ) {}
 
-  getType(): ComponentTypes {
+  getType(): DeviceTypes {
     return this.type;
   }
 
-  accept<T>(visitor: ComponentVisitor<T>): T {
+  accept<T>(visitor: DeviceVisitor<T>): T {
     return visitor.visitLight(this);
   }
 
-  turnOn(actor?: ComponentEventActor): LightTurnedOnEvent {
+  turnOn(actor?: DeviceEventActor): LightTurnedOnEvent {
     this.isOn = true;
     return {
       ...buildEventBase(this, actor),
       eventType: "LightTurnedOn",
-      componentType: ComponentTypes.LIGHT,
+      deviceType: DeviceTypes.LIGHT,
     };
   }
 
-  turnOff(actor?: ComponentEventActor): LightTurnedOffEvent {
+  turnOff(actor?: DeviceEventActor): LightTurnedOffEvent {
     this.isOn = false;
     return {
       ...buildEventBase(this, actor),
       eventType: "LightTurnedOff",
-      componentType: ComponentTypes.LIGHT,
+      deviceType: DeviceTypes.LIGHT,
     };
   }
 }
 
-export class Window implements Component {
-  private type: ComponentTypes = ComponentTypes.WINDOW;
+export class Window implements Device {
+  private type: DeviceTypes = DeviceTypes.WINDOW;
   constructor(
     public id: string,
     public name: string,
@@ -109,35 +109,35 @@ export class Window implements Component {
     public isOpen: boolean = false,
   ) {}
 
-  getType(): ComponentTypes {
+  getType(): DeviceTypes {
     return this.type;
   }
 
-  accept<T>(visitor: ComponentVisitor<T>): T {
+  accept<T>(visitor: DeviceVisitor<T>): T {
     return visitor.visitWindow(this);
   }
 
-  open(actor?: ComponentEventActor): WindowOpenedEvent {
+  open(actor?: DeviceEventActor): WindowOpenedEvent {
     this.isOpen = true;
     return {
       ...buildEventBase(this, actor),
       eventType: "WindowOpened",
-      componentType: ComponentTypes.WINDOW,
+      deviceType: DeviceTypes.WINDOW,
     };
   }
 
-  close(actor?: ComponentEventActor): WindowClosedEvent {
+  close(actor?: DeviceEventActor): WindowClosedEvent {
     this.isOpen = false;
     return {
       ...buildEventBase(this, actor),
       eventType: "WindowClosed",
-      componentType: ComponentTypes.WINDOW,
+      deviceType: DeviceTypes.WINDOW,
     };
   }
 }
 
-export class Thermostat implements Component {
-  private type: ComponentTypes = ComponentTypes.THERMOSTAT;
+export class Thermostat implements Device {
+  private type: DeviceTypes = DeviceTypes.THERMOSTAT;
   constructor(
     public id: string,
     public name: string,
@@ -145,30 +145,27 @@ export class Thermostat implements Component {
     public temperature: number = 20,
   ) {}
 
-  getType(): ComponentTypes {
+  getType(): DeviceTypes {
     return this.type;
   }
 
-  accept<T>(visitor: ComponentVisitor<T>): T {
+  accept<T>(visitor: DeviceVisitor<T>): T {
     return visitor.visitThermostat(this);
   }
 
-  setTemperature(
-    temp: number,
-    actor?: ComponentEventActor,
-  ): ThermostatSetEvent {
+  setTemperature(temp: number, actor?: DeviceEventActor): ThermostatSetEvent {
     this.temperature = temp;
     return {
       ...buildEventBase(this, actor),
       eventType: "ThermostatSet",
-      componentType: ComponentTypes.THERMOSTAT,
+      deviceType: DeviceTypes.THERMOSTAT,
       targetTemperature: temp,
     };
   }
 }
 
-export class SmartLock implements Component {
-  private type: ComponentTypes = ComponentTypes.LOCK;
+export class SmartLock implements Device {
+  private type: DeviceTypes = DeviceTypes.LOCK;
   constructor(
     public id: string,
     public name: string,
@@ -176,35 +173,35 @@ export class SmartLock implements Component {
     public isLocked: boolean = true,
   ) {}
 
-  getType(): ComponentTypes {
+  getType(): DeviceTypes {
     return this.type;
   }
 
-  accept<T>(visitor: ComponentVisitor<T>): T {
+  accept<T>(visitor: DeviceVisitor<T>): T {
     return visitor.visitLock(this);
   }
 
-  lock(actor?: ComponentEventActor): LockLockedEvent {
+  lock(actor?: DeviceEventActor): LockLockedEvent {
     this.isLocked = true;
     return {
       ...buildEventBase(this, actor),
       eventType: "LockLocked",
-      componentType: ComponentTypes.LOCK,
+      deviceType: DeviceTypes.LOCK,
     };
   }
 
-  unlock(actor?: ComponentEventActor): LockUnlockedEvent {
+  unlock(actor?: DeviceEventActor): LockUnlockedEvent {
     this.isLocked = false;
     return {
       ...buildEventBase(this, actor),
       eventType: "LockUnlocked",
-      componentType: ComponentTypes.LOCK,
+      deviceType: DeviceTypes.LOCK,
     };
   }
 }
 
-export class Fan implements Component {
-  private type: ComponentTypes = ComponentTypes.FAN;
+export class Fan implements Device {
+  private type: DeviceTypes = DeviceTypes.FAN;
   constructor(
     public id: string,
     public name: string,
@@ -212,20 +209,20 @@ export class Fan implements Component {
     public mode: FanMode = "off",
   ) {}
 
-  getType(): ComponentTypes {
+  getType(): DeviceTypes {
     return this.type;
   }
 
-  accept<T>(visitor: ComponentVisitor<T>): T {
+  accept<T>(visitor: DeviceVisitor<T>): T {
     return visitor.visitFan(this);
   }
 
-  setMode(mode: FanMode, actor?: ComponentEventActor): FanModeSetEvent {
+  setMode(mode: FanMode, actor?: DeviceEventActor): FanModeSetEvent {
     this.mode = mode;
     return {
       ...buildEventBase(this, actor),
       eventType: "FanModeSet",
-      componentType: ComponentTypes.FAN,
+      deviceType: DeviceTypes.FAN,
       mode,
     };
   }

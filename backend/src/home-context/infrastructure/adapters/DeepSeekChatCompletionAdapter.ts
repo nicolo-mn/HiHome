@@ -7,9 +7,9 @@ import type {
   ForecastSummary,
 } from "../../application/ports/ForecastPort";
 import { HomeService } from "../../application/services/HomeService";
-import { ComponentTypes } from "../../domain";
-import { ComponentStateSerializer } from "../ComponentStateSerializer";
-import type { ComponentSerialization } from "../../application/dtos/ComponentDTO";
+import { DeviceStateSerializer } from "../DeviceStateSerializer";
+import type { DeviceSerialization } from "../../application/dtos/DeviceDTO";
+import { DeviceTypes } from "../../domain";
 import type { AddRuleDto } from "../../../rule-context/application/services/RuleService";
 import { RuleService } from "../../../rule-context/application/services/RuleService";
 type DeepSeekOptions = {
@@ -72,7 +72,7 @@ type StreamChunk = {
 };
 
 export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
-  private stateSerializer = new ComponentStateSerializer();
+  private stateSerializer = new DeviceStateSerializer();
 
   constructor(
     private options: DeepSeekOptions,
@@ -142,7 +142,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
   private buildTools(isAdmin: boolean): DeepSeekTool[] {
     const tools = [this.buildForecastTool(), this.buildDeviceStatesTool()];
     if (isAdmin) {
-      tools.push(this.buildAddRuleTool(), this.buildAddComponentTool());
+      tools.push(this.buildAddRuleTool(), this.buildAddDeviceTool());
     }
     return tools;
   }
@@ -190,7 +190,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           "Fields: ruleName (short label), observableId (weather|external-thermometer|internal-thermometer|wind-speed|air-quality). " +
           "For weather: operatorTarget must be one of Clear, Drizzle, Fog, Overcast, Cloudy, Rain, Snow, Thunderstorm and operator is omitted. " +
           "For numeric observables: operator is gt|lt|eq and operatorTarget is a number or numeric string. " +
-          "Actions is a non-empty array; each action has componentType (light|window|thermostat|lock|fan), command, componentId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature, lock -> lock|unlock, fan -> setOff|setLow|setMedium|setHigh.",
+          "Actions is a non-empty array; each action has deviceType (light|window|thermostat|lock|fan), command, deviceId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature, lock -> lock|unlock, fan -> setOff|setLow|setMedium|setHigh.",
         parameters: {
           type: "object",
           properties: {
@@ -223,7 +223,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
               items: {
                 type: "object",
                 properties: {
-                  componentType: {
+                  deviceType: {
                     type: "string",
                     enum: ["light", "window", "thermostat", "lock", "fan"],
                   },
@@ -243,10 +243,10 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
                       "setHigh",
                     ],
                   },
-                  componentId: { type: ["string", "number"] },
+                  deviceId: { type: ["string", "number"] },
                   targetTemp: { type: ["string", "number"] },
                 },
-                required: ["componentType", "command", "componentId"],
+                required: ["deviceType", "command", "deviceId"],
               },
             },
           },
@@ -256,14 +256,14 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     };
   }
 
-  private buildAddComponentTool(): DeepSeekTool {
+  private buildAddDeviceTool(): DeepSeekTool {
     return {
       type: "function",
       function: {
-        name: "add_component",
+        name: "add_device",
         description:
           "Add a new smart device to a room in the current home. " +
-          "Fields: name (human-friendly label), type (light|window|thermostat|lock|fan), roomId (the ID of the room to place the component in).",
+          "Fields: name (human-friendly label), type (light|window|thermostat|lock|fan), roomId (the ID of the room to place the device in).",
         parameters: {
           type: "object",
           properties: {
@@ -278,7 +278,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
             },
             roomId: {
               type: "string",
-              description: "The ID of the room to place the component in.",
+              description: "The ID of the room to place the device in.",
             },
           },
           required: ["name", "type", "roomId"],
@@ -446,13 +446,13 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         }
 
         if (toolCall.function.name === "get_device_states") {
-          const components = await this.homeService.getComponents(homeId);
+          const devices = await this.homeService.getDevices(homeId);
           responses.push({
             role: "tool",
             tool_call_id: toolCall.id,
             content: this.formatDeviceStates(
-              components.map((component) =>
-                component.accept(this.stateSerializer),
+              devices.map((device) =>
+                device.accept(this.stateSerializer),
               ),
             ),
           });
@@ -478,21 +478,21 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           continue;
         }
 
-        if (toolCall.function.name === "add_component") {
+        if (toolCall.function.name === "add_device") {
           const args = JSON.parse(toolCall.function.arguments) as {
             name: string;
             type: string;
             roomId: string;
           };
-          const component = await this.homeService.addComponent(homeId, {
+          const device = await this.homeService.addDevice(homeId, {
             name: args.name,
-            type: args.type as ComponentTypes,
+            type: args.type as DeviceTypes,
             roomId: args.roomId,
           });
           responses.push({
             role: "tool",
             tool_call_id: toolCall.id,
-            content: `Component "${component.name}" (${component.getType()}) added with id ${component.id}.`,
+            content: `Device "${device.name}" (${device.getType()}) added with id ${device.id}.`,
           });
           continue;
         }
@@ -546,7 +546,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     }
   }
 
-  private formatDeviceStates(devices: ComponentSerialization[]): string {
+  private formatDeviceStates(devices: DeviceSerialization[]): string {
     if (devices.length === 0) {
       return "No devices in this home.";
     }

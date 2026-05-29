@@ -9,9 +9,9 @@ export interface NotificationActor {
   role: string;
 }
 
-export interface ComponentActionEvent {
-  componentId: string;
-  componentName?: string;
+export interface DeviceActionEvent {
+  deviceId: string;
+  deviceName?: string;
   action: string;
   actor: NotificationActor;
 }
@@ -33,9 +33,6 @@ export interface NotificationDTO {
 export interface NotificationInboundPort {
   notifySensorUpdate(homeId: string, update: SensorUpdateEvent): Promise<void>;
   notifyRulesExecuted(homeId: string, event: RulesExecutedEvent): Promise<void>;
-  notifyComponentAction(
-    homeId: string,
-    event: ComponentActionEvent,
-  ): Promise<void>;
+  notifyDeviceAction(homeId: string, event: DeviceActionEvent): Promise<void>;
   listByUser(homeId: string, username: string): Promise<NotificationDTO[]>;
 }

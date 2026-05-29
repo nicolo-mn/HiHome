@@ -1,4 +1,4 @@
-import { ComponentEvent } from "../../domain";
+import { DeviceEvent } from "../../domain";
 import { HomeRepository } from "../../domain/HomeRepository";
 import { UsageRangeDays, UsageReport } from "../dtos/UsageDTO";
 import { HistoricalWeatherRepository } from "../HistoricalWeatherRepository";
@@ -74,7 +74,7 @@ export class UsageService {
   }
 
   private summarizeActivity(
-    eventLog: ComponentEvent[],
+    eventLog: DeviceEvent[],
     rangeStart: Date,
     rangeEnd: Date,
   ): ActivitySummary {

@@ -1,7 +1,7 @@
 export type NotificationType =
   | "AirQualityThresholdBreach"
   | "AutomationRuleExecuted"
-  | "ComponentAction";
+  | "DeviceAction";
 
 export interface RuleExecutionDetails {
   executions: { ruleName: string; actions: string[] }[];

@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import {
-  ComponentActionEvent,
+  DeviceActionEvent,
   NotificationDTO,
   NotificationInboundPort,
   RulesExecutedEvent,
@@ -73,16 +73,16 @@ export class NotificationService implements NotificationInboundPort {
     );
   }
 
-  async notifyComponentAction(
+  async notifyDeviceAction(
     homeId: string,
-    event: ComponentActionEvent,
+    event: DeviceActionEvent,
   ): Promise<void> {
     if (event.actor.role === "Admin") return;
-    const componentLabel = event.componentName || event.componentId;
+    const deviceLabel = event.deviceName || event.deviceId;
     await this.storeAndDeliver(
       homeId,
-      "ComponentAction",
-      `${event.actor.username} performed ${event.action} on ${componentLabel}.`,
+      "DeviceAction",
+      `${event.actor.username} performed ${event.action} on ${deviceLabel}.`,
     );
   }
 

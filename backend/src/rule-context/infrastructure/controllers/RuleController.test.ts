@@ -58,7 +58,7 @@ describe("RuleController", () => {
         observableId: "weather",
         operatorTarget: "Rain",
         actions: [
-          { componentType: "light", command: "turnOn", componentId: "comp-1" },
+          { deviceType: "light", command: "turnOn", deviceId: "comp-1" },
         ],
       };
 
@@ -74,9 +74,9 @@ describe("RuleController", () => {
           operatorTarget: "Rain",
           actions: [
             {
-              componentType: "light",
+              deviceType: "light",
               command: "turnOn",
-              componentId: "comp-1",
+              deviceId: "comp-1",
             },
           ],
         }),
@@ -92,7 +92,7 @@ describe("RuleController", () => {
         operator: "gt",
         operatorTarget: "25",
         actions: [
-          { componentType: "window", command: "open", componentId: "comp-2" },
+          { deviceType: "window", command: "open", deviceId: "comp-2" },
         ],
       };
 
@@ -109,9 +109,9 @@ describe("RuleController", () => {
           operatorTarget: "25",
           actions: [
             {
-              componentType: "window",
+              deviceType: "window",
               command: "open",
-              componentId: "comp-2",
+              deviceId: "comp-2",
             },
           ],
         }),
@@ -127,9 +127,9 @@ describe("RuleController", () => {
         operatorTarget: "20",
         actions: [
           {
-            componentType: "thermostat",
+            deviceType: "thermostat",
             command: "setTemperature",
-            componentId: "comp-3",
+            deviceId: "comp-3",
             targetTemp: "22",
           },
         ],
@@ -148,9 +148,9 @@ describe("RuleController", () => {
           operatorTarget: "20",
           actions: [
             {
-              componentType: "thermostat",
+              deviceType: "thermostat",
               command: "setTemperature",
-              componentId: "comp-3",
+              deviceId: "comp-3",
               targetTemp: "22",
             },
           ],

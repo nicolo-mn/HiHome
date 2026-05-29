@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { InMemoryRuleRepository } from "./InMemoryRuleRepository";
 import { ObservableCondition } from "../../domain/Observables";
-import { ComponentAction } from "../../domain/Actions";
+import { DeviceAction } from "../../domain/Actions";
 import { RuleRepository } from "../../application/repositories/RuleRepository";
 
 describe("RuleRepository", () => {
@@ -18,7 +18,7 @@ describe("RuleRepository", () => {
 
   it("should raise an error when attempting to add a rule without actions", async () => {
     const mockCondition = {} as ObservableCondition;
-    const mockActions: ComponentAction[] = [];
+    const mockActions: DeviceAction[] = [];
 
     await expect(
       repository.addRule("home-1", "Rule 1", mockCondition, mockActions, 0),
@@ -27,7 +27,7 @@ describe("RuleRepository", () => {
 
   it("should add a rule and retrieve it", async () => {
     const mockCondition = {} as ObservableCondition;
-    const mockActions: ComponentAction[] = [{} as ComponentAction];
+    const mockActions: DeviceAction[] = [{} as DeviceAction];
 
     const rule = await repository.addRule(
       "home-1",

@@ -13,7 +13,7 @@ const actionSchema = new Schema(
   {
     type: { type: String, required: true },
     homeId: { type: String, required: true },
-    componentId: { type: String, required: true },
+    deviceId: { type: String, required: true },
     targetTemperature: { type: Number },
     mode: { type: String },
   },

@@ -76,7 +76,7 @@ describe("HomeController", () => {
     });
   });
 
-  describe("addComponent", () => {
+  describe("addDevice", () => {
     const addRequest = (body: unknown, homeId = "1") =>
       ({ params: { id: homeId }, body }) as unknown as Request;
 
@@ -88,7 +88,7 @@ describe("HomeController", () => {
       const req = addRequest({ name: `My ${type}`, type, roomId: "room-1" });
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(201);
       const payload = (res.json as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -105,16 +105,16 @@ describe("HomeController", () => {
     it.each([
       [{ type: "light", roomId: "room-1" }, "name must be a non-empty string"],
       [{ name: "X", type: "light" }, "roomId must be a non-empty string"],
-      [{ name: "X", roomId: "room-1" }, "Unsupported component type"],
+      [{ name: "X", roomId: "room-1" }, "Unsupported device type"],
       [
         { name: "X", type: "fridge", roomId: "room-1" },
-        "Unsupported component type",
+        "Unsupported device type",
       ],
     ])("returns 400 on invalid body %#", async (body, expectedError) => {
       const req = addRequest(body);
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: expectedError });
@@ -128,7 +128,7 @@ describe("HomeController", () => {
       });
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: "Room not found" });
@@ -141,7 +141,7 @@ describe("HomeController", () => {
       );
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: "Home 999 not found" });

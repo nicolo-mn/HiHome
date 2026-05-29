@@ -1,5 +1,5 @@
 import {
-  ComponentActionEvent,
+  DeviceActionEvent,
   HomeNotificationOutboundPort,
   SensorUpdateEvent,
 } from "../../application/ports/HomeNotificationPort";
@@ -8,11 +8,8 @@ import { NotificationInboundPort } from "../../../notification-context/applicati
 export class NotificationContextAdapter implements HomeNotificationOutboundPort {
   constructor(private notificationPort: NotificationInboundPort) {}
 
-  notifyComponentAction(
-    homeId: string,
-    event: ComponentActionEvent,
-  ): Promise<void> {
-    return this.notificationPort.notifyComponentAction(homeId, event);
+  notifyDeviceAction(homeId: string, event: DeviceActionEvent): Promise<void> {
+    return this.notificationPort.notifyDeviceAction(homeId, event);
   }
 
   notifySensorUpdate(homeId: string, event: SensorUpdateEvent): Promise<void> {

@@ -1,5 +1,5 @@
 import { ObservableCondition } from "../domain/Observables";
-import { ComponentAction } from "../domain/Actions";
+import { DeviceAction } from "../domain/Actions";
 // a rule that links triggers to actions
 export type Rule = {
   id: string;
@@ -7,5 +7,5 @@ export type Rule = {
   name: string;
   order: number;
   condition: ObservableCondition;
-  actions: ComponentAction[];
+  actions: DeviceAction[];
 };
