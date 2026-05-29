@@ -42,18 +42,22 @@ async function seedHome(homeRepo: HomeRepository): Promise<void> {
   const existingHome = await homeRepo.getHome("1");
   if (existingHome) return;
 
-  const seededHome = new Home("1", { latitude: 45.4642, longitude: 9.19 }, [
-    new Room("room-1", "Living Room", [
-      new Window("window-1", "Front Window", "room-1", false),
-      new Window("window-2", "Side Window", "room-1", false),
-      new Light("light-1", "Main Light", "room-1", false),
-      new Thermostat("thermostat-1", "Main Thermostat", "room-1", 20),
-    ]),
-    new Room("room-2", "Bedroom", [
-      new Window("window-3", "Bedroom Window", "room-2", false),
-      new Light("light-2", "Bed Light", "room-2", false),
-    ]),
-  ]);
+  const seededHome = new Home(
+    "1",
+    { latitude: 45.4642, longitude: 9.19, locationName: "Berlin" },
+    [
+      new Room("room-1", "Living Room", [
+        new Window("window-1", "Front Window", "room-1", false),
+        new Window("window-2", "Side Window", "room-1", false),
+        new Light("light-1", "Main Light", "room-1", false),
+        new Thermostat("thermostat-1", "Main Thermostat", "room-1", 20),
+      ]),
+      new Room("room-2", "Bedroom", [
+        new Window("window-3", "Bedroom Window", "room-2", false),
+        new Light("light-2", "Bed Light", "room-2", false),
+      ]),
+    ],
+  );
 
   await homeRepo.saveHome(seededHome);
   console.log("Seeded home with id 1");

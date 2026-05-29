@@ -192,6 +192,17 @@ export class HomeController {
     }
   }
 
+  async getLocationName(req: Request, res: Response) {
+    try {
+      const locationName = await this.homeService.getLocationName(
+        req.params.id as string,
+      );
+      res.json({ locationName });
+    } catch (e: any) {
+      res.status(404).json({ error: e.message });
+    }
+  }
+
   async getHourlyTemperatures(req: Request, res: Response) {
     try {
       const temps = await this.homeService.getHourlyTemperatures(

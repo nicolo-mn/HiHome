@@ -60,6 +60,9 @@ export class HomeRouter {
         this.homeController.executeAction(req, res);
       },
     );
+    this.router.get("/:id/location-name", (req: Request, res: Response) =>
+      this.homeController.getLocationName(req, res),
+    );
     this.router.get("/:id/hourly-temperatures", (req, res) =>
       this.homeController.getHourlyTemperatures(req, res),
     );
