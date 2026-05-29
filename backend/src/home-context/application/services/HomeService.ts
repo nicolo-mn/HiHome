@@ -149,6 +149,11 @@ export class HomeService {
     return home.coordinates;
   }
 
+  async getLocationName(homeId: string): Promise<string | null> {
+    const home = await ensureHomeExists(this.homeRepo, homeId);
+    return home.coordinates.locationName ?? null;
+  }
+
   async getHourlyTemperatures(homeId: string): Promise<number[]> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
     return home.hourlyTemperatures;

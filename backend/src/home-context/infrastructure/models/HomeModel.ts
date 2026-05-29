@@ -5,6 +5,7 @@ const coordinatesSchema = new Schema(
   {
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
+    locationName: { type: String },
   },
   { _id: false },
 );

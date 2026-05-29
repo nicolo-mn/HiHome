@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useSensorStore } from "@/stores/sensors";
+import { homeApi } from "@/api";
 import SensorCard from "@/components/cards/SensorCard.vue";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
 
 const auth = useAuthStore();
 const sensorStore = useSensorStore();
-const { readings, connected, error } = storeToRefs(sensorStore);
+const { readings } = storeToRefs(sensorStore);
+
+const locationName = ref<string | null>(null);
+
+onMounted(async () => {
+  if (auth.homeId) {
+    locationName.value = await homeApi.getLocationName(auth.homeId);
+  }
+});
 
 const sensorOrder = [
   "outdoor_temperature",
@@ -29,6 +38,24 @@ const sensorReadings = computed(() =>
     return a.sensorId.localeCompare(b.sensorId);
   }),
 );
+
+const outdoorReadings = computed(() =>
+  sensorReadings.value.filter((r) =>
+    ["weather", "outdoor_temperature", "airquality", "wind"].includes(r.type),
+  ),
+);
+
+const indoorReadings = computed(() =>
+  sensorReadings.value.filter((r) => r.type === "thermometer"),
+);
+
+const weatherCard = computed(() =>
+  outdoorReadings.value.find((r) => r.type === "weather"),
+);
+
+const otherOutdoorCards = computed(() =>
+  outdoorReadings.value.filter((r) => r.type !== "weather"),
+);
 </script>
 
 <template>
@@ -41,36 +68,37 @@ const sensorReadings = computed(() =>
       ]"
     />
 
-    <section class="flex flex-col gap-3">
-      <div
-        class="flex items-baseline gap-3 font-medium text-[18px] md:text-[20px] text-gray-400"
-      >
-        <span>Overview</span>
-        <span
-          v-if="error"
-          class="text-[13px] text-rose-500 font-normal normal-case"
-        >
-          Live updates unavailable: {{ error }}
-        </span>
-        <span
-          v-else-if="!connected"
-          class="text-[13px] text-gray-500 font-normal normal-case"
-        >
-          Connecting…
-        </span>
+    <section v-if="outdoorReadings.length" class="flex flex-col gap-3">
+      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+        Outdoor
       </div>
-      <div
-        v-if="sensorReadings.length"
-        class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3"
-      >
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
         <SensorCard
-          v-for="reading in sensorReadings"
+          v-if="weatherCard"
+          :key="weatherCard.sensorId"
+          :reading="weatherCard"
+          :subtitle="locationName ?? undefined"
+        />
+        <div class="flex flex-col gap-2 md:gap-3">
+          <SensorCard
+            v-for="reading in otherOutdoorCards"
+            :key="reading.sensorId"
+            :reading="reading"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section v-if="indoorReadings.length" class="flex flex-col gap-3">
+      <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+        Indoor
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+        <SensorCard
+          v-for="reading in indoorReadings"
           :key="reading.sensorId"
           :reading="reading"
         />
-      </div>
-      <div v-else class="text-sm text-gray-500">
-        Waiting for sensor readings…
       </div>
     </section>
 
