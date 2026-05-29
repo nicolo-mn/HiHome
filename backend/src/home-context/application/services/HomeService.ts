@@ -12,7 +12,7 @@ import {
   DeviceEventActor,
   TemperatureState,
   SensorUpdatePort,
-  ExternalSensorsUpdate,
+  OutdoorSensorsUpdate,
   Room,
   createDevice,
   DeviceUpdatePort,
@@ -20,7 +20,7 @@ import {
   Fan,
 } from "../../domain";
 import { SensorRegistry } from "../SensorRegistry";
-import { ExternalSensorsDataPort } from "../ports/ExternalSensorsDataPort";
+import { OutdoorSensorsDataPort } from "../ports/OutdoorSensorsDataPort";
 import { RuleServicePort } from "../ports/RuleServicePort";
 import { CreateDeviceInput } from "../dtos/DeviceDTO";
 import { ensureHomeExists, persistAndBroadcast } from "./ServiceHelpers";
@@ -31,7 +31,7 @@ export class HomeService {
     private sensorRegistry: SensorRegistry,
     private sensorUpdatePort: SensorUpdatePort,
     private ruleServicePort: RuleServicePort,
-    private externalSensorsDataPort: ExternalSensorsDataPort,
+    private outdoorSensorsDataPort: OutdoorSensorsDataPort,
     private deviceUpdatePort?: DeviceUpdatePort,
   ) {}
 
@@ -194,42 +194,41 @@ export class HomeService {
     );
   }
 
-  async sendExternalSensorsUpdate(homeId: string): Promise<void> {
+  async sendOutdoorSensorsUpdate(homeId: string): Promise<void> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
 
-    const resolvedUpdate =
-      this.sensorRegistry.getState(homeId)?.externalSensors;
+    const resolvedUpdate = this.sensorRegistry.getState(homeId)?.outdoorSensors;
     if (!resolvedUpdate) return;
 
-    this.sendExternalSensorsUpdateToClients(home, resolvedUpdate);
+    this.sendOutdoorSensorsUpdateToClients(home, resolvedUpdate);
   }
 
-  async sendInternalSensorsUpdate(homeId: string): Promise<void> {
+  async sendIndoorSensorsUpdate(homeId: string): Promise<void> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
 
     const resolvedTemperature =
       this.sensorRegistry.getState(homeId)?.indoorTemperature;
     if (resolvedTemperature === undefined) return;
 
-    this.sendInternalSensorsUpdateToClients(home, resolvedTemperature);
+    this.sendIndoorSensorsUpdateToClients(home, resolvedTemperature);
   }
 
-  async pollAllHomesExternalSensorsData(): Promise<void> {
+  async pollAllHomesOutdoorSensorsData(): Promise<void> {
     const homes = await this.homeRepo.getAllHomes();
 
     await Promise.all(
       homes.map(async (home) => {
         try {
           const extSensorsData =
-            await this.externalSensorsDataPort.getExternalSensorsData(home);
+            await this.outdoorSensorsDataPort.getOutdoorSensorsData(home);
 
           console.log(
-            `External sensors update received for home ${home.id}: temp=${extSensorsData.outdoorTemperature.temperature} AQI=${extSensorsData.airQuality.AQI}`,
+            `Outdoor sensors update received for home ${home.id}: temp=${extSensorsData.outdoorTemperature.temperature} AQI=${extSensorsData.airQuality.AQI}`,
           );
 
-          this.sensorRegistry.setExternalSensorsUpdate(home.id, extSensorsData);
+          this.sensorRegistry.setOutdoorSensorsUpdate(home.id, extSensorsData);
 
-          await this.sendExternalSensorsUpdate(home.id);
+          await this.sendOutdoorSensorsUpdate(home.id);
 
           const indoorTemperatureValue = this.sensorRegistry.getState(
             home.id,
@@ -243,7 +242,7 @@ export class HomeService {
 
           const indoorTemperature: TemperatureState = indoorTemperatureValue;
 
-          this.sendInternalSensorsUpdateToClients(home, indoorTemperatureValue);
+          this.sendIndoorSensorsUpdateToClients(home, indoorTemperatureValue);
 
           this.ruleServicePort.evaluateRules(
             home.id,
@@ -252,7 +251,7 @@ export class HomeService {
           );
         } catch (error) {
           console.error(
-            `Failed to poll external sensors data for home ${home.id}:`,
+            `Failed to poll outdoor sensors data for home ${home.id}:`,
             error,
           );
         }
@@ -268,12 +267,12 @@ export class HomeService {
     console.log(
       `Indoor temperature update received for home ${homeId}: temp=${update.temperature}`,
     );
-    await this.sendInternalSensorsUpdate(homeId);
+    await this.sendIndoorSensorsUpdate(homeId);
   }
 
-  private sendExternalSensorsUpdateToClients(
+  private sendOutdoorSensorsUpdateToClients(
     home: Home,
-    update: ExternalSensorsUpdate,
+    update: OutdoorSensorsUpdate,
   ): void {
     this.sensorUpdatePort.sendOutdoorTemperatureUpdate(
       home,
@@ -284,7 +283,7 @@ export class HomeService {
     this.sensorUpdatePort.sendWeatherUpdate(home, update.weather);
   }
 
-  private sendInternalSensorsUpdateToClients(
+  private sendIndoorSensorsUpdateToClients(
     home: Home,
     update: TemperatureState,
   ): void {

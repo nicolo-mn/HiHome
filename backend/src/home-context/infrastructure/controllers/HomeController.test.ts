@@ -28,8 +28,8 @@ describe("HomeController", () => {
     const ruleServicePort = {
       evaluateRules: vi.fn(),
     };
-    const externalSensorsDataPort = {
-      getExternalSensorsData: vi.fn(),
+    const outdoorSensorsDataPort = {
+      getOutdoorSensorsData: vi.fn(),
     };
 
     const homeService = new HomeService(
@@ -37,7 +37,7 @@ describe("HomeController", () => {
       sensorRegistry,
       sensorUpdatePort,
       ruleServicePort,
-      externalSensorsDataPort,
+      outdoorSensorsDataPort,
     );
 
     controller = new HomeController(homeService);

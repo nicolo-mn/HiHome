@@ -1,8 +1,4 @@
-import {
-  ExternalSensorsUpdate,
-  SensorState,
-  TemperatureState,
-} from "../domain";
+import { OutdoorSensorsUpdate, SensorState, TemperatureState } from "../domain";
 import { SensorRegistry } from "../application/SensorRegistry";
 
 export class InMemorySensorRegistry implements SensorRegistry {
@@ -22,12 +18,9 @@ export class InMemorySensorRegistry implements SensorRegistry {
     this.sensorsByHome.set(homeId, state);
   }
 
-  setExternalSensorsUpdate(
-    homeId: string,
-    update: ExternalSensorsUpdate,
-  ): void {
+  setOutdoorSensorsUpdate(homeId: string, update: OutdoorSensorsUpdate): void {
     const prev = this.sensorsByHome.get(homeId) || {};
-    this.sensorsByHome.set(homeId, { ...prev, externalSensors: update });
+    this.sensorsByHome.set(homeId, { ...prev, outdoorSensors: update });
   }
 
   setIndoorTemperature(homeId: string, update: TemperatureState): void {

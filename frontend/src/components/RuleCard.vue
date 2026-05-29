@@ -19,16 +19,16 @@ defineEmits<{
 }>();
 
 const CONDITION_LABELS: Record<string, string> = {
-  "internal-thermometer": "Internal temperature",
-  "external-thermometer": "External temperature",
+  "indoor-thermometer": "Indoor temperature",
+  "outdoor-thermometer": "Outdoor temperature",
   "wind-speed": "Wind speed",
   "air-quality": "Air quality",
   weather: "Weather",
 };
 
 const CONDITION_UNITS: Record<string, string> = {
-  "internal-thermometer": "°C",
-  "external-thermometer": "°C",
+  "indoor-thermometer": "°C",
+  "outdoor-thermometer": "°C",
   "wind-speed": " m/s",
   "air-quality": " AQI",
 };

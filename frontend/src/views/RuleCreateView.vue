@@ -71,8 +71,8 @@ const weatherOptions: EnumOption[] = [
 
 const sensorOptions: SensorOption[] = [
   {
-    id: "internal-thermometer",
-    label: "Internal temperature",
+    id: "indoor-thermometer",
+    label: "Indoor temperature",
     kind: "numeric",
     operators: numericOperators,
     min: 5,
@@ -84,8 +84,8 @@ const sensorOptions: SensorOption[] = [
     defaultTarget: 20,
   },
   {
-    id: "external-thermometer",
-    label: "External temperature",
+    id: "outdoor-thermometer",
+    label: "Outdoor temperature",
     kind: "numeric",
     operators: numericOperators,
     min: 5,

@@ -89,8 +89,8 @@ const DEEPSEEK_API_BASE_URL =
 const EXT_API_BASE_URL =
   process.env.EXT_API_BASE_URL || "http://ext_api_service:8080";
 const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 30);
-const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
-  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
+const OUTDOOR_SENSORS_POLL_INTERVAL_MS = Number(
+  process.env.OUTDOOR_SENSORS_POLL_INTERVAL_MS || 200000,
 );
 const HOUR_IN_MS = 60 * 60 * 1000;
 
@@ -105,7 +105,7 @@ const ruleServicePort = new AsyncBusRuleServiceAdapter(
   eventEmitter,
   "observables-updated",
 );
-const externalSensorsDataPort = new ExtApiServiceDataAdapter(EXT_API_BASE_URL);
+const outdoorSensorsDataPort = new ExtApiServiceDataAdapter(EXT_API_BASE_URL);
 const sensorRegistry = new InMemorySensorRegistry();
 const historicalWeatherRepo = new InMemoryHistoricalWeatherRepository();
 const homeRepo =
@@ -117,7 +117,7 @@ const homeService = new HomeService(
   sensorRegistry,
   sensorUpdatePort,
   ruleServicePort,
-  externalSensorsDataPort,
+  outdoorSensorsDataPort,
   deviceUpdatePort,
 );
 export const homeController = new HomeController(
@@ -149,7 +149,7 @@ export const ruleController = new RuleController(ruleService);
 const ruleRouter = new RuleRouter(ruleController);
 const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
 
-const forecastPort = externalSensorsDataPort;
+const forecastPort = outdoorSensorsDataPort;
 const chatCompletionPort = new DeepSeekChatCompletionAdapter(
   {
     apiKey: DEEPSEEK_API_KEY,
@@ -204,15 +204,15 @@ io.on("connection", (socket) => {
   if (typeof username === "string" && username.length > 0) {
     socket.join(`user-${username}`);
   }
-  void homeService.sendExternalSensorsUpdate(homeId).catch((error) => {
+  void homeService.sendOutdoorSensorsUpdate(homeId).catch((error) => {
     console.error(
-      `Failed to send external sensors snapshot for home ${homeId}:`,
+      `Failed to send outdoor sensors snapshot for home ${homeId}:`,
       error,
     );
   });
-  void homeService.sendInternalSensorsUpdate(homeId).catch((error) => {
+  void homeService.sendIndoorSensorsUpdate(homeId).catch((error) => {
     console.error(
-      `Failed to send internal sensors snapshot for home ${homeId}:`,
+      `Failed to send indoor sensors snapshot for home ${homeId}:`,
       error,
     );
   });
@@ -308,7 +308,7 @@ const pollHistoricalWeatherData = async () => {
   await Promise.all(
     homes.map(async (home) => {
       try {
-        const summary = await externalSensorsDataPort.getHistoricalSummary(
+        const summary = await outdoorSensorsDataPort.getHistoricalSummary(
           home.coordinates,
         );
         if (!summary) return;
@@ -341,7 +341,7 @@ export async function bootstrap() {
     await mongoose.connect(MONGO_URI);
     await seedDatabase(homeRepo);
 
-    await homeService.pollAllHomesExternalSensorsData();
+    await homeService.pollAllHomesOutdoorSensorsData();
     await pollHistoricalWeatherData();
     await scheduleHourlyPlanUpdates();
     setInterval(() => {
@@ -349,11 +349,11 @@ export async function bootstrap() {
     }, HOUR_IN_MS);
     setInterval(async () => {
       try {
-        await homeService.pollAllHomesExternalSensorsData();
+        await homeService.pollAllHomesOutdoorSensorsData();
       } catch (error) {
-        console.error("Error polling external sensors data:", error);
+        console.error("Error polling outdoor sensors data:", error);
       }
-    }, EXTERNAL_SENSORS_POLL_INTERVAL_MS);
+    }, OUTDOOR_SENSORS_POLL_INTERVAL_MS);
 
     server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);

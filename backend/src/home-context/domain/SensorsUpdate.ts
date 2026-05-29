@@ -27,7 +27,7 @@ export type WeatherState = {
   precipitation: number;
 };
 
-export type ExternalSensorsUpdate = {
+export type OutdoorSensorsUpdate = {
   outdoorTemperature: TemperatureState;
   airQuality: AirQualityState;
   wind: WindState;
@@ -35,6 +35,6 @@ export type ExternalSensorsUpdate = {
 };
 
 export type SensorState = {
-  externalSensors?: ExternalSensorsUpdate;
+  outdoorSensors?: OutdoorSensorsUpdate;
   indoorTemperature?: TemperatureState;
 };

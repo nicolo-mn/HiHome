@@ -20,19 +20,19 @@ type ReadingBuilder = (
 ) => Omit<SensorReading, "receivedAt"> | null;
 
 const SENSOR_MAPPINGS: Record<string, ReadingBuilder> = {
-  "sensor:internal-temperature": (p) =>
+  "sensor:indoor-temperature": (p) =>
     typeof p?.temperature === "number"
       ? {
-          sensorId: "internal-thermometer",
+          sensorId: "indoor-thermometer",
           type: "thermometer",
           value: p.temperature,
           measureUnit: "celsius",
         }
       : null,
-  "sensor:external-temperature": (p) =>
+  "sensor:outdoor-temperature": (p) =>
     typeof p?.temperature === "number"
       ? {
-          sensorId: "external-thermometer",
+          sensorId: "outdoor-thermometer",
           type: "outdoor_temperature",
           value: p.temperature,
           measureUnit: "celsius",
