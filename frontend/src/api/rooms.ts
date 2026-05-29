@@ -6,5 +6,5 @@ export interface Room {
 }
 
 export async function getRooms(homeId: string): Promise<Room[]> {
-  return apiFetch<Room[]>(`/api/home/${encodeURIComponent(homeId)}/rooms`);
+  return apiFetch<Room[]>(`/api/v1/home/${encodeURIComponent(homeId)}/rooms`);
 }

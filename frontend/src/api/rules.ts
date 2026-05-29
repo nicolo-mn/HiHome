@@ -39,7 +39,7 @@ export type CreateRulePayload = {
 
 export async function getRules(homeId: string): Promise<RuleDto[]> {
   const res = await apiFetch<{ rules: RuleDto[] }>(
-    `/api/home/${encodeURIComponent(homeId)}/rules`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/rules`,
   );
   return res.rules;
 }
@@ -49,7 +49,7 @@ export async function createRule(
   payload: CreateRulePayload,
 ): Promise<string> {
   const res = await apiFetch<{ ruleId: string }>(
-    `/api/home/${encodeURIComponent(homeId)}/rules`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/rules`,
     { method: "POST", body: payload },
   );
   return res.ruleId;
@@ -60,7 +60,7 @@ export async function deleteRule(
   ruleId: string,
 ): Promise<void> {
   await apiFetch(
-    `/api/home/${encodeURIComponent(homeId)}/rules/${encodeURIComponent(ruleId)}`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/rules/${encodeURIComponent(ruleId)}`,
     { method: "DELETE" },
   );
 }
@@ -69,7 +69,7 @@ export async function reorderRules(
   homeId: string,
   ruleIds: string[],
 ): Promise<void> {
-  await apiFetch(`/api/home/${encodeURIComponent(homeId)}/rules/order`, {
+  await apiFetch(`/api/v1/home/${encodeURIComponent(homeId)}/rules/order`, {
     method: "PUT",
     body: { ruleIds },
   });

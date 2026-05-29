@@ -23,7 +23,7 @@ export async function getNotifications(
   homeId: string,
 ): Promise<NotificationDTO[]> {
   const data = await apiFetch<{ notifications: NotificationDTO[] }>(
-    `/api/home/${encodeURIComponent(homeId)}/notifications`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/notifications`,
   );
   return data.notifications;
 }

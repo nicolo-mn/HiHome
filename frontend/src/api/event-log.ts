@@ -72,7 +72,7 @@ export async function getDeviceEvents(
   homeId: string,
 ): Promise<DeviceEventDTO[]> {
   const data = await apiFetch<{ events: DeviceEventDTO[] }>(
-    `/api/home/${encodeURIComponent(homeId)}/devices/events`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices/events`,
   );
   return data.events;
 }

@@ -101,7 +101,7 @@ export function normalizeDevice(raw: RawDevice): HomeDevice {
 
 export async function getDevices(homeId: string): Promise<HomeDevice[]> {
   const raw = await apiFetch<RawDevice[]>(
-    `/api/home/${encodeURIComponent(homeId)}/devices`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices`,
   );
   return raw.map(normalizeDevice);
 }
@@ -111,7 +111,7 @@ export async function createDevice(
   input: CreateDeviceInput,
 ): Promise<HomeDevice> {
   const raw = await apiFetch<RawDevice>(
-    `/api/home/${encodeURIComponent(homeId)}/devices`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices`,
     { method: "POST", body: input },
   );
   return normalizeDevice(raw);
@@ -124,7 +124,7 @@ export async function executeAction(
   body?: unknown,
 ): Promise<HomeDevice> {
   const raw = await apiFetch<RawDevice>(
-    `/api/home/${encodeURIComponent(homeId)}/devices/${encodeURIComponent(deviceId)}/${encodeURIComponent(action)}`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices/${encodeURIComponent(deviceId)}/${encodeURIComponent(action)}`,
     { method: "POST", body },
   );
   return normalizeDevice(raw);

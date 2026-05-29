@@ -11,7 +11,7 @@ export interface LoginResponse {
 }
 
 export function login(payload: LoginRequest): Promise<LoginResponse> {
-  return apiFetch<LoginResponse>("/api/login", {
+  return apiFetch<LoginResponse>("/api/v1/login", {
     method: "POST",
     body: payload,
     auth: false,

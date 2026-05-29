@@ -18,7 +18,7 @@ export async function getPreferences(
   homeId: string,
 ): Promise<NotificationType[]> {
   const data = await apiFetch<{ notificationPreferences: NotificationType[] }>(
-    `/api/home/${encodeURIComponent(homeId)}/users/me/preferences`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/users/me/preferences`,
   );
   return data.notificationPreferences;
 }
@@ -28,7 +28,7 @@ export async function updatePreferences(
   types: NotificationType[],
 ): Promise<NotificationType[]> {
   const data = await apiFetch<{ notificationPreferences: NotificationType[] }>(
-    `/api/home/${encodeURIComponent(homeId)}/users/me/preferences`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/users/me/preferences`,
     { method: "PUT", body: { notificationPreferences: types } },
   );
   return data.notificationPreferences;
