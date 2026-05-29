@@ -172,21 +172,21 @@ app.use(cors());
 app.use(express.json());
 
 // --- Non authenticated routes ---
-app.post("/api/login", (req, res) => authController.login(req, res));
-app.get("/api/health", (req: Request, res: Response) => {
+app.post("/api/v1/login", (req, res) => authController.login(req, res));
+app.get("/api/v1/health", (req: Request, res: Response) => {
   res.json({ status: "ok", db: mongoose.connection.readyState });
 });
-app.post("/api/home/:id/sensors/indoor-temperature", (req, res) => {
+app.post("/api/v1/home/:id/sensors/indoor-temperature", (req, res) => {
   homeController.updateIndoorTemperature(req, res);
 });
 
 // --- Authenticated routes ---
 app.use(authMiddleware);
-app.use("/api/home", homeRouter.router);
-app.use("/api/home", ruleRouter.router);
-app.use("/api/home", notificationRouter.router);
-app.use("/api/home", preferencesRouter.router);
-app.use("/api/home", userRouter.router);
+app.use("/api/v1/home", homeRouter.router);
+app.use("/api/v1/home", ruleRouter.router);
+app.use("/api/v1/home", notificationRouter.router);
+app.use("/api/v1/home", preferencesRouter.router);
+app.use("/api/v1/home", userRouter.router);
 
 // --- Socket.IO ---
 io.use(wsAuthMiddleware);
