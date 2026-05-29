@@ -7,7 +7,7 @@ import BaseIcon from "@/components/BaseIcon.vue";
 import ErrorBanner from "@/components/ErrorBanner.vue";
 import { ACCENT } from "@/utils/accents";
 import type { Accent, IconName } from "@/types/ui";
-import type { ComponentEventDTO } from "@/api/event-log";
+import type { DeviceEventDTO } from "@/api/event-log";
 
 const store = useEventLogStore();
 const { events, isLoading, error } = storeToRefs(store);
@@ -30,11 +30,11 @@ function metaFor(type: string) {
   );
 }
 
-function isAutomation(e: ComponentEventDTO): boolean {
+function isAutomation(e: DeviceEventDTO): boolean {
   return !e.actor;
 }
 
-function formatAction(e: ComponentEventDTO): string {
+function formatAction(e: DeviceEventDTO): string {
   switch (e.eventType) {
     case "LightTurnedOn":
       return "Turned on";
@@ -57,15 +57,15 @@ function formatAction(e: ComponentEventDTO): string {
   }
 }
 
-function formatComponentLabel(e: ComponentEventDTO): string {
-  return e.componentName?.trim().length ? e.componentName : e.componentId;
+function formatDeviceLabel(e: DeviceEventDTO): string {
+  return e.deviceName?.trim().length ? e.deviceName : e.deviceId;
 }
 
 function formatType(t: string) {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-function formatActor(e: ComponentEventDTO) {
+function formatActor(e: DeviceEventDTO) {
   if (!e.actor) return "Automation";
   return e.actor.username;
 }
@@ -100,8 +100,8 @@ const filtered = computed(() => {
   return events.value.filter((e) => {
     const matchesQ =
       !q ||
-      formatComponentLabel(e).toLowerCase().includes(q) ||
-      e.componentType.toLowerCase().includes(q) ||
+      formatDeviceLabel(e).toLowerCase().includes(q) ||
+      e.deviceType.toLowerCase().includes(q) ||
       (e.actor?.username ?? "").toLowerCase().includes(q) ||
       formatAction(e).toLowerCase().includes(q);
     const matchesF =
@@ -115,7 +115,7 @@ const filtered = computed(() => {
 });
 
 const groups = computed(() => {
-  const out: { date: string; items: ComponentEventDTO[] }[] = [];
+  const out: { date: string; items: DeviceEventDTO[] }[] = [];
   filtered.value.forEach((e) => {
     const label = formatDateLabel(e.createdAt);
     const last = out[out.length - 1];
@@ -212,27 +212,27 @@ onMounted(() => store.fetchAll());
             <div
               :class="[
                 'w-[48px] h-[48px] md:w-[52px] md:h-[52px] rounded-[18px] flex items-center justify-center shrink-0',
-                ACCENT[metaFor(e.componentType).accent].tint,
-                ACCENT[metaFor(e.componentType).accent].text,
+                ACCENT[metaFor(e.deviceType).accent].tint,
+                ACCENT[metaFor(e.deviceType).accent].text,
               ]"
             >
-              <BaseIcon :name="metaFor(e.componentType).icon" :size="24" />
+              <BaseIcon :name="metaFor(e.deviceType).icon" :size="24" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-baseline gap-2 mb-1 flex-wrap">
                 <span
                   class="font-bold text-[17px] md:text-[18px] text-gray-200"
                 >
-                  {{ formatType(e.componentType) }}
+                  {{ formatType(e.deviceType) }}
                 </span>
                 <span class="text-[14px] md:text-[15px] text-gray-400">
-                  · {{ formatComponentLabel(e) }}
+                  · {{ formatDeviceLabel(e) }}
                 </span>
               </div>
               <div
                 class="text-[15px] md:text-base font-medium mb-2"
                 :style="{
-                  color: `var(--color-${metaFor(e.componentType).accent}-500)`,
+                  color: `var(--color-${metaFor(e.deviceType).accent}-500)`,
                 }"
               >
                 {{ formatAction(e) }}

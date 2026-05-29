@@ -45,7 +45,7 @@ const NOTIF_META: Record<
     accent: "yellow",
     desc: "Alert me every time an automation runs.",
   },
-  ComponentAction: {
+  DeviceAction: {
     icon: "devices",
     accent: "sky",
     desc: "Alert me when a device is turned on, off or adjusted.",

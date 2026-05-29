@@ -108,7 +108,7 @@ const otherOutdoorCards = computed(() =>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
         <RouterLink
-          to="/components"
+          to="/devices"
           class="h-14 rounded-[28px] md:rounded-[32px] bg-gray-800/50 border-2 border-gray-800 text-gray-200 font-medium text-[18px] md:text-[20px] flex items-center justify-center gap-1.5 hover:bg-gray-800/80 transition-colors no-underline"
         >
           <BaseIcon name="devices" :size="22" />

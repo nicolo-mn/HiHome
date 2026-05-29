@@ -33,7 +33,7 @@ const TYPE_META: Record<
     accent: "yellow",
     kind: "rule",
   },
-  ComponentAction: {
+  DeviceAction: {
     label: "Device action",
     icon: "devices",
     accent: "sky",

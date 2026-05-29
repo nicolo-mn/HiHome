@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import type { ComponentType } from "./components";
+import type { DeviceType } from "./devices";
 
 export type ConditionDto = {
   type: string;
@@ -11,7 +11,7 @@ export type FanMode = "off" | "low" | "medium" | "high";
 
 export type ActionDto = {
   type: string;
-  componentId: string;
+  deviceId: string;
   targetTemperature?: number;
   mode?: FanMode;
 };
@@ -30,8 +30,8 @@ export type CreateRulePayload = {
   operator: string;
   operatorTarget: string | number;
   actions: {
-    componentId: string;
-    componentType: ComponentType;
+    deviceId: string;
+    deviceType: DeviceType;
     command: string;
     targetTemp?: number;
   }[];

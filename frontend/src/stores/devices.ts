@@ -1,27 +1,27 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { io, type Socket } from "socket.io-client";
-import { componentsApi } from "@/api";
 import { UnauthorizedError } from "@/api/errors";
+import { devicesApi } from "@/api";
 import { humanizeErrorMessage } from "@/utils/humanizeError";
 import { getRooms } from "@/api/rooms";
 import type {
-  HomeComponent,
-  ToggleableComponent,
-  ThermostatComponent,
-  FanComponent,
+  HomeDevice,
+  ToggleableDevice,
+  ThermostatDevice,
+  FanDevice,
   FanMode,
-  CreateComponentInput,
-  RawComponent,
-} from "@/api/components";
-import { normalizeComponent } from "@/api/components";
+  CreateDeviceInput,
+  RawDevice,
+} from "@/api/devices";
+import { normalizeDevice } from "@/api/devices";
 import { useAuthStore } from "@/stores/auth";
 import { useBusyIds } from "@/composables/useBusyIds";
 
-export const useComponentsStore = defineStore("components", () => {
+export const useDevicesStore = defineStore("devices", () => {
   const authStore = useAuthStore();
 
-  const components = ref<HomeComponent[]>([]);
+  const devices = ref<HomeDevice[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const loadedHomeId = ref<string | null>(null);
@@ -44,24 +44,24 @@ export const useComponentsStore = defineStore("components", () => {
       }
       roomNames.value = next;
     } catch {
-      // Best effort: fallback to whatever roomName arrives with components.
+      // Best effort: fallback to whatever roomName arrives with devices.
     }
   }
 
-  function needsRoomNames(list: HomeComponent[]) {
+  function needsRoomNames(list: HomeDevice[]) {
     return list.some(
       (c) => c.roomId && (!c.roomName || c.roomName.trim() === c.roomId.trim()),
     );
   }
 
-  function enrichRoomName(component: HomeComponent): HomeComponent {
-    if (!component.roomId) return component;
-    const mapped = roomNames.value[component.roomId];
-    if (!mapped) return component;
-    if (component.roomName && component.roomName.trim() !== component.roomId) {
-      return component;
+  function enrichRoomName(device: HomeDevice): HomeDevice {
+    if (!device.roomId) return device;
+    const mapped = roomNames.value[device.roomId];
+    if (!mapped) return device;
+    if (device.roomName && device.roomName.trim() !== device.roomId) {
+      return device;
     }
-    return { ...component, roomName: mapped };
+    return { ...device, roomName: mapped };
   }
 
   async function fetchAll() {
@@ -69,11 +69,11 @@ export const useComponentsStore = defineStore("components", () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const loaded = await componentsApi.getComponents(homeId.value);
+      const loaded = await devicesApi.getDevices(homeId.value);
       if (needsRoomNames(loaded)) {
         await loadRoomNames();
       }
-      components.value = loaded.map(enrichRoomName);
+      devices.value = loaded.map(enrichRoomName);
       loadedHomeId.value = homeId.value;
     } catch (e) {
       if (e instanceof UnauthorizedError) return;
@@ -93,19 +93,19 @@ export const useComponentsStore = defineStore("components", () => {
   }
 
   function reset() {
-    components.value = [];
+    devices.value = [];
     error.value = null;
     loadedHomeId.value = null;
   }
 
-  function applyRemoteUpdate(raw: RawComponent) {
+  function applyRemoteUpdate(raw: RawDevice) {
     if (!raw?.id) return;
-    const updated = enrichRoomName(normalizeComponent(raw));
-    const index = components.value.findIndex((c) => c.id === updated.id);
+    const updated = enrichRoomName(normalizeDevice(raw));
+    const index = devices.value.findIndex((c) => c.id === updated.id);
     if (index === -1) {
-      components.value = [...components.value, updated];
+      devices.value = [...devices.value, updated];
     } else {
-      components.value = components.value.map((c) =>
+      devices.value = devices.value.map((c) =>
         c.id === updated.id ? updated : c,
       );
     }
@@ -129,7 +129,7 @@ export const useComponentsStore = defineStore("components", () => {
       reconnectionDelayMax: 5000,
     });
 
-    socket.on("component:updated", (payload: RawComponent) => {
+    socket.on("device:updated", (payload: RawDevice) => {
       applyRemoteUpdate(payload);
     });
   }
@@ -141,14 +141,14 @@ export const useComponentsStore = defineStore("components", () => {
   }
 
   async function executeAction(
-    componentId: string,
-    run: () => Promise<HomeComponent>,
+    deviceId: string,
+    run: () => Promise<HomeDevice>,
   ) {
     if (!homeId.value) return;
-    busy.add(componentId);
+    busy.add(deviceId);
     try {
       const updated = enrichRoomName(await run());
-      components.value = components.value.map((c) =>
+      devices.value = devices.value.map((c) =>
         c.id === updated.id ? updated : c,
       );
     } catch (e) {
@@ -157,44 +157,42 @@ export const useComponentsStore = defineStore("components", () => {
         error.value = humanizeErrorMessage(e, "control that device");
       }
     } finally {
-      busy.remove(componentId);
+      busy.remove(deviceId);
     }
   }
 
-  function toggle(component: ToggleableComponent, next: boolean) {
+  function toggle(device: ToggleableDevice, next: boolean) {
     if (!homeId.value) return;
     const id = homeId.value;
-    return executeAction(component.id, () =>
-      componentsApi.toggle(id, component, next),
+    return executeAction(device.id, () => devicesApi.toggle(id, device, next));
+  }
+
+  function step(device: ThermostatDevice, direction: "up" | "down") {
+    if (!homeId.value) return;
+    const id = homeId.value;
+    return executeAction(device.id, () =>
+      devicesApi.setpointDelta(id, device, direction),
     );
   }
 
-  function step(component: ThermostatComponent, direction: "up" | "down") {
+  function setFanMode(device: FanDevice, mode: FanMode) {
     if (!homeId.value) return;
     const id = homeId.value;
-    return executeAction(component.id, () =>
-      componentsApi.setpointDelta(id, component, direction),
+    return executeAction(device.id, () =>
+      devicesApi.setFanMode(id, device, mode),
     );
   }
 
-  function setFanMode(component: FanComponent, mode: FanMode) {
-    if (!homeId.value) return;
-    const id = homeId.value;
-    return executeAction(component.id, () =>
-      componentsApi.setFanMode(id, component, mode),
-    );
-  }
-
-  async function addComponent(input: CreateComponentInput) {
+  async function addDevice(input: CreateDeviceInput) {
     if (!homeId.value) return;
     error.value = null;
     try {
-      const created = await componentsApi.createComponent(homeId.value, input);
+      const created = await devicesApi.createDevice(homeId.value, input);
       if (created.roomId && !roomNames.value[created.roomId]) {
         await loadRoomNames();
       }
       const resolved = enrichRoomName(created);
-      components.value = [...components.value, resolved];
+      devices.value = [...devices.value, resolved];
       return created;
     } catch (e) {
       if (!(e instanceof UnauthorizedError)) {
@@ -204,12 +202,12 @@ export const useComponentsStore = defineStore("components", () => {
     }
   }
 
-  function isBusy(componentId: string) {
-    return busy.has(componentId);
+  function isBusy(deviceId: string) {
+    return busy.has(deviceId);
   }
 
   return {
-    components,
+    devices,
     isLoading,
     error,
     isLoaded,
@@ -220,7 +218,7 @@ export const useComponentsStore = defineStore("components", () => {
     toggle,
     step,
     setFanMode,
-    addComponent,
+    addDevice,
     connect,
     disconnect,
   };

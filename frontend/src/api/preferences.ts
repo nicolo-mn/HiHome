@@ -3,7 +3,7 @@ import { apiFetch } from "./client";
 export const ALL_NOTIFICATION_TYPES = [
   "AirQualityThresholdBreach",
   "AutomationRuleExecuted",
-  "ComponentAction",
+  "DeviceAction",
 ] as const;
 
 export type NotificationType = (typeof ALL_NOTIFICATION_TYPES)[number];
@@ -11,7 +11,7 @@ export type NotificationType = (typeof ALL_NOTIFICATION_TYPES)[number];
 export const TYPE_LABELS: Record<NotificationType, string> = {
   AirQualityThresholdBreach: "Air quality alerts",
   AutomationRuleExecuted: "Automation rule events",
-  ComponentAction: "Component actions",
+  DeviceAction: "Device actions",
 };
 
 export async function getPreferences(

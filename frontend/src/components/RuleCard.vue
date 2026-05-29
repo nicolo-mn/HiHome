@@ -2,11 +2,11 @@
 import BaseIcon from "@/components/BaseIcon.vue";
 import { ACCENT } from "@/utils/accents";
 import type { RuleDto } from "@/api/rules";
-import type { HomeComponent } from "@/api/components";
+import type { HomeDevice } from "@/api/devices";
 
 const props = defineProps<{
   rule: RuleDto;
-  components?: HomeComponent[];
+  devices?: HomeDevice[];
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   reorderDisabled?: boolean;
@@ -72,9 +72,9 @@ function actionSummary(action: RuleDto["actions"][number]): string {
   return label;
 }
 
-function getComponentName(componentId: string): string {
-  const component = props.components?.find((c) => c.id === componentId);
-  return component?.name ?? componentId;
+function getDeviceName(deviceId: string): string {
+  const device = props.devices?.find((c) => c.id === deviceId);
+  return device?.name ?? deviceId;
 }
 </script>
 
@@ -146,7 +146,7 @@ function getComponentName(componentId: string): string {
       >
         {{ actionSummary(action) }}
         <span class="text-gray-500 ml-1">
-          ({{ getComponentName(action.componentId) }})
+          ({{ getDeviceName(action.deviceId) }})
         </span>
       </span>
     </div>
