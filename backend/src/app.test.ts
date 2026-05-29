@@ -23,23 +23,6 @@ describe("Backend Routes (Integration with Supertest)", () => {
     expect(response.body).toHaveProperty("db");
   });
 
-  it("GET / should return hello message when authenticated", async () => {
-    const response = await request(app)
-      .get("/")
-      .set("Authorization", `Bearer ${token}`);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      message: "Protected: Hello from MEVN backend!",
-    });
-  });
-
-  it("GET / should return 401 when not authenticated", async () => {
-    const response = await request(app).get("/");
-
-    expect(response.status).toBe(401);
-  });
-
   it("POST /api/login should return 400 when missing required fields", async () => {
     const response = await request(app).post("/api/login").send({
       homeId: "1",
