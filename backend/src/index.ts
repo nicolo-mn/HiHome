@@ -176,8 +176,8 @@ app.post("/api/login", (req, res) => authController.login(req, res));
 app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok", db: mongoose.connection.readyState });
 });
-app.post("/api/home/:id/sensors/internal-temperature", (req, res) => {
-  homeController.updateInternalTemperature(req, res);
+app.post("/api/home/:id/sensors/indoor-temperature", (req, res) => {
+  homeController.updateIndoorTemperature(req, res);
 });
 
 // --- Authenticated routes ---

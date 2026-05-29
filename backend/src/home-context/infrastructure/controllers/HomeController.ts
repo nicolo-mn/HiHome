@@ -173,7 +173,7 @@ export class HomeController {
     }
   }
 
-  async updateInternalTemperature(req: Request, res: Response) {
+  async updateIndoorTemperature(req: Request, res: Response) {
     try {
       const { temperature } = req.body;
 
@@ -181,11 +181,10 @@ export class HomeController {
         return res.status(400).json({ error: "Temperature must be a number" });
       }
 
-      await this.homeService.updateInternalTemperature(
-        req.params.id as string,
-        { temperature },
-      );
-      res.status(200).json({ message: "Internal temperature updated" });
+      await this.homeService.updateIndoorTemperature(req.params.id as string, {
+        temperature,
+      });
+      res.status(200).json({ message: "Indoor temperature updated" });
     } catch (e: any) {
       res.status(400).json({ error: e.message });
     }

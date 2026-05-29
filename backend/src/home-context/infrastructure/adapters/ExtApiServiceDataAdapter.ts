@@ -82,7 +82,7 @@ export class ExtApiServiceDataAdapter
     }
 
     const result = {
-      externalTemperature: { temperature: payload.temperature },
+      outdoorTemperature: { temperature: payload.temperature },
       airQuality: { AQI: payload.europeanAqi },
       wind: {
         windDirection: payload.windDirection,
@@ -94,7 +94,7 @@ export class ExtApiServiceDataAdapter
       },
     };
     console.log(
-      `Successfully received external sensors data for home ${home.id}: temp=${result.externalTemperature.temperature}, AQI=${result.airQuality.AQI}`,
+      `Successfully received external sensors data for home ${home.id}: temp=${result.outdoorTemperature.temperature}, AQI=${result.airQuality.AQI}`,
     );
     return result;
   }

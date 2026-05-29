@@ -8,9 +8,9 @@ import {
 
 // Sends sensor updates to the frontend
 export interface SensorUpdatePort {
-  sendInternalTemperatureUpdate(home: Home, update: TemperatureState): void;
+  sendIndoorTemperatureUpdate(home: Home, update: TemperatureState): void;
 
-  sendExternalTemperatureUpdate(home: Home, update: TemperatureState): void;
+  sendOutdoorTemperatureUpdate(home: Home, update: TemperatureState): void;
 
   sendAirQualityUpdate(home: Home, update: AirQualityState): void;
 

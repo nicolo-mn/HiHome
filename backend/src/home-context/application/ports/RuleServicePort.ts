@@ -5,6 +5,6 @@ export interface RuleServicePort {
   evaluateRules(
     homeId: string,
     extSensorsData: ExternalSensorsUpdate,
-    internalTemperature: TemperatureState,
+    indoorTemperature: TemperatureState,
   ): void;
 }

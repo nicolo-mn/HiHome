@@ -20,11 +20,11 @@ export class AsyncBusRuleServiceAdapter implements RuleServicePort {
   evaluateRules(
     homeId: string,
     extSensorsData: ExternalSensorsUpdate,
-    internalTemperature: TemperatureState,
+    indoorTemperature: TemperatureState,
   ): void {
     const event: ObservablesUpdatedDomainEvent = {
-      externalTemperature: extSensorsData.externalTemperature.temperature,
-      internalTemperature: internalTemperature.temperature,
+      outdoorTemperature: extSensorsData.outdoorTemperature.temperature,
+      indoorTemperature: indoorTemperature.temperature,
       airQuality: extSensorsData.airQuality.AQI,
       windSpeed: extSensorsData.wind.windSpeed,
       weatherForecast: this.convertWeatherForecastToRuleContextFormat(

@@ -6,11 +6,11 @@ import {
   NumericGreaterOperator,
   NumericLowerOperator,
   WeatherEqualityOperator,
-  ExternalTemperatureCondition,
+  OutdoorTemperatureCondition,
   WindSpeedCondition,
   AirQualityCondition,
   WeatherCondition,
-  InternalTemperatureCondition,
+  IndoorTemperatureCondition,
 } from "../../domain/Observables";
 import {
   DeviceAction,
@@ -62,8 +62,8 @@ export type AddRuleDto = {
   ruleName: string;
   observableId:
     | "weather"
-    | "external-thermometer"
-    | "internal-thermometer"
+    | "outdoor-thermometer"
+    | "indoor-thermometer"
     | "wind-speed"
     | "air-quality";
   operator?: "gt" | "lt" | "eq";
@@ -213,11 +213,11 @@ export class RuleService {
         throw new Error("Invalid operator for numeric condition");
     }
 
-    if (dto.observableId === "external-thermometer") {
-      return new ExternalTemperatureCondition(numericOperator);
+    if (dto.observableId === "outdoor-thermometer") {
+      return new OutdoorTemperatureCondition(numericOperator);
     }
-    if (dto.observableId === "internal-thermometer") {
-      return new InternalTemperatureCondition(numericOperator);
+    if (dto.observableId === "indoor-thermometer") {
+      return new IndoorTemperatureCondition(numericOperator);
     }
     if (dto.observableId === "wind-speed") {
       return new WindSpeedCondition(numericOperator);

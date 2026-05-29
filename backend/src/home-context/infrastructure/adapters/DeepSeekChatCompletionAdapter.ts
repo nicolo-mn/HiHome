@@ -187,7 +187,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         name: "add_rule",
         description:
           "Create an automation rule for the current home. Use this tool only after collecting all required fields. " +
-          "Fields: ruleName (short label), observableId (weather|external-thermometer|internal-thermometer|wind-speed|air-quality). " +
+          "Fields: ruleName (short label), observableId (weather|outdoor-thermometer|indoor-thermometer|wind-speed|air-quality). " +
           "For weather: operatorTarget must be one of Clear, Drizzle, Fog, Overcast, Cloudy, Rain, Snow, Thunderstorm and operator is omitted. " +
           "For numeric observables: operator is gt|lt|eq and operatorTarget is a number or numeric string. " +
           "Actions is a non-empty array; each action has deviceType (light|window|thermostat|lock|fan), command, deviceId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature, lock -> lock|unlock, fan -> setOff|setLow|setMedium|setHigh.",
@@ -202,8 +202,8 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
               type: "string",
               enum: [
                 "weather",
-                "external-thermometer",
-                "internal-thermometer",
+                "outdoor-thermometer",
+                "indoor-thermometer",
                 "wind-speed",
                 "air-quality",
               ],

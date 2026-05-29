@@ -189,7 +189,7 @@ export class HomeService {
           return;
         }
 
-        await this.updateInternalTemperature(home.id, { temperature });
+        await this.updateIndoorTemperature(home.id, { temperature });
       }),
     );
   }
@@ -208,7 +208,7 @@ export class HomeService {
     const home = await ensureHomeExists(this.homeRepo, homeId);
 
     const resolvedTemperature =
-      this.sensorRegistry.getState(homeId)?.internalTemperature;
+      this.sensorRegistry.getState(homeId)?.indoorTemperature;
     if (resolvedTemperature === undefined) return;
 
     this.sendInternalSensorsUpdateToClients(home, resolvedTemperature);
@@ -224,35 +224,31 @@ export class HomeService {
             await this.externalSensorsDataPort.getExternalSensorsData(home);
 
           console.log(
-            `External sensors update received for home ${home.id}: temp=${extSensorsData.externalTemperature.temperature} AQI=${extSensorsData.airQuality.AQI}`,
+            `External sensors update received for home ${home.id}: temp=${extSensorsData.outdoorTemperature.temperature} AQI=${extSensorsData.airQuality.AQI}`,
           );
 
           this.sensorRegistry.setExternalSensorsUpdate(home.id, extSensorsData);
 
           await this.sendExternalSensorsUpdate(home.id);
 
-          const internalTemperatureValue = this.sensorRegistry.getState(
+          const indoorTemperatureValue = this.sensorRegistry.getState(
             home.id,
-          )?.internalTemperature;
-          if (internalTemperatureValue === undefined) {
+          )?.indoorTemperature;
+          if (indoorTemperatureValue === undefined) {
             console.warn(
-              `No internal temperature found for home ${home.id}, skipping rules evaluation`,
+              `No indoor temperature found for home ${home.id}, skipping rules evaluation`,
             );
             return;
           }
 
-          const internalTemperature: TemperatureState =
-            internalTemperatureValue;
+          const indoorTemperature: TemperatureState = indoorTemperatureValue;
 
-          this.sendInternalSensorsUpdateToClients(
-            home,
-            internalTemperatureValue,
-          );
+          this.sendInternalSensorsUpdateToClients(home, indoorTemperatureValue);
 
           this.ruleServicePort.evaluateRules(
             home.id,
             extSensorsData,
-            internalTemperature,
+            indoorTemperature,
           );
         } catch (error) {
           console.error(
@@ -264,13 +260,13 @@ export class HomeService {
     );
   }
 
-  async updateInternalTemperature(
+  async updateIndoorTemperature(
     homeId: string,
     update: TemperatureState,
   ): Promise<void> {
-    this.sensorRegistry.setInternalTemperature(homeId, update);
+    this.sensorRegistry.setIndoorTemperature(homeId, update);
     console.log(
-      `Internal temperature update received for home ${homeId}: temp=${update.temperature}`,
+      `Indoor temperature update received for home ${homeId}: temp=${update.temperature}`,
     );
     await this.sendInternalSensorsUpdate(homeId);
   }
@@ -279,9 +275,9 @@ export class HomeService {
     home: Home,
     update: ExternalSensorsUpdate,
   ): void {
-    this.sensorUpdatePort.sendExternalTemperatureUpdate(
+    this.sensorUpdatePort.sendOutdoorTemperatureUpdate(
       home,
-      update.externalTemperature,
+      update.outdoorTemperature,
     );
     this.sensorUpdatePort.sendAirQualityUpdate(home, update.airQuality);
     this.sensorUpdatePort.sendWindUpdate(home, update.wind);
@@ -292,6 +288,6 @@ export class HomeService {
     home: Home,
     update: TemperatureState,
   ): void {
-    this.sensorUpdatePort.sendInternalTemperatureUpdate(home, update);
+    this.sensorUpdatePort.sendIndoorTemperatureUpdate(home, update);
   }
 }

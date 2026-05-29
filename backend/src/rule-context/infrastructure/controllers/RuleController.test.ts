@@ -88,7 +88,7 @@ describe("RuleController", () => {
     it("should add a numeric rule", async () => {
       req.body = {
         ruleName: "Temp Rule",
-        observableId: "external-thermometer",
+        observableId: "outdoor-thermometer",
         operator: "gt",
         operatorTarget: "25",
         actions: [
@@ -104,7 +104,7 @@ describe("RuleController", () => {
         expect.objectContaining({
           homeId: "home-1",
           ruleName: "Temp Rule",
-          observableId: "external-thermometer",
+          observableId: "outdoor-thermometer",
           operator: "gt",
           operatorTarget: "25",
           actions: [
@@ -122,7 +122,7 @@ describe("RuleController", () => {
     it("should add a thermostat rule", async () => {
       req.body = {
         ruleName: "Thermo Rule",
-        observableId: "internal-thermometer",
+        observableId: "indoor-thermometer",
         operator: "lt",
         operatorTarget: "20",
         actions: [
@@ -143,7 +143,7 @@ describe("RuleController", () => {
         expect.objectContaining({
           homeId: "home-1",
           ruleName: "Thermo Rule",
-          observableId: "internal-thermometer",
+          observableId: "indoor-thermometer",
           operator: "lt",
           operatorTarget: "20",
           actions: [

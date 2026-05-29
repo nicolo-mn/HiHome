@@ -6,8 +6,8 @@ import {
 import {
   NumericGreaterOperator,
   NumericLowerOperator,
-  ExternalTemperatureCondition,
-  InternalTemperatureCondition,
+  OutdoorTemperatureCondition,
+  IndoorTemperatureCondition,
   WindSpeedCondition,
   AirQualityCondition,
   WeatherCondition,
@@ -52,8 +52,8 @@ function conditionToDto(condition: ObservableCondition): ConditionDto {
   }
 
   const bounded = condition as
-    | ExternalTemperatureCondition
-    | InternalTemperatureCondition
+    | OutdoorTemperatureCondition
+    | IndoorTemperatureCondition
     | AirQualityCondition
     | WindSpeedCondition;
   const op = bounded.operator;
@@ -63,10 +63,10 @@ function conditionToDto(condition: ObservableCondition): ConditionDto {
   else operatorStr = "eq";
 
   let type: string;
-  if (condition instanceof ExternalTemperatureCondition)
-    type = "external-thermometer";
-  else if (condition instanceof InternalTemperatureCondition)
-    type = "internal-thermometer";
+  if (condition instanceof OutdoorTemperatureCondition)
+    type = "outdoor-thermometer";
+  else if (condition instanceof IndoorTemperatureCondition)
+    type = "indoor-thermometer";
   else if (condition instanceof AirQualityCondition) type = "air-quality";
   else if (condition instanceof WindSpeedCondition) type = "wind-speed";
   else throw new Error("Unsupported condition type");

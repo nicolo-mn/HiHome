@@ -19,8 +19,8 @@ describe("HomeController", () => {
     const homeRepo = new InMemoryHomeRepository();
     sensorRegistry = new InMemorySensorRegistry();
     const sensorUpdatePort = {
-      sendInternalTemperatureUpdate: vi.fn(),
-      sendExternalTemperatureUpdate: vi.fn(),
+      sendIndoorTemperatureUpdate: vi.fn(),
+      sendOutdoorTemperatureUpdate: vi.fn(),
       sendAirQualityUpdate: vi.fn(),
       sendWindUpdate: vi.fn(),
       sendWeatherUpdate: vi.fn(),
@@ -43,20 +43,20 @@ describe("HomeController", () => {
     controller = new HomeController(homeService);
   });
 
-  it("updates the sensor registry on internal temperature update", async () => {
+  it("updates the sensor registry on indoor temperature update", async () => {
     const req = {
       params: { id: "1" },
       body: { temperature: 21 },
     } as unknown as Request;
     const res = createResponse();
 
-    await controller.updateInternalTemperature(req, res);
+    await controller.updateIndoorTemperature(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: "Internal temperature updated",
+      message: "Indoor temperature updated",
     });
-    expect(sensorRegistry.getState("1")?.internalTemperature).toEqual({
+    expect(sensorRegistry.getState("1")?.indoorTemperature).toEqual({
       temperature: 21,
     });
   });
@@ -68,7 +68,7 @@ describe("HomeController", () => {
     } as unknown as Request;
     const res = createResponse();
 
-    await controller.updateInternalTemperature(req, res);
+    await controller.updateIndoorTemperature(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({

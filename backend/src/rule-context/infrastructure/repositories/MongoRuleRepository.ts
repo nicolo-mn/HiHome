@@ -3,8 +3,8 @@ import {
   WeatherCondition,
   WeatherEqualityOperator,
   WeatherForecast,
-  ExternalTemperatureCondition,
-  InternalTemperatureCondition,
+  OutdoorTemperatureCondition,
+  IndoorTemperatureCondition,
   AirQualityCondition,
   WindSpeedCondition,
   NumericGreaterOperator,
@@ -29,8 +29,8 @@ import { HomeRuleSet } from "../../domain/HomeRuleSet";
 import { RuleModel } from "../models/RuleModel";
 
 const WEATHER_TYPE = "weather";
-const EXTERNAL_TEMP_TYPE = "external-thermometer";
-const INTERNAL_TEMP_TYPE = "internal-thermometer";
+const OUTDOOR_TEMP_TYPE = "outdoor-thermometer";
+const INDOOR_TEMP_TYPE = "indoor-thermometer";
 const AIR_QUALITY_TYPE = "air-quality";
 const WIND_SPEED_TYPE = "wind-speed";
 
@@ -147,10 +147,10 @@ export class MongoRuleRepository implements RuleRepository {
     const operator = this.toNumericOperator(record.operator, record.target);
 
     switch (record.type) {
-      case EXTERNAL_TEMP_TYPE:
-        return new ExternalTemperatureCondition(operator);
-      case INTERNAL_TEMP_TYPE:
-        return new InternalTemperatureCondition(operator);
+      case OUTDOOR_TEMP_TYPE:
+        return new OutdoorTemperatureCondition(operator);
+      case INDOOR_TEMP_TYPE:
+        return new IndoorTemperatureCondition(operator);
       case AIR_QUALITY_TYPE:
         return new AirQualityCondition(operator);
       case WIND_SPEED_TYPE:
@@ -192,12 +192,12 @@ export class MongoRuleRepository implements RuleRepository {
       };
     }
 
-    if (condition instanceof ExternalTemperatureCondition) {
-      return this.toNumericConditionRecord(condition, EXTERNAL_TEMP_TYPE);
+    if (condition instanceof OutdoorTemperatureCondition) {
+      return this.toNumericConditionRecord(condition, OUTDOOR_TEMP_TYPE);
     }
 
-    if (condition instanceof InternalTemperatureCondition) {
-      return this.toNumericConditionRecord(condition, INTERNAL_TEMP_TYPE);
+    if (condition instanceof IndoorTemperatureCondition) {
+      return this.toNumericConditionRecord(condition, INDOOR_TEMP_TYPE);
     }
 
     if (condition instanceof AirQualityCondition) {
@@ -213,8 +213,8 @@ export class MongoRuleRepository implements RuleRepository {
 
   private toNumericConditionRecord(
     condition:
-      | ExternalTemperatureCondition
-      | InternalTemperatureCondition
+      | OutdoorTemperatureCondition
+      | IndoorTemperatureCondition
       | AirQualityCondition
       | WindSpeedCondition,
     type: string,

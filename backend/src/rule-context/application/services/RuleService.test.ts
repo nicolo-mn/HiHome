@@ -175,8 +175,8 @@ describe("RuleService", () => {
 
   it("should execute rules for home", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
@@ -238,8 +238,8 @@ describe("RuleService", () => {
   it("should execute actions only on false-to-true transitions", async () => {
     ruleService = new RuleService(mockRuleRepository, mockActionExecutionPort);
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
@@ -273,8 +273,8 @@ describe("RuleService", () => {
   it("should re-arm when condition becomes false", async () => {
     ruleService = new RuleService(mockRuleRepository, mockActionExecutionPort);
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
@@ -312,8 +312,8 @@ describe("RuleService", () => {
 
   it("should execute one action for device when multiple are accepted", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
@@ -392,8 +392,8 @@ describe("RuleService", () => {
 
   it("should notify rules executed with only actually executed actions per rule", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
@@ -440,8 +440,8 @@ describe("RuleService", () => {
 
   it("should not notify when no actions executed", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,

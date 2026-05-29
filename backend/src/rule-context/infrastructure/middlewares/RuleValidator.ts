@@ -28,14 +28,14 @@ export const conditionValidator = [
     .notEmpty()
     .withMessage("observableId is required")
     .isIn([
-      "internal-thermometer",
-      "external-thermometer",
+      "indoor-thermometer",
+      "outdoor-thermometer",
       "wind-speed",
       "weather",
       "air-quality",
     ])
     .withMessage(
-      "observableId must be one of: internal-thermometer, external-thermometer, wind-speed, weather, air-quality",
+      "observableId must be one of: indoor-thermometer, outdoor-thermometer, wind-speed, weather, air-quality",
     ),
 
   body("operator")
@@ -44,8 +44,8 @@ export const conditionValidator = [
     .bail()
     .if((_value, { req }) =>
       [
-        "internal-thermometer",
-        "external-thermometer",
+        "indoor-thermometer",
+        "outdoor-thermometer",
         "wind-speed",
         "air-quality",
       ].includes(req.body?.observableId),
@@ -62,8 +62,8 @@ export const conditionValidator = [
     .bail()
     .if((_value, { req }) =>
       [
-        "internal-thermometer",
-        "external-thermometer",
+        "indoor-thermometer",
+        "outdoor-thermometer",
         "wind-speed",
         "air-quality",
       ].includes(req.body?.observableId),
