@@ -23,9 +23,6 @@ export class HomeRouter {
     this.router.get("/:id/rooms", (req: Request, res: Response) =>
       this.homeController.getRooms(req, res),
     );
-    this.router.get("/:id/devices/types", (req: Request, res: Response) =>
-      this.homeController.getDeviceTypes(req, res),
-    );
     this.router.get("/:id/devices/types/:type", (req: Request, res: Response) =>
       this.homeController.getDevicesByType(req, res),
     );

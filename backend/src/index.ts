@@ -271,30 +271,6 @@ io.on("connection", (socket) => {
   );
 });
 
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Protected: Hello from MEVN backend!" });
-});
-
-app.get("/api/message", async (req: Request, res: Response) => {
-  try {
-    const extApiRes = await fetch("http://ext-api-service:8080/api/mock");
-    if (extApiRes.ok) {
-      const data = await extApiRes.json();
-      res.json({
-        text: `Success: Backend received "${data.message}" from external service.`,
-      });
-    } else {
-      res.json({
-        text:
-          "Error: Call to external service failed with status " +
-          extApiRes.status,
-      });
-    }
-  } catch {
-    res.json({ text: "Error: Could not reach external service." });
-  }
-});
-
 // --- Scheduling helpers (defined here, called only inside bootstrap) ---
 const runUpdate = () => {
   void homeService.applyHourlyTemperaturePlan().catch((error) => {

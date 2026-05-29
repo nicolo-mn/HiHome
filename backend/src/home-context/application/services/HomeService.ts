@@ -121,10 +121,6 @@ export class HomeService {
     return { device, roomName: room?.name ?? "" };
   }
 
-  async getDeviceTypes(): Promise<string[]> {
-    return Object.values(DeviceTypes); // The device types come from an enum
-  }
-
   async getDevicesByType(homeId: string, type: string): Promise<Device[]> {
     const devices = await this.getDevices(homeId);
     return devices.filter((c) => {

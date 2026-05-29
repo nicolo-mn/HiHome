@@ -83,15 +83,6 @@ export class HomeController {
     return (Object.values(DeviceTypes) as string[]).includes(value);
   }
 
-  async getDeviceTypes(req: Request, res: Response) {
-    try {
-      const types = await this.homeService.getDeviceTypes();
-      res.json(types);
-    } catch (e: any) {
-      res.status(500).json({ error: e.message });
-    }
-  }
-
   async getDevicesByType(req: Request, res: Response) {
     try {
       const devices = await this.homeService.getDevicesByType(

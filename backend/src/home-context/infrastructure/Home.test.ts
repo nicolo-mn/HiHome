@@ -27,14 +27,6 @@ describe("Home Context Integration Tests", () => {
   });
 
   describe("REST Endpoints", () => {
-    it("should get device types", async () => {
-      const res = await request(app)
-        .get("/api/home/1/devices/types")
-        .set("Authorization", `Bearer ${token}`);
-      expect(res.status).toBe(200);
-      expect(res.body).toContain("light");
-    });
-
     it("should list devices for home-1", async () => {
       const res = await request(app)
         .get("/api/home/1/devices")
