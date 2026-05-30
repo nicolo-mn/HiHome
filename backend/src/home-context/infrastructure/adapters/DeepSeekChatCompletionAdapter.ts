@@ -451,9 +451,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
             role: "tool",
             tool_call_id: toolCall.id,
             content: this.formatDeviceStates(
-              devices.map((device) =>
-                device.accept(this.stateSerializer),
-              ),
+              devices.map((device) => device.accept(this.stateSerializer)),
             ),
           });
           continue;
