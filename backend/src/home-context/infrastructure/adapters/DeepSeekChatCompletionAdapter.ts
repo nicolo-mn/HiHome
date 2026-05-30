@@ -8,6 +8,8 @@ import type {
 } from "../../application/ports/ForecastPort";
 import { HomeService } from "../../application/services/HomeService";
 import { ComponentTypes } from "../../domain";
+import { ComponentStateSerializer } from "../ComponentStateSerializer";
+import type { ComponentSerialization } from "../../application/dtos/ComponentDTO";
 import type { AddRuleDto } from "../../../rule-context/application/services/RuleService";
 import { RuleService } from "../../../rule-context/application/services/RuleService";
 type DeepSeekOptions = {
@@ -70,6 +72,8 @@ type StreamChunk = {
 };
 
 export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
+  private stateSerializer = new ComponentStateSerializer();
+
   constructor(
     private options: DeepSeekOptions,
     private forecastPort: ForecastPort,
@@ -136,11 +140,30 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
   }
 
   private buildTools(isAdmin: boolean): DeepSeekTool[] {
-    const tools = [this.buildForecastTool()];
+    const tools = [this.buildForecastTool(), this.buildDeviceStatesTool()];
     if (isAdmin) {
       tools.push(this.buildAddRuleTool(), this.buildAddComponentTool());
     }
     return tools;
+  }
+
+  private buildDeviceStatesTool(): DeepSeekTool {
+    return {
+      type: "function",
+      function: {
+        name: "get_device_states",
+        description:
+          "Get the current, up-to-date state of every device in the home " +
+          "(light on/off, window open/closed, thermostat target temperature, " +
+          "lock locked/unlocked, fan mode). Call this whenever the user asks " +
+          "about the current status of one or more devices, since the device " +
+          "list in the system prompt does not include live state.",
+        parameters: {
+          type: "object",
+          properties: {},
+        },
+      },
+    };
   }
 
   private buildForecastTool(): DeepSeekTool {
@@ -422,6 +445,20 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           continue;
         }
 
+        if (toolCall.function.name === "get_device_states") {
+          const components = await this.homeService.getComponents(homeId);
+          responses.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: this.formatDeviceStates(
+              components.map((component) =>
+                component.accept(this.stateSerializer),
+              ),
+            ),
+          });
+          continue;
+        }
+
         if (toolCall.function.name === "add_rule") {
           const args = this.parseToolArguments(toolCall.function.arguments);
           const dto: AddRuleDto = {
@@ -507,6 +544,34 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     } catch {
       throw new Error("Invalid tool arguments.");
     }
+  }
+
+  private formatDeviceStates(devices: ComponentSerialization[]): string {
+    if (devices.length === 0) {
+      return "No devices in this home.";
+    }
+
+    return devices
+      .map((device) => {
+        const head = `${device.name} (id ${device.id}, ${device.type})`;
+        if ("isOn" in device) {
+          return `${head}: ${device.isOn ? "on" : "off"}`;
+        }
+        if ("isOpen" in device) {
+          return `${head}: ${device.isOpen ? "open" : "closed"}`;
+        }
+        if ("temperature" in device) {
+          return `${head}: set to ${device.temperature}C`;
+        }
+        if ("isLocked" in device) {
+          return `${head}: ${device.isLocked ? "locked" : "unlocked"}`;
+        }
+        if ("mode" in device) {
+          return `${head}: mode ${device.mode}`;
+        }
+        return head;
+      })
+      .join("\n");
   }
 
   private formatForecast(summary: ForecastSummary) {
