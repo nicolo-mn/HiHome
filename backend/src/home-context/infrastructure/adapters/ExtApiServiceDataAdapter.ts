@@ -47,7 +47,7 @@ export class ExtApiServiceDataAdapter
   ) {}
 
   async getOutdoorSensorsData(home: Home): Promise<OutdoorSensorsUpdate> {
-    const url = new URL("/api/weather", this.baseUrl);
+    const url = new URL("/api/v1/environment/current", this.baseUrl);
     url.searchParams.set("latitude", home.coordinates.latitude.toString());
     url.searchParams.set("longitude", home.coordinates.longitude.toString());
 
@@ -102,7 +102,7 @@ export class ExtApiServiceDataAdapter
   async getForecastSummary(
     coords: Coordinates,
   ): Promise<ForecastSummary | null> {
-    const url = new URL("/api/forecast", this.baseUrl);
+    const url = new URL("/api/v1/environment/forecast", this.baseUrl);
     url.searchParams.set("latitude", coords.latitude.toString());
     url.searchParams.set("longitude", coords.longitude.toString());
 
@@ -157,7 +157,7 @@ export class ExtApiServiceDataAdapter
   async getHistoricalSummary(
     coords: Coordinates,
   ): Promise<HistoricalWeatherSummary | null> {
-    const url = new URL("/api/historical", this.baseUrl);
+    const url = new URL("/api/v1/environment/historical", this.baseUrl);
     url.searchParams.set("latitude", coords.latitude.toString());
     url.searchParams.set("longitude", coords.longitude.toString());
 
