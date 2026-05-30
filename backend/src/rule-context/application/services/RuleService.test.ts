@@ -9,7 +9,7 @@ import {
   WeatherForecast,
   WeatherCondition,
 } from "../../domain/Observables";
-import { ComponentAction, LightTurnOnAction } from "../../domain/Actions";
+import { DeviceAction, LightTurnOnAction } from "../../domain/Actions";
 import { AddRuleDto } from "./RuleService";
 import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
 import { RuleNotificationPort } from "../ports/RuleNotificationPort";
@@ -85,9 +85,7 @@ describe("RuleService", () => {
       ruleName: "New Rule",
       observableId: "weather",
       operatorTarget: "Rain",
-      actions: [
-        { componentType: "light", command: "turnOn", componentId: "comp-1" },
-      ],
+      actions: [{ deviceType: "light", command: "turnOn", deviceId: "comp-1" }],
     };
 
     const result = await ruleService.addRule(dto);
@@ -116,9 +114,7 @@ describe("RuleService", () => {
       ruleName: "First",
       observableId: "weather",
       operatorTarget: "Rain",
-      actions: [
-        { componentType: "light", command: "turnOn", componentId: "c" },
-      ],
+      actions: [{ deviceType: "light", command: "turnOn", deviceId: "c" }],
     });
 
     const [, , , , order] = vi.mocked(mockRuleRepository.addRule).mock.calls[0];
@@ -179,25 +175,25 @@ describe("RuleService", () => {
 
   it("should execute rules for home", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
 
     const mockAction1 = {
-      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      getDeviceId: vi.fn().mockReturnValue("comp-1"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
     const mockAction2 = {
-      getComponentId: vi.fn().mockReturnValue("comp-2"),
+      getDeviceId: vi.fn().mockReturnValue("comp-2"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
     const mockAction3 = {
-      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      getDeviceId: vi.fn().mockReturnValue("comp-1"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
 
     const mockConditionTrue = {
       verify: vi.fn().mockReturnValue(true),
@@ -242,17 +238,17 @@ describe("RuleService", () => {
   it("should execute actions only on false-to-true transitions", async () => {
     ruleService = new RuleService(mockRuleRepository, mockActionExecutionPort);
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
 
     const mockAction = {
-      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      getDeviceId: vi.fn().mockReturnValue("comp-1"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
 
     const mockConditionTrue = {
       verify: vi.fn().mockReturnValue(true),
@@ -277,17 +273,17 @@ describe("RuleService", () => {
   it("should re-arm when condition becomes false", async () => {
     ruleService = new RuleService(mockRuleRepository, mockActionExecutionPort);
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
 
     const mockAction = {
-      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      getDeviceId: vi.fn().mockReturnValue("comp-1"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
 
     const mockConditionSequence = {
       verify: vi
@@ -314,35 +310,35 @@ describe("RuleService", () => {
     expect(mockAction.accept).toHaveBeenCalledTimes(2);
   });
 
-  it("should execute one action for component when multiple are accepted", async () => {
+  it("should execute one action for device when multiple are accepted", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
     };
 
     const mockAction1Comp1 = {
-      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      getDeviceId: vi.fn().mockReturnValue("comp-1"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
     const mockAction2Comp2 = {
-      getComponentId: vi.fn().mockReturnValue("comp-2"),
+      getDeviceId: vi.fn().mockReturnValue("comp-2"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
     const mockAction3Comp1 = {
-      getComponentId: vi.fn().mockReturnValue("comp-1"),
+      getDeviceId: vi.fn().mockReturnValue("comp-1"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
     const mockAction4Comp2 = {
-      getComponentId: vi.fn().mockReturnValue("comp-2"),
+      getDeviceId: vi.fn().mockReturnValue("comp-2"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
     const mockAction5Comp2 = {
-      getComponentId: vi.fn().mockReturnValue("comp-2"),
+      getDeviceId: vi.fn().mockReturnValue("comp-2"),
       accept: vi.fn().mockResolvedValue(undefined),
-    } as unknown as ComponentAction;
+    } as unknown as DeviceAction;
 
     const mockConditionTrue = {
       verify: vi.fn().mockReturnValue(true),
@@ -396,8 +392,8 @@ describe("RuleService", () => {
 
   it("should notify rules executed with only actually executed actions per rule", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
@@ -444,8 +440,8 @@ describe("RuleService", () => {
 
   it("should not notify when no actions executed", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 20,
-      internalTemperature: 22,
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
       airQuality: 50,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,

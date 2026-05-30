@@ -1,8 +1,8 @@
 import { body, param } from "express-validator";
 import { validate } from "../../../shared/middlewares/Validate";
 
-export const componentIdValidator = [
-  param("componentId").notEmpty().withMessage("componentId is required"),
+export const deviceIdValidator = [
+  param("deviceId").notEmpty().withMessage("deviceId is required"),
   validate,
 ];
 

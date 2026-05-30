@@ -11,7 +11,7 @@ const notificationSchema = new Schema(
       enum: [
         "AirQualityThresholdBreach",
         "AutomationRuleExecuted",
-        "ComponentAction",
+        "DeviceAction",
       ],
     },
     message: { type: String, required: true },

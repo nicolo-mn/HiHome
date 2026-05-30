@@ -1,20 +1,20 @@
 import { computed, type ComputedRef, type Ref } from "vue";
-import type { HomeComponent } from "@/api/components";
+import type { HomeDevice } from "@/api/devices";
 
 export interface RoomGroup {
   roomId: string;
   label: string;
-  items: HomeComponent[];
+  items: HomeDevice[];
 }
 
 const UNASSIGNED = "__unassigned__";
 
 export function useRoomGroups(
-  components: Ref<HomeComponent[]>,
+  devices: Ref<HomeDevice[]>,
 ): ComputedRef<RoomGroup[]> {
   return computed(() => {
-    const map = new Map<string, HomeComponent[]>();
-    for (const comp of components.value) {
+    const map = new Map<string, HomeDevice[]>();
+    for (const comp of devices.value) {
       const key = comp.roomId ?? UNASSIGNED;
       const list = map.get(key) ?? [];
       list.push(comp);

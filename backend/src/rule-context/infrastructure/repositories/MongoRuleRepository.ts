@@ -3,8 +3,8 @@ import {
   WeatherCondition,
   WeatherEqualityOperator,
   WeatherForecast,
-  ExternalTemperatureCondition,
-  InternalTemperatureCondition,
+  OutdoorTemperatureCondition,
+  IndoorTemperatureCondition,
   AirQualityCondition,
   WindSpeedCondition,
   NumericGreaterOperator,
@@ -12,7 +12,7 @@ import {
   NumericEqualityOperator,
 } from "../../domain/Observables";
 import {
-  ComponentAction,
+  DeviceAction,
   FanMode,
   FanSetModeAction,
   LightTurnOnAction,
@@ -29,8 +29,8 @@ import { HomeRuleSet } from "../../domain/HomeRuleSet";
 import { RuleModel } from "../models/RuleModel";
 
 const WEATHER_TYPE = "weather";
-const EXTERNAL_TEMP_TYPE = "external-thermometer";
-const INTERNAL_TEMP_TYPE = "internal-thermometer";
+const OUTDOOR_TEMP_TYPE = "outdoor-thermometer";
+const INDOOR_TEMP_TYPE = "indoor-thermometer";
 const AIR_QUALITY_TYPE = "air-quality";
 const WIND_SPEED_TYPE = "wind-speed";
 
@@ -47,7 +47,7 @@ type ConditionRecord = {
 type ActionRecord = {
   type: string;
   homeId: string;
-  componentId: string;
+  deviceId: string;
   targetTemperature?: number;
   mode?: FanMode;
 };
@@ -87,7 +87,7 @@ export class MongoRuleRepository implements RuleRepository {
     homeId: string,
     name: string,
     condition: ObservableCondition,
-    actions: ComponentAction[],
+    actions: DeviceAction[],
     order: number,
   ): Promise<Rule> {
     if (actions.length === 0)
@@ -147,10 +147,10 @@ export class MongoRuleRepository implements RuleRepository {
     const operator = this.toNumericOperator(record.operator, record.target);
 
     switch (record.type) {
-      case EXTERNAL_TEMP_TYPE:
-        return new ExternalTemperatureCondition(operator);
-      case INTERNAL_TEMP_TYPE:
-        return new InternalTemperatureCondition(operator);
+      case OUTDOOR_TEMP_TYPE:
+        return new OutdoorTemperatureCondition(operator);
+      case INDOOR_TEMP_TYPE:
+        return new IndoorTemperatureCondition(operator);
       case AIR_QUALITY_TYPE:
         return new AirQualityCondition(operator);
       case WIND_SPEED_TYPE:
@@ -192,12 +192,12 @@ export class MongoRuleRepository implements RuleRepository {
       };
     }
 
-    if (condition instanceof ExternalTemperatureCondition) {
-      return this.toNumericConditionRecord(condition, EXTERNAL_TEMP_TYPE);
+    if (condition instanceof OutdoorTemperatureCondition) {
+      return this.toNumericConditionRecord(condition, OUTDOOR_TEMP_TYPE);
     }
 
-    if (condition instanceof InternalTemperatureCondition) {
-      return this.toNumericConditionRecord(condition, INTERNAL_TEMP_TYPE);
+    if (condition instanceof IndoorTemperatureCondition) {
+      return this.toNumericConditionRecord(condition, INDOOR_TEMP_TYPE);
     }
 
     if (condition instanceof AirQualityCondition) {
@@ -213,8 +213,8 @@ export class MongoRuleRepository implements RuleRepository {
 
   private toNumericConditionRecord(
     condition:
-      | ExternalTemperatureCondition
-      | InternalTemperatureCondition
+      | OutdoorTemperatureCondition
+      | IndoorTemperatureCondition
       | AirQualityCondition
       | WindSpeedCondition,
     type: string,
@@ -235,12 +235,12 @@ export class MongoRuleRepository implements RuleRepository {
     throw new Error("Unsupported numeric operator");
   }
 
-  private toActionRecord(action: ComponentAction): ActionRecord {
+  private toActionRecord(action: DeviceAction): ActionRecord {
     if (action instanceof LightTurnOnAction) {
       return {
         type: "light-turn-on",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
       };
     }
 
@@ -248,7 +248,7 @@ export class MongoRuleRepository implements RuleRepository {
       return {
         type: "light-turn-off",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
       };
     }
 
@@ -256,7 +256,7 @@ export class MongoRuleRepository implements RuleRepository {
       return {
         type: "window-open",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
       };
     }
 
@@ -264,7 +264,7 @@ export class MongoRuleRepository implements RuleRepository {
       return {
         type: "window-close",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
       };
     }
 
@@ -272,7 +272,7 @@ export class MongoRuleRepository implements RuleRepository {
       return {
         type: "thermostat-set-temperature",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
         targetTemperature: action.targetTemperature,
       };
     }
@@ -281,7 +281,7 @@ export class MongoRuleRepository implements RuleRepository {
       return {
         type: "lock-lock",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
       };
     }
 
@@ -289,7 +289,7 @@ export class MongoRuleRepository implements RuleRepository {
       return {
         type: "lock-unlock",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
       };
     }
 
@@ -297,7 +297,7 @@ export class MongoRuleRepository implements RuleRepository {
       return {
         type: "fan-set-mode",
         homeId: action.getHomeId(),
-        componentId: action.getComponentId(),
+        deviceId: action.getDeviceId(),
         mode: action.mode,
       };
     }
@@ -305,30 +305,30 @@ export class MongoRuleRepository implements RuleRepository {
     throw new Error("Unsupported action type");
   }
 
-  private toAction(record: ActionRecord): ComponentAction {
+  private toAction(record: ActionRecord): DeviceAction {
     switch (record.type) {
       case "light-turn-on":
-        return new LightTurnOnAction(record.homeId, record.componentId);
+        return new LightTurnOnAction(record.homeId, record.deviceId);
       case "light-turn-off":
-        return new LightTurnOffAction(record.homeId, record.componentId);
+        return new LightTurnOffAction(record.homeId, record.deviceId);
       case "window-open":
-        return new WindowOpenAction(record.homeId, record.componentId);
+        return new WindowOpenAction(record.homeId, record.deviceId);
       case "window-close":
-        return new WindowCloseAction(record.homeId, record.componentId);
+        return new WindowCloseAction(record.homeId, record.deviceId);
       case "thermostat-set-temperature":
         return new ThermostatSetTemperatureAction(
           record.homeId,
-          record.componentId,
+          record.deviceId,
           record.targetTemperature ?? 0,
         );
       case "lock-lock":
-        return new LockLockAction(record.homeId, record.componentId);
+        return new LockLockAction(record.homeId, record.deviceId);
       case "lock-unlock":
-        return new LockUnlockAction(record.homeId, record.componentId);
+        return new LockUnlockAction(record.homeId, record.deviceId);
       case "fan-set-mode":
         return new FanSetModeAction(
           record.homeId,
-          record.componentId,
+          record.deviceId,
           record.mode ?? "off",
         );
       default:

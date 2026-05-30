@@ -3,9 +3,9 @@ export interface NotificationActor {
   role: string;
 }
 
-export interface ComponentActionEvent {
-  componentId: string;
-  componentName?: string;
+export interface DeviceActionEvent {
+  deviceId: string;
+  deviceName?: string;
   action: string;
   actor: NotificationActor;
 }
@@ -17,9 +17,6 @@ export interface SensorUpdateEvent {
 }
 
 export interface HomeNotificationOutboundPort {
-  notifyComponentAction(
-    homeId: string,
-    event: ComponentActionEvent,
-  ): Promise<void>;
+  notifyDeviceAction(homeId: string, event: DeviceActionEvent): Promise<void>;
   notifySensorUpdate(homeId: string, event: SensorUpdateEvent): Promise<void>;
 }

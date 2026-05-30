@@ -45,7 +45,7 @@ const NOTIF_META: Record<
     accent: "yellow",
     desc: "Alert me every time an automation runs.",
   },
-  ComponentAction: {
+  DeviceAction: {
     icon: "devices",
     accent: "sky",
     desc: "Alert me when a device is turned on, off or adjusted.",
@@ -93,7 +93,7 @@ const initial = computed(() =>
 
     <div class="max-w-[720px] flex flex-col gap-8">
       <section>
-        <div class="font-medium text-[18px] md:text-[20px] text-gray-400 mb-3">
+        <div class="font-medium text-[18px] md:text-[20px] text-white mb-3">
           Account
         </div>
         <div
@@ -110,7 +110,7 @@ const initial = computed(() =>
             >
               {{ authStore.username ?? "User" }}
             </div>
-            <div class="text-[14px] md:text-[15px] text-gray-400 truncate">
+            <div class="text-[14px] md:text-[15px] text-white truncate">
               {{ authStore.homeId ?? "—" }} · {{ authStore.role ?? "" }}
             </div>
           </div>
@@ -118,7 +118,7 @@ const initial = computed(() =>
       </section>
 
       <section>
-        <div class="font-medium text-[18px] md:text-[20px] text-gray-400 mb-3">
+        <div class="font-medium text-[18px] md:text-[20px] text-white mb-3">
           Notifications
         </div>
         <div
@@ -142,7 +142,7 @@ const initial = computed(() =>
                 <div class="font-bold text-[17px] md:text-[19px] text-gray-200">
                   {{ TYPE_LABELS[type] }}
                 </div>
-                <div class="text-[14px] md:text-[15px] text-gray-400 mt-0.5">
+                <div class="text-[14px] md:text-[15px] text-white mt-0.5">
                   {{ NOTIF_META[type].desc }}
                 </div>
               </div>
@@ -164,7 +164,7 @@ const initial = computed(() =>
       </section>
 
       <section v-if="authStore.isAdmin">
-        <div class="font-medium text-[18px] md:text-[20px] text-gray-400 mb-3">
+        <div class="font-medium text-[18px] md:text-[20px] text-white mb-3">
           User management
         </div>
         <div
@@ -172,13 +172,13 @@ const initial = computed(() =>
         >
           <p
             v-if="usersStore.isLoading && manageableUsers.length === 0"
-            class="text-sm text-gray-400 p-4"
+            class="text-sm text-white p-4"
           >
             Loading users…
           </p>
           <p
             v-else-if="manageableUsers.length === 0"
-            class="text-sm text-gray-400 p-4"
+            class="text-sm text-white p-4"
           >
             No other users in this home.
           </p>
@@ -195,7 +195,7 @@ const initial = computed(() =>
                   <div class="font-semibold text-[17px] text-gray-200 truncate">
                     {{ user.username }}
                   </div>
-                  <div class="text-sm text-gray-400">
+                  <div class="text-sm text-white">
                     {{ ROLE_LABELS[user.role] }}
                   </div>
                 </div>
@@ -250,7 +250,7 @@ const initial = computed(() =>
         <div class="font-bold text-xl md:text-2xl text-gray-200 mb-2">
           Log out of HiHome?
         </div>
-        <div class="text-[15px] md:text-base text-gray-400 mb-6">
+        <div class="text-[15px] md:text-base text-white mb-6">
           Active rules and connected devices will keep working in the
           background.
         </div>

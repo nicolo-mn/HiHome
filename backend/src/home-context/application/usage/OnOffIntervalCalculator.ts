@@ -1,4 +1,4 @@
-import { ComponentEvent } from "../../domain";
+import { DeviceEvent } from "../../domain";
 
 const MS_PER_HOUR = 1000 * 60 * 60;
 
@@ -8,14 +8,14 @@ export class OnOffIntervalCalculator {
   constructor(private readonly pair: OnOffPair) {}
 
   totalOnHours(
-    eventLog: ComponentEvent[],
+    eventLog: DeviceEvent[],
     rangeStart: Date,
     rangeEnd: Date,
   ): number {
     let totalMs = 0;
-    for (const events of this.groupByComponent(eventLog).values()) {
+    for (const events of this.groupByDevice(eventLog).values()) {
       events.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-      for (const [start, end] of this.intervalsForComponent(
+      for (const [start, end] of this.intervalsForDevice(
         events,
         rangeStart,
         rangeEnd,
@@ -27,16 +27,14 @@ export class OnOffIntervalCalculator {
   }
 
   unionOnHours(
-    eventLog: ComponentEvent[],
+    eventLog: DeviceEvent[],
     rangeStart: Date,
     rangeEnd: Date,
   ): number {
     const intervals: [Date, Date][] = [];
-    for (const events of this.groupByComponent(eventLog).values()) {
+    for (const events of this.groupByDevice(eventLog).values()) {
       events.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-      intervals.push(
-        ...this.intervalsForComponent(events, rangeStart, rangeEnd),
-      );
+      intervals.push(...this.intervalsForDevice(events, rangeStart, rangeEnd));
     }
     intervals.sort((a, b) => a[0].getTime() - b[0].getTime());
 
@@ -62,32 +60,30 @@ export class OnOffIntervalCalculator {
     return totalMs / MS_PER_HOUR;
   }
 
-  private groupByComponent(
-    eventLog: ComponentEvent[],
-  ): Map<string, ComponentEvent[]> {
-    const byComponent = new Map<string, ComponentEvent[]>();
+  private groupByDevice(eventLog: DeviceEvent[]): Map<string, DeviceEvent[]> {
+    const byDevice = new Map<string, DeviceEvent[]>();
     for (const event of eventLog) {
       if (!this.isRelevant(event)) continue;
-      const arr = byComponent.get(event.componentId) ?? [];
+      const arr = byDevice.get(event.deviceId) ?? [];
       arr.push(event);
-      byComponent.set(event.componentId, arr);
+      byDevice.set(event.deviceId, arr);
     }
-    return byComponent;
+    return byDevice;
   }
 
-  private isRelevant(event: ComponentEvent): boolean {
+  private isRelevant(event: DeviceEvent): boolean {
     return (
       event.eventType === this.pair.onType ||
       event.eventType === this.pair.offType
     );
   }
 
-  private intervalsForComponent(
-    events: ComponentEvent[],
+  private intervalsForDevice(
+    events: DeviceEvent[],
     rangeStart: Date,
     rangeEnd: Date,
   ): [Date, Date][] {
-    let lastPreRange: ComponentEvent | undefined;
+    let lastPreRange: DeviceEvent | undefined;
     for (const e of events) {
       if (e.createdAt >= rangeStart) break;
       lastPreRange = e;

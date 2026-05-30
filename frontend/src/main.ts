@@ -6,7 +6,7 @@ import router from "./router";
 import { registerApiHandlers } from "./api/setup";
 import { useAuthStore } from "./stores/auth";
 import { useSensorStore } from "./stores/sensors";
-import { useComponentsStore } from "./stores/components";
+import { useDevicesStore } from "./stores/devices";
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -17,7 +17,7 @@ registerApiHandlers(authStore, router);
 
 if (authStore.isAuthenticated) {
   useSensorStore(pinia).connect();
-  useComponentsStore(pinia).connect();
+  useDevicesStore(pinia).connect();
 }
 
 app.mount("#app");

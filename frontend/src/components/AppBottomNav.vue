@@ -25,13 +25,13 @@ const router = useRouter();
 
 const tabs: Tab[] = [
   { to: "/dashboard", label: "Home", icon: "home" },
-  { to: "/components", label: "Devices", icon: "devices" },
+  { to: "/devices", label: "Devices", icon: "devices" },
   { to: "/chat", label: "Assistant", icon: "assistant" },
 ];
 
 const menuItems: NavItem[] = [
   { to: "/dashboard", label: "Home", icon: "home" },
-  { to: "/components", label: "Devices", icon: "devices" },
+  { to: "/devices", label: "Devices", icon: "devices" },
   { to: "/chat", label: "Assistant", icon: "assistant" },
   { to: "/rules", label: "Rules", icon: "rules", admin: true },
   { to: "/notifications", label: "Activity", icon: "bell" },

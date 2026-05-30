@@ -4,9 +4,9 @@ import { UsageController } from "../controllers/UsageController";
 import { homeIdMiddleware } from "../middlewares/RoutesMiddlewares";
 import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
 import {
-  componentIdValidator,
+  deviceIdValidator,
   temperatureValidator,
-} from "../middlewares/ComponentValidator";
+} from "../middlewares/DeviceValidator";
 
 export class HomeRouter {
   public router = Router();
@@ -23,38 +23,31 @@ export class HomeRouter {
     this.router.get("/:id/rooms", (req: Request, res: Response) =>
       this.homeController.getRooms(req, res),
     );
-    this.router.get("/:id/components/types", (req: Request, res: Response) =>
-      this.homeController.getComponentTypes(req, res),
+    this.router.get("/:id/devices/types/:type", (req: Request, res: Response) =>
+      this.homeController.getDevicesByType(req, res),
+    );
+    this.router.get("/:id/devices", (req: Request, res: Response) =>
+      this.homeController.getDevices(req, res),
     );
     this.router.get(
-      "/:id/components/types/:type",
-      (req: Request, res: Response) =>
-        this.homeController.getComponentsByType(req, res),
-    );
-    this.router.get("/:id/components", (req: Request, res: Response) =>
-      this.homeController.getComponents(req, res),
-    );
-    this.router.get(
-      "/:id/components/events",
+      "/:id/devices/events",
       adminMiddleware,
       (req: Request, res: Response) =>
-        this.homeController.getComponentEvents(req, res),
+        this.homeController.getDeviceEvents(req, res),
     );
     this.router.post(
-      "/:id/components",
+      "/:id/devices",
       adminMiddleware,
-      (req: Request, res: Response) =>
-        this.homeController.addComponent(req, res),
+      (req: Request, res: Response) => this.homeController.addDevice(req, res),
     );
     this.router.get(
-      "/:id/components/:componentId",
-      componentIdValidator,
-      (req: Request, res: Response) =>
-        this.homeController.getComponent(req, res),
+      "/:id/devices/:deviceId",
+      deviceIdValidator,
+      (req: Request, res: Response) => this.homeController.getDevice(req, res),
     );
     this.router.post(
-      "/:id/components/:componentId/:action",
-      componentIdValidator,
+      "/:id/devices/:deviceId/:action",
+      deviceIdValidator,
       temperatureValidator,
       (req: Request, res: Response) => {
         this.homeController.executeAction(req, res);

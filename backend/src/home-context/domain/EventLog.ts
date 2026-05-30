@@ -1,64 +1,64 @@
-import { ComponentTypes } from "./Component";
+import { DeviceTypes } from "./Device";
 
-export type ComponentEventActor = {
+export type DeviceEventActor = {
   username: string;
   role: string;
 };
 
-export type ComponentEventBase = {
+export type DeviceEventBase = {
   id: string;
-  componentId: string;
-  componentName?: string;
-  componentType: ComponentTypes;
-  actor?: ComponentEventActor;
+  deviceId: string;
+  deviceName?: string;
+  deviceType: DeviceTypes;
+  actor?: DeviceEventActor;
   createdAt: Date;
 };
 
-export type LightTurnedOnEvent = ComponentEventBase & {
+export type LightTurnedOnEvent = DeviceEventBase & {
   eventType: "LightTurnedOn";
-  componentType: ComponentTypes.LIGHT;
+  deviceType: DeviceTypes.LIGHT;
 };
 
-export type LightTurnedOffEvent = ComponentEventBase & {
+export type LightTurnedOffEvent = DeviceEventBase & {
   eventType: "LightTurnedOff";
-  componentType: ComponentTypes.LIGHT;
+  deviceType: DeviceTypes.LIGHT;
 };
 
-export type WindowOpenedEvent = ComponentEventBase & {
+export type WindowOpenedEvent = DeviceEventBase & {
   eventType: "WindowOpened";
-  componentType: ComponentTypes.WINDOW;
+  deviceType: DeviceTypes.WINDOW;
 };
 
-export type WindowClosedEvent = ComponentEventBase & {
+export type WindowClosedEvent = DeviceEventBase & {
   eventType: "WindowClosed";
-  componentType: ComponentTypes.WINDOW;
+  deviceType: DeviceTypes.WINDOW;
 };
 
-export type ThermostatSetEvent = ComponentEventBase & {
+export type ThermostatSetEvent = DeviceEventBase & {
   eventType: "ThermostatSet";
-  componentType: ComponentTypes.THERMOSTAT;
+  deviceType: DeviceTypes.THERMOSTAT;
   targetTemperature: number;
 };
 
-export type LockLockedEvent = ComponentEventBase & {
+export type LockLockedEvent = DeviceEventBase & {
   eventType: "LockLocked";
-  componentType: ComponentTypes.LOCK;
+  deviceType: DeviceTypes.LOCK;
 };
 
-export type LockUnlockedEvent = ComponentEventBase & {
+export type LockUnlockedEvent = DeviceEventBase & {
   eventType: "LockUnlocked";
-  componentType: ComponentTypes.LOCK;
+  deviceType: DeviceTypes.LOCK;
 };
 
 export type FanMode = "off" | "low" | "medium" | "high";
 
-export type FanModeSetEvent = ComponentEventBase & {
+export type FanModeSetEvent = DeviceEventBase & {
   eventType: "FanModeSet";
-  componentType: ComponentTypes.FAN;
+  deviceType: DeviceTypes.FAN;
   mode: FanMode;
 };
 
-export type ComponentEvent =
+export type DeviceEvent =
   | LightTurnedOnEvent
   | LightTurnedOffEvent
   | WindowOpenedEvent

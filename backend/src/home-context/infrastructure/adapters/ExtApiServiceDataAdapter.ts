@@ -1,11 +1,11 @@
-import { ExternalSensorsDataPort } from "../../application/ports/ExternalSensorsDataPort";
+import { OutdoorSensorsDataPort } from "../../application/ports/OutdoorSensorsDataPort";
 import type {
   ForecastPort,
   ForecastSummary,
 } from "../../application/ports/ForecastPort";
 import type { HistoricalWeatherSummary } from "../../application/dtos/UsageDTO";
 import {
-  ExternalSensorsUpdate,
+  OutdoorSensorsUpdate,
   Home,
   WeatherForecast,
   Coordinates,
@@ -39,15 +39,15 @@ type ExtApiServiceForecastResponse = {
 };
 
 export class ExtApiServiceDataAdapter
-  implements ExternalSensorsDataPort, ForecastPort
+  implements OutdoorSensorsDataPort, ForecastPort
 {
   constructor(
     private readonly baseUrl: string = process.env.EXT_API_BASE_URL ||
       "http://ext-api-service:8080",
   ) {}
 
-  async getExternalSensorsData(home: Home): Promise<ExternalSensorsUpdate> {
-    const url = new URL("/api/weather", this.baseUrl);
+  async getOutdoorSensorsData(home: Home): Promise<OutdoorSensorsUpdate> {
+    const url = new URL("/api/v1/environment/current", this.baseUrl);
     url.searchParams.set("latitude", home.coordinates.latitude.toString());
     url.searchParams.set("longitude", home.coordinates.longitude.toString());
 
@@ -66,7 +66,7 @@ export class ExtApiServiceDataAdapter
         `ext-api-service responded with status ${response.status} for home ${home.id} at ${url.toString()}`,
       );
       throw new Error(
-        `Failed to fetch external sensors data: ${response.status}`,
+        `Failed to fetch outdoor sensors data: ${response.status}`,
       );
     }
 
@@ -82,7 +82,7 @@ export class ExtApiServiceDataAdapter
     }
 
     const result = {
-      externalTemperature: { temperature: payload.temperature },
+      outdoorTemperature: { temperature: payload.temperature },
       airQuality: { AQI: payload.europeanAqi },
       wind: {
         windDirection: payload.windDirection,
@@ -94,7 +94,7 @@ export class ExtApiServiceDataAdapter
       },
     };
     console.log(
-      `Successfully received external sensors data for home ${home.id}: temp=${result.externalTemperature.temperature}, AQI=${result.airQuality.AQI}`,
+      `Successfully received outdoor sensors data for home ${home.id}: temp=${result.outdoorTemperature.temperature}, AQI=${result.airQuality.AQI}`,
     );
     return result;
   }
@@ -102,7 +102,7 @@ export class ExtApiServiceDataAdapter
   async getForecastSummary(
     coords: Coordinates,
   ): Promise<ForecastSummary | null> {
-    const url = new URL("/api/forecast", this.baseUrl);
+    const url = new URL("/api/v1/environment/forecast", this.baseUrl);
     url.searchParams.set("latitude", coords.latitude.toString());
     url.searchParams.set("longitude", coords.longitude.toString());
 
@@ -157,7 +157,7 @@ export class ExtApiServiceDataAdapter
   async getHistoricalSummary(
     coords: Coordinates,
   ): Promise<HistoricalWeatherSummary | null> {
-    const url = new URL("/api/historical", this.baseUrl);
+    const url = new URL("/api/v1/environment/historical", this.baseUrl);
     url.searchParams.set("latitude", coords.latitude.toString());
     url.searchParams.set("longitude", coords.longitude.toString());
 

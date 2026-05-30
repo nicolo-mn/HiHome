@@ -1,5 +1,5 @@
 import {
-  ComponentActionVisitor,
+  DeviceActionVisitor,
   FanSetModeAction,
   LightTurnOffAction,
   LightTurnOnAction,
@@ -10,37 +10,37 @@ import {
   WindowOpenAction,
 } from "../domain/Actions";
 
-export class ActionDescriptionVisitor implements ComponentActionVisitor<string> {
-  constructor(private componentNameById: Map<string, string>) {}
+export class ActionDescriptionVisitor implements DeviceActionVisitor<string> {
+  constructor(private deviceNameById: Map<string, string>) {}
 
-  private name(componentId: string): string {
-    return this.componentNameById.get(componentId) ?? componentId;
+  private name(deviceId: string): string {
+    return this.deviceNameById.get(deviceId) ?? deviceId;
   }
 
   visitLightTurnOnAction(action: LightTurnOnAction): string {
-    return `Turn on light ${this.name(action.getComponentId())}`;
+    return `Turn on light ${this.name(action.getDeviceId())}`;
   }
   visitLightTurnOffAction(action: LightTurnOffAction): string {
-    return `Turn off light ${this.name(action.getComponentId())}`;
+    return `Turn off light ${this.name(action.getDeviceId())}`;
   }
   visitWindowOpenAction(action: WindowOpenAction): string {
-    return `Open window ${this.name(action.getComponentId())}`;
+    return `Open window ${this.name(action.getDeviceId())}`;
   }
   visitWindowCloseAction(action: WindowCloseAction): string {
-    return `Close window ${this.name(action.getComponentId())}`;
+    return `Close window ${this.name(action.getDeviceId())}`;
   }
   visitThermostatSetTemperatureAction(
     action: ThermostatSetTemperatureAction,
   ): string {
-    return `Set thermostat ${this.name(action.getComponentId())} to ${action.targetTemperature}°C`;
+    return `Set thermostat ${this.name(action.getDeviceId())} to ${action.targetTemperature}°C`;
   }
   visitLockLockAction(action: LockLockAction): string {
-    return `Lock ${this.name(action.getComponentId())}`;
+    return `Lock ${this.name(action.getDeviceId())}`;
   }
   visitLockUnlockAction(action: LockUnlockAction): string {
-    return `Unlock ${this.name(action.getComponentId())}`;
+    return `Unlock ${this.name(action.getDeviceId())}`;
   }
   visitFanSetModeAction(action: FanSetModeAction): string {
-    return `Set fan ${this.name(action.getComponentId())} to ${action.mode}`;
+    return `Set fan ${this.name(action.getDeviceId())} to ${action.mode}`;
   }
 }

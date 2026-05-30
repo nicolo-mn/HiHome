@@ -23,8 +23,8 @@ describe("AsyncBus", () => {
 
   it("should listen to specified event and call RuleService.executeRulesForHome", async () => {
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 25,
-      internalTemperature: 22,
+      outdoorTemperature: 25,
+      indoorTemperature: 22,
       airQuality: 40,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,
@@ -49,8 +49,8 @@ describe("AsyncBus", () => {
     vi.mocked(ruleService.executeRulesForHome).mockRejectedValue(error);
 
     const update: ObservablesUpdatedDomainEvent = {
-      externalTemperature: 25,
-      internalTemperature: 22,
+      outdoorTemperature: 25,
+      indoorTemperature: 22,
       airQuality: 40,
       windSpeed: 10,
       weatherForecast: WeatherForecast.Clear,

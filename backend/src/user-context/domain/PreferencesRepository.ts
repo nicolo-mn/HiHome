@@ -1,7 +1,7 @@
 export const ALL_NOTIFICATION_TYPES = [
   "AirQualityThresholdBreach",
   "AutomationRuleExecuted",
-  "ComponentAction",
+  "DeviceAction",
 ] as const;
 
 export type NotificationType = (typeof ALL_NOTIFICATION_TYPES)[number];

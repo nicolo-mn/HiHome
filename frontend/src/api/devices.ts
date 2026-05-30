@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 
-export type ComponentType =
+export type DeviceType =
   | "light"
   | "window"
   | "thermostat"
@@ -18,45 +18,45 @@ export type FanMode = "off" | "low" | "medium" | "high";
 
 export const FAN_MODES: FanMode[] = ["off", "low", "medium", "high"];
 
-export type CreateComponentInput = {
+export type CreateDeviceInput = {
   name: string;
   type: CreatableType;
   roomId: string;
 };
 
-export interface BaseComponent {
+export interface BaseDevice {
   id: string;
   name: string;
   roomId?: string;
   roomName?: string;
 }
 
-// Shared interface for components whose state is a single boolean.
+// Shared interface for devices whose state is a single boolean.
 // `state` is normalized from backend field names (isOn, isOpen, …).
-export interface ToggleableComponent extends BaseComponent {
+export interface ToggleableDevice extends BaseDevice {
   type: ToggleableType;
   state: boolean;
 }
 
-// TODO: Implement controllable thermostat component
-export interface ThermostatComponent extends BaseComponent {
+// TODO: Implement controllable thermostat device
+export interface ThermostatDevice extends BaseDevice {
   type: "thermostat";
   setpoint: number;
   unit: string;
 }
 
-export interface FanComponent extends BaseComponent {
+export interface FanDevice extends BaseDevice {
   type: "fan";
   mode: FanMode;
 }
 
-export type HomeComponent =
-  | ToggleableComponent
-  | ThermostatComponent
-  | FanComponent
-  | (BaseComponent & { type: "unknown" });
+export type HomeDevice =
+  | ToggleableDevice
+  | ThermostatDevice
+  | FanDevice
+  | (BaseDevice & { type: "unknown" });
 
-export interface RawComponent {
+export interface RawDevice {
   id: string;
   name: string;
   roomId?: string;
@@ -69,7 +69,7 @@ export interface RawComponent {
   unit?: string;
   mode?: FanMode;
 }
-export function normalizeComponent(raw: RawComponent): HomeComponent {
+export function normalizeDevice(raw: RawDevice): HomeDevice {
   const base = {
     id: raw.id,
     name: raw.name,
@@ -99,41 +99,35 @@ export function normalizeComponent(raw: RawComponent): HomeComponent {
   }
 }
 
-export async function getComponents(homeId: string): Promise<HomeComponent[]> {
-  const raw = await apiFetch<RawComponent[]>(
-    `/api/home/${encodeURIComponent(homeId)}/components`,
+export async function getDevices(homeId: string): Promise<HomeDevice[]> {
+  const raw = await apiFetch<RawDevice[]>(
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices`,
   );
-  return raw.map(normalizeComponent);
+  return raw.map(normalizeDevice);
 }
 
-export async function createComponent(
+export async function createDevice(
   homeId: string,
-  input: CreateComponentInput,
-): Promise<HomeComponent> {
-  const raw = await apiFetch<RawComponent>(
-    `/api/home/${encodeURIComponent(homeId)}/components`,
+  input: CreateDeviceInput,
+): Promise<HomeDevice> {
+  const raw = await apiFetch<RawDevice>(
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices`,
     { method: "POST", body: input },
   );
-  return normalizeComponent(raw);
+  return normalizeDevice(raw);
 }
 
 export async function executeAction(
   homeId: string,
-  componentId: string,
+  deviceId: string,
   action: string,
   body?: unknown,
-): Promise<HomeComponent> {
-  const raw = await apiFetch<RawComponent>(
-    `/api/home/${encodeURIComponent(homeId)}/components/${encodeURIComponent(componentId)}/${encodeURIComponent(action)}`,
+): Promise<HomeDevice> {
+  const raw = await apiFetch<RawDevice>(
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices/${encodeURIComponent(deviceId)}/${encodeURIComponent(action)}`,
     { method: "POST", body },
   );
-  return normalizeComponent(raw);
-}
-
-export async function getComponentTypes(homeId: string): Promise<string[]> {
-  return apiFetch<string[]>(
-    `/api/home/${encodeURIComponent(homeId)}/components/types`,
-  );
+  return normalizeDevice(raw);
 }
 
 const TOGGLE_ACTIONS: Record<ToggleableType, { on: string; off: string }> = {
@@ -144,26 +138,26 @@ const TOGGLE_ACTIONS: Record<ToggleableType, { on: string; off: string }> = {
 
 export function toggle(
   homeId: string,
-  c: ToggleableComponent,
+  c: ToggleableDevice,
   next: boolean,
-): Promise<HomeComponent> {
+): Promise<HomeDevice> {
   const action = TOGGLE_ACTIONS[c.type][next ? "on" : "off"];
   return executeAction(homeId, c.id, action);
 }
 
 export function setFanMode(
   homeId: string,
-  c: FanComponent,
+  c: FanDevice,
   mode: FanMode,
-): Promise<HomeComponent> {
+): Promise<HomeDevice> {
   return executeAction(homeId, c.id, "setMode", { mode });
 }
 
 export function setpointDelta(
   homeId: string,
-  c: ThermostatComponent,
+  c: ThermostatDevice,
   dir: "up" | "down",
-): Promise<HomeComponent> {
+): Promise<HomeDevice> {
   const rawNext = dir === "up" ? c.setpoint + 0.5 : c.setpoint - 0.5;
   const next = Math.max(5, Math.min(40, rawNext));
   if (next === c.setpoint) {

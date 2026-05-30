@@ -2,25 +2,25 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
-import { useComponentsStore } from "@/stores/components";
+import { useDevicesStore } from "@/stores/devices";
 import { useRoomGroups } from "@/composables/useRoomGroups";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import { ApiError } from "@/api/errors";
-import type { CreatableType } from "@/api/components";
+import type { CreatableType } from "@/api/devices";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
-import ComponentCard from "@/components/cards/ComponentCard.vue";
-import AddComponentCard from "@/components/cards/AddComponentCard.vue";
+import DeviceCard from "@/components/cards/DeviceCard.vue";
+import AddDeviceCard from "@/components/cards/AddDeviceCard.vue";
 import BaseButton from "@/components/BaseButton.vue";
 import BaseInput from "@/components/BaseInput.vue";
 import ErrorBanner from "@/components/ErrorBanner.vue";
 
 const auth = useAuthStore();
-const store = useComponentsStore();
-const { components, isLoading, error } = storeToRefs(store);
-const { load, toggle, step, setFanMode, isBusy, addComponent } = store;
+const store = useDevicesStore();
+const { devices, isLoading, error } = storeToRefs(store);
+const { load, toggle, step, setFanMode, isBusy, addDevice } = store;
 
-const roomGroups = useRoomGroups(components);
+const roomGroups = useRoomGroups(devices);
 
 const fieldClass =
   "bg-gray-800/50 rounded-2xl px-5 py-3.5 text-gray-200 placeholder:text-gray-600 outline-none border-2 border-gray-800 focus:border-yellow-500 transition-colors";
@@ -39,7 +39,7 @@ const roomSelection = ref("");
 
 const roomOptions = computed(() => {
   const map = new Map<string, string>();
-  for (const comp of components.value) {
+  for (const comp of devices.value) {
     if (comp.roomId) {
       map.set(comp.roomId, comp.roomName ?? comp.roomId);
     }
@@ -71,7 +71,7 @@ function getApiErrorMessage(error: unknown): string | null {
 }
 
 const {
-  run: createComponent,
+  run: createDevice,
   isLoading: creating,
   error: createError,
   reset: resetCreateError,
@@ -79,7 +79,7 @@ const {
   async () => {
     const roomId = roomSelection.value;
     if (!roomId) return;
-    await addComponent({
+    await addDevice({
       name: draftName.value.trim(),
       type: draftType.value,
       roomId,
@@ -98,7 +98,7 @@ function setDefaultRoomSelection() {
   roomSelection.value = roomOptions.value[0]?.value ?? "";
 }
 
-function openAddComponent(roomId?: string) {
+function openAddDevice(roomId?: string) {
   resetCreateError();
   addFormOpen.value = true;
   if (roomId && roomOptions.value.some((room) => room.value === roomId)) {
@@ -108,7 +108,7 @@ function openAddComponent(roomId?: string) {
   setDefaultRoomSelection();
 }
 
-function closeAddComponent() {
+function closeAddDevice() {
   addFormOpen.value = false;
   resetCreateError();
   draftName.value = "";
@@ -130,7 +130,7 @@ onMounted(() => {
           ? [{ icon: addFormOpen ? 'close' : 'add', label: 'Add device' }]
           : []
       "
-      @action="addFormOpen ? closeAddComponent() : openAddComponent()"
+      @action="addFormOpen ? closeAddDevice() : openAddDevice()"
     />
 
     <section
@@ -141,8 +141,8 @@ onMounted(() => {
         <h2 class="text-lg md:text-xl font-bold text-gray-200">Add device</h2>
         <button
           type="button"
-          class="w-9 h-9 rounded-2xl text-gray-400 hover:bg-white/5 flex items-center justify-center"
-          @click="closeAddComponent"
+          class="w-9 h-9 rounded-2xl text-white hover:bg-white/5 flex items-center justify-center"
+          @click="closeAddDevice"
         >
           <BaseIcon name="close" :size="20" />
         </button>
@@ -153,7 +153,7 @@ onMounted(() => {
         :error="createError"
         action="add the device"
       />
-      <p v-if="!hasRooms" class="text-gray-400 text-sm">
+      <p v-if="!hasRooms" class="text-white text-sm">
         Add a room before creating devices.
       </p>
 
@@ -162,7 +162,7 @@ onMounted(() => {
 
         <div class="flex flex-col gap-1.5">
           <label
-            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-white"
           >
             Type
           </label>
@@ -179,7 +179,7 @@ onMounted(() => {
 
         <div class="flex flex-col gap-1.5">
           <label
-            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-gray-400"
+            class="text-[12px] md:text-[13px] font-medium uppercase tracking-wider text-white"
           >
             Room
           </label>
@@ -205,24 +205,21 @@ onMounted(() => {
             label="Add device"
             :loading="creating"
             :disabled="!canSubmit || !hasRooms"
-            @click="createComponent"
+            @click="createDevice"
           />
         </div>
       </div>
     </section>
 
     <ErrorBanner
-      v-if="error && components.length === 0"
+      v-if="error && devices.length === 0"
       :error="error"
       action="load your devices"
       :on-retry="() => load()"
     />
     <ErrorBanner v-else-if="error" :error="error" />
 
-    <p
-      v-if="isLoading && components.length === 0"
-      class="text-gray-400 text-sm"
-    >
+    <p v-if="isLoading && devices.length === 0" class="text-white text-sm">
       Loading devices…
     </p>
 
@@ -232,7 +229,7 @@ onMounted(() => {
       class="flex flex-col gap-3"
     >
       <div class="flex items-center gap-3">
-        <div class="font-medium text-[18px] md:text-[20px] text-gray-400">
+        <div class="font-medium text-[18px] md:text-[20px] text-white">
           {{ group.label }}
         </div>
         <span class="text-sm text-gray-500">
@@ -244,19 +241,19 @@ onMounted(() => {
       <div
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3"
       >
-        <ComponentCard
+        <DeviceCard
           v-for="item in group.items"
           :key="item.id"
-          :component="item"
+          :device="item"
           :busy="isBusy(item.id)"
           @toggle="toggle"
           @step="step"
           @fan-mode="setFanMode"
         />
-        <AddComponentCard
+        <AddDeviceCard
           v-if="auth.isAdmin"
           :disabled="creating || !hasRooms"
-          @click="openAddComponent(group.roomId)"
+          @click="openAddDevice(group.roomId)"
         />
       </div>
     </section>

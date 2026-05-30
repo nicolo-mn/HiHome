@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import { authApi } from "@/api";
 import { decodeJwt, isExpired } from "@/utils/jwt";
 import { useSensorStore } from "@/stores/sensors";
-import { useComponentsStore } from "@/stores/components";
+import { useDevicesStore } from "@/stores/devices";
 
 export const useAuthStore = defineStore("auth", () => {
   const storedToken = localStorage.getItem("jwt");
@@ -43,14 +43,14 @@ export const useAuthStore = defineStore("auth", () => {
     token.value = newToken;
     localStorage.setItem("jwt", newToken);
     useSensorStore().connect();
-    useComponentsStore().connect();
+    useDevicesStore().connect();
   }
 
   function logout() {
     token.value = null;
     localStorage.removeItem("jwt");
     useSensorStore().disconnect();
-    useComponentsStore().disconnect();
+    useDevicesStore().disconnect();
   }
 
   return {

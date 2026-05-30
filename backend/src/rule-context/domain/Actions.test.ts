@@ -31,8 +31,8 @@ describe("Actions", () => {
   describe("LightTurnOnAction", () => {
     const action = new LightTurnOnAction(homeId, "comp-1");
 
-    it("should return component id", () => {
-      expect(action.getComponentId()).toBe("comp-1");
+    it("should return device id", () => {
+      expect(action.getDeviceId()).toBe("comp-1");
     });
 
     it("should accept visitor", () => {
@@ -44,8 +44,8 @@ describe("Actions", () => {
   describe("LightTurnOffAction", () => {
     const action = new LightTurnOffAction(homeId, "comp-2");
 
-    it("should return component id", () => {
-      expect(action.getComponentId()).toBe("comp-2");
+    it("should return device id", () => {
+      expect(action.getDeviceId()).toBe("comp-2");
     });
 
     it("should accept visitor", () => {
@@ -57,8 +57,8 @@ describe("Actions", () => {
   describe("WindowOpenAction", () => {
     const action = new WindowOpenAction(homeId, "comp-3");
 
-    it("should return component id", () => {
-      expect(action.getComponentId()).toBe("comp-3");
+    it("should return device id", () => {
+      expect(action.getDeviceId()).toBe("comp-3");
     });
 
     it("should accept visitor", () => {
@@ -70,8 +70,8 @@ describe("Actions", () => {
   describe("WindowCloseAction", () => {
     const action = new WindowCloseAction(homeId, "comp-4");
 
-    it("should return component id", () => {
-      expect(action.getComponentId()).toBe("comp-4");
+    it("should return device id", () => {
+      expect(action.getDeviceId()).toBe("comp-4");
     });
 
     it("should accept visitor", () => {
@@ -83,8 +83,8 @@ describe("Actions", () => {
   describe("ThermostatSetTemperatureAction", () => {
     const action = new ThermostatSetTemperatureAction(homeId, "comp-5", 25);
 
-    it("should return component id and target temperature", () => {
-      expect(action.getComponentId()).toBe("comp-5");
+    it("should return device id and target temperature", () => {
+      expect(action.getDeviceId()).toBe("comp-5");
       expect(action.targetTemperature).toBe(25);
     });
 
@@ -99,8 +99,8 @@ describe("Actions", () => {
   describe("LockLockAction", () => {
     const action = new LockLockAction(homeId, "comp-6");
 
-    it("should return component id", () => {
-      expect(action.getComponentId()).toBe("comp-6");
+    it("should return device id", () => {
+      expect(action.getDeviceId()).toBe("comp-6");
     });
 
     it("should accept visitor", () => {
@@ -112,8 +112,8 @@ describe("Actions", () => {
   describe("LockUnlockAction", () => {
     const action = new LockUnlockAction(homeId, "comp-7");
 
-    it("should return component id", () => {
-      expect(action.getComponentId()).toBe("comp-7");
+    it("should return device id", () => {
+      expect(action.getDeviceId()).toBe("comp-7");
     });
 
     it("should accept visitor", () => {
@@ -125,8 +125,8 @@ describe("Actions", () => {
   describe("FanSetModeAction", () => {
     const action = new FanSetModeAction(homeId, "comp-8", "low");
 
-    it("should return component id and mode", () => {
-      expect(action.getComponentId()).toBe("comp-8");
+    it("should return device id and mode", () => {
+      expect(action.getDeviceId()).toBe("comp-8");
       expect(action.mode).toBe("low");
     });
 

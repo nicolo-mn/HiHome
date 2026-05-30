@@ -12,20 +12,20 @@ export {
 } from "./errors";
 export * as authApi from "./auth";
 export type { LoginRequest, LoginResponse } from "./auth";
-export * as componentsApi from "./components";
+export * as devicesApi from "./devices";
 export type {
-  HomeComponent,
-  ThermostatComponent,
-  ToggleableComponent,
+  HomeDevice,
+  ThermostatDevice,
+  ToggleableDevice,
   ToggleableType,
-  FanComponent,
+  FanDevice,
   FanMode,
   CreatableType,
-  BaseComponent,
-  ComponentType,
-  CreateComponentInput,
-} from "./components";
-export { FAN_MODES } from "./components";
+  BaseDevice,
+  DeviceType,
+  CreateDeviceInput,
+} from "./devices";
+export { FAN_MODES } from "./devices";
 export * as notificationsApi from "./notifications";
 export type { NotificationDTO } from "./notifications";
 export * as preferencesApi from "./preferences";
@@ -40,7 +40,7 @@ export type {
   CreateRulePayload,
 } from "./rules";
 export * as eventLogApi from "./event-log";
-export type { ComponentEventDTO } from "./event-log";
+export type { DeviceEventDTO } from "./event-log";
 export * as usersApi from "./users";
 export type { UserSummary, RoleName } from "./users";
 export { ALL_ROLES, ROLE_LABELS } from "./users";

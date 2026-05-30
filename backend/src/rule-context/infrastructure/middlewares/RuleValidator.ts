@@ -1,13 +1,7 @@
 import { body, param } from "express-validator";
 import { validate } from "../../../shared/middlewares/Validate";
 
-const COMPONENT_TYPES = [
-  "light",
-  "window",
-  "thermostat",
-  "lock",
-  "fan",
-] as const;
+const DEVICE_TYPES = ["light", "window", "thermostat", "lock", "fan"] as const;
 
 const COMMANDS_BY_TYPE: Record<string, string[]> = {
   light: ["turnOn", "turnOff"],
@@ -34,14 +28,14 @@ export const conditionValidator = [
     .notEmpty()
     .withMessage("observableId is required")
     .isIn([
-      "internal-thermometer",
-      "external-thermometer",
+      "indoor-thermometer",
+      "outdoor-thermometer",
       "wind-speed",
       "weather",
       "air-quality",
     ])
     .withMessage(
-      "observableId must be one of: internal-thermometer, external-thermometer, wind-speed, weather, air-quality",
+      "observableId must be one of: indoor-thermometer, outdoor-thermometer, wind-speed, weather, air-quality",
     ),
 
   body("operator")
@@ -50,8 +44,8 @@ export const conditionValidator = [
     .bail()
     .if((_value, { req }) =>
       [
-        "internal-thermometer",
-        "external-thermometer",
+        "indoor-thermometer",
+        "outdoor-thermometer",
         "wind-speed",
         "air-quality",
       ].includes(req.body?.observableId),
@@ -68,8 +62,8 @@ export const conditionValidator = [
     .bail()
     .if((_value, { req }) =>
       [
-        "internal-thermometer",
-        "external-thermometer",
+        "indoor-thermometer",
+        "outdoor-thermometer",
         "wind-speed",
         "air-quality",
       ].includes(req.body?.observableId),
@@ -100,15 +94,13 @@ export const actionsValidator = [
     .isArray({ min: 1 })
     .withMessage("actions must be a non-empty array"),
 
-  body("actions[*].componentId")
-    .notEmpty()
-    .withMessage("componentId is required"),
+  body("actions[*].deviceId").notEmpty().withMessage("deviceId is required"),
 
-  body("actions[*].componentType")
+  body("actions[*].deviceType")
     .notEmpty()
-    .withMessage("componentType is required")
-    .isIn(COMPONENT_TYPES)
-    .withMessage(`componentType must be one of: ${COMPONENT_TYPES.join(", ")}`),
+    .withMessage("deviceType is required")
+    .isIn(DEVICE_TYPES)
+    .withMessage(`deviceType must be one of: ${DEVICE_TYPES.join(", ")}`),
 
   body("actions[*].command")
     .notEmpty()
@@ -116,12 +108,12 @@ export const actionsValidator = [
     .bail()
     .custom((value, { req, path }) => {
       const index = getActionIndex(path);
-      const componentType = req.body?.actions?.[index]?.componentType;
-      const validCommands = COMMANDS_BY_TYPE[componentType];
+      const deviceType = req.body?.actions?.[index]?.deviceType;
+      const validCommands = COMMANDS_BY_TYPE[deviceType];
       if (!validCommands) return true;
       if (!validCommands.includes(value)) {
         throw new Error(
-          `command must be one of: ${validCommands.join(", ")} for ${componentType}`,
+          `command must be one of: ${validCommands.join(", ")} for ${deviceType}`,
         );
       }
       return true;

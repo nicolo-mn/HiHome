@@ -17,7 +17,7 @@ export interface UserSummary {
 
 export async function getUsers(homeId: string): Promise<UserSummary[]> {
   const data = await apiFetch<{ users: UserSummary[] }>(
-    `/api/home/${encodeURIComponent(homeId)}/users`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/users`,
   );
   return data.users;
 }
@@ -28,7 +28,7 @@ export async function changeRole(
   role: RoleName,
 ): Promise<UserSummary> {
   const data = await apiFetch<{ user: UserSummary }>(
-    `/api/home/${encodeURIComponent(homeId)}/users/${encodeURIComponent(userId)}/role`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/users/${encodeURIComponent(userId)}/role`,
     { method: "PUT", body: { role } },
   );
   return data.user;

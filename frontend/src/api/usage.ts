@@ -26,6 +26,6 @@ export async function getUsage(
   range: UsageRange,
 ): Promise<UsageReport> {
   return apiFetch<UsageReport>(
-    `/api/home/${encodeURIComponent(homeId)}/usage?range=${range}`,
+    `/api/v1/home/${encodeURIComponent(homeId)}/usage?range=${range}`,
   );
 }

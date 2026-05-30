@@ -22,14 +22,14 @@ export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
     this.io.to(`home-${homeId}`).emit(event, payload);
   }
 
-  sendInternalTemperatureUpdate(home: Home, update: TemperatureState): void {
-    this.broadcast(home.id, "sensor:internal-temperature", {
+  sendIndoorTemperatureUpdate(home: Home, update: TemperatureState): void {
+    this.broadcast(home.id, "sensor:indoor-temperature", {
       temperature: update.temperature,
     });
   }
 
-  sendExternalTemperatureUpdate(home: Home, update: TemperatureState): void {
-    this.broadcast(home.id, "sensor:external-temperature", {
+  sendOutdoorTemperatureUpdate(home: Home, update: TemperatureState): void {
+    this.broadcast(home.id, "sensor:outdoor-temperature", {
       temperature: update.temperature,
     });
   }

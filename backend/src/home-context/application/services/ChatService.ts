@@ -86,30 +86,30 @@ export class ChatService {
     ].join(" ");
 
     try {
-      const [components, rooms] = await Promise.all([
-        this.homeService.getComponents(homeId),
+      const [devices, rooms] = await Promise.all([
+        this.homeService.getDevices(homeId),
         this.homeService.getRooms(homeId),
       ]);
-      if (!components.length) {
-        return `${basePrompt} Home components: none.`;
+      if (!devices.length) {
+        return `${basePrompt} Home devices: none.`;
       }
 
       const roomsById = new Map(rooms.map((room) => [room.id, room.name]));
 
-      const componentSummary = components
-        .map((component) => {
-          if (!component.roomId) {
-            return `${component.name} (id ${component.id}, type ${component.getType()}, room unknown)`;
+      const deviceSummary = devices
+        .map((device) => {
+          if (!device.roomId) {
+            return `${device.name} (id ${device.id}, type ${device.getType()}, room unknown)`;
           }
 
-          const roomName = roomsById.get(component.roomId) ?? "unknown";
-          return `${component.name} (id ${component.id}, type ${component.getType()}, room ${roomName} - ${component.roomId})`;
+          const roomName = roomsById.get(device.roomId) ?? "unknown";
+          return `${device.name} (id ${device.id}, type ${device.getType()}, room ${roomName} - ${device.roomId})`;
         })
         .join("; ");
 
-      return `${basePrompt} Home components: ${componentSummary}. When the user mentions a device by name, map it to the matching id.`;
+      return `${basePrompt} Home devices: ${deviceSummary}. When the user mentions a device by name, map it to the matching id.`;
     } catch {
-      return `${basePrompt} Home components: unavailable.`;
+      return `${basePrompt} Home devices: unavailable.`;
     }
   }
 }

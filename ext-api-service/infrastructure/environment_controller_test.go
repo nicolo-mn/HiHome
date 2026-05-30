@@ -36,13 +36,13 @@ func (s *stubEnvironmentProvider) FetchHistoricalForecast(lat, lon float64) (*do
 	return s.weeklyForecast, s.forecastErr
 }
 
-// error on post for /api/weather
+// error on post for /api/v1/environment/current
 func TestEnvironmentControllerServeHTTPMethodNotAllowed(t *testing.T) {
 	provider := &stubEnvironmentProvider{}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/weather", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/environment/current", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeHTTP(rec, req)
 
@@ -51,13 +51,13 @@ func TestEnvironmentControllerServeHTTPMethodNotAllowed(t *testing.T) {
 	}
 }
 
-// error on missing query params for /api/weather
+// error on missing query params for /api/v1/environment/current
 func TestEnvironmentControllerServeHTTPBadRequest(t *testing.T) {
 	provider := &stubEnvironmentProvider{}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/weather", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/environment/current", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeHTTP(rec, req)
 
@@ -66,13 +66,13 @@ func TestEnvironmentControllerServeHTTPBadRequest(t *testing.T) {
 	}
 }
 
-// error on weather provider failure for /api/weather
+// error on weather provider failure for /api/v1/environment/current
 func TestEnvironmentControllerServeHTTPBadGateway(t *testing.T) {
 	provider := &stubEnvironmentProvider{weatherErr: errors.New("weather failure")}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/weather?latitude=45&longitude=9", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/environment/current?latitude=45&longitude=9", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeHTTP(rec, req)
 
@@ -81,7 +81,7 @@ func TestEnvironmentControllerServeHTTPBadGateway(t *testing.T) {
 	}
 }
 
-// test successful response for /api/weather
+// test successful response for /api/v1/environment/current
 func TestEnvironmentControllerServeHTTPSuccess(t *testing.T) {
 	weather := domain.NewWeatherInfo(18.5, 2, 5.1, 200, 0.0)
 	air := domain.NewAirQualityInfo(30)
@@ -92,7 +92,7 @@ func TestEnvironmentControllerServeHTTPSuccess(t *testing.T) {
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/weather?latitude=45&longitude=9", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/environment/current?latitude=45&longitude=9", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeHTTP(rec, req)
 
@@ -118,13 +118,13 @@ func TestEnvironmentControllerServeHTTPSuccess(t *testing.T) {
 	}
 }
 
-// error on post for /api/forecast
+// error on post for /api/v1/environment/forecast
 func TestEnvironmentControllerServeForecastMethodNotAllowed(t *testing.T) {
 	provider := &stubEnvironmentProvider{}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/forecast", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/environment/forecast", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeForecast(rec, req)
 
@@ -133,13 +133,13 @@ func TestEnvironmentControllerServeForecastMethodNotAllowed(t *testing.T) {
 	}
 }
 
-// error on missing query params for /api/forecast
+// error on missing query params for /api/v1/environment/forecast
 func TestEnvironmentControllerServeForecastBadRequest(t *testing.T) {
 	provider := &stubEnvironmentProvider{}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/forecast", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/environment/forecast", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeForecast(rec, req)
 
@@ -148,13 +148,13 @@ func TestEnvironmentControllerServeForecastBadRequest(t *testing.T) {
 	}
 }
 
-// error on forecast provider failure for /api/forecast
+// error on forecast provider failure for /api/v1/environment/forecast
 func TestEnvironmentControllerServeForecastBadGateway(t *testing.T) {
 	provider := &stubEnvironmentProvider{forecastErr: errors.New("forecast failure")}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/forecast?latitude=45&longitude=9", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/environment/forecast?latitude=45&longitude=9", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeForecast(rec, req)
 
@@ -163,7 +163,7 @@ func TestEnvironmentControllerServeForecastBadGateway(t *testing.T) {
 	}
 }
 
-// error on invalid forecast length for /api/forecast
+// error on invalid forecast length for /api/v1/environment/forecast
 func TestEnvironmentControllerServeForecastInvalidLength(t *testing.T) {
 	aqi := make([]domain.HourlyAirQuality, 0, 24)
 	for h := 0; h < 24; h++ {
@@ -177,7 +177,7 @@ func TestEnvironmentControllerServeForecastInvalidLength(t *testing.T) {
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/forecast?latitude=45&longitude=9", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/environment/forecast?latitude=45&longitude=9", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeForecast(rec, req)
 
@@ -186,7 +186,7 @@ func TestEnvironmentControllerServeForecastInvalidLength(t *testing.T) {
 	}
 }
 
-// test successful response for /api/forecast
+// test successful response for /api/v1/environment/forecast
 func TestEnvironmentControllerServeForecastSuccess(t *testing.T) {
 	days := make([]domain.DailyForecast, 0, 7)
 	aqi := make([]domain.HourlyAirQuality, 0, 24)
@@ -201,7 +201,7 @@ func TestEnvironmentControllerServeForecastSuccess(t *testing.T) {
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/forecast?latitude=45&longitude=9", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/environment/forecast?latitude=45&longitude=9", nil)
 	rec := httptest.NewRecorder()
 	controller.ServeForecast(rec, req)
 

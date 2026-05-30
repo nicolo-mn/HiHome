@@ -17,8 +17,8 @@ export enum WeatherForecast {
 }
 
 export type ObservablesUpdatedDomainEvent = {
-  externalTemperature: number;
-  internalTemperature: number;
+  outdoorTemperature: number;
+  indoorTemperature: number;
   airQuality: number;
   windSpeed: number;
   weatherForecast: WeatherForecast;
@@ -137,16 +137,16 @@ abstract class BoundedNumericCondition extends AbstractCondition {
   }
 }
 
-export class ExternalTemperatureCondition extends BoundedNumericCondition {
+export class OutdoorTemperatureCondition extends BoundedNumericCondition {
   static readonly MIN_TEMP = 5;
   static readonly MAX_TEMP = 40;
 
   constructor(operator: NumericOperator) {
     super(
       operator,
-      ExternalTemperatureCondition.MIN_TEMP,
-      ExternalTemperatureCondition.MAX_TEMP,
-      "ExternalTemperatureCondition",
+      OutdoorTemperatureCondition.MIN_TEMP,
+      OutdoorTemperatureCondition.MAX_TEMP,
+      "OutdoorTemperatureCondition",
     );
   }
 
@@ -155,20 +155,20 @@ export class ExternalTemperatureCondition extends BoundedNumericCondition {
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
-    return this.assertInRangeAndEvaluate(update.externalTemperature);
+    return this.assertInRangeAndEvaluate(update.outdoorTemperature);
   }
 }
 
-export class InternalTemperatureCondition extends BoundedNumericCondition {
+export class IndoorTemperatureCondition extends BoundedNumericCondition {
   static readonly MIN_TEMP = 5;
   static readonly MAX_TEMP = 40;
 
   constructor(operator: NumericOperator) {
     super(
       operator,
-      InternalTemperatureCondition.MIN_TEMP,
-      InternalTemperatureCondition.MAX_TEMP,
-      "InternalTemperatureCondition",
+      IndoorTemperatureCondition.MIN_TEMP,
+      IndoorTemperatureCondition.MAX_TEMP,
+      "IndoorTemperatureCondition",
     );
   }
 
@@ -177,7 +177,7 @@ export class InternalTemperatureCondition extends BoundedNumericCondition {
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
-    return this.assertInRangeAndEvaluate(update.internalTemperature);
+    return this.assertInRangeAndEvaluate(update.indoorTemperature);
   }
 }
 

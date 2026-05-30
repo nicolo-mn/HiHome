@@ -1,61 +1,61 @@
 import {
-  ComponentTypes,
-  ComponentVisitor,
+  DeviceTypes,
+  DeviceVisitor,
   Fan,
   Light,
   SmartLock,
   Thermostat,
   Window,
 } from "../domain";
-import { ComponentSerialization } from "../application/dtos/ComponentDTO";
+import { DeviceSerialization } from "../application/dtos/DeviceDTO";
 
-export class ComponentStateSerializer implements ComponentVisitor<ComponentSerialization> {
-  visitLight(light: Light): ComponentSerialization {
+export class DeviceStateSerializer implements DeviceVisitor<DeviceSerialization> {
+  visitLight(light: Light): DeviceSerialization {
     return {
       id: light.id,
       name: light.name,
       roomId: light.roomId,
-      type: ComponentTypes.LIGHT,
+      type: DeviceTypes.LIGHT,
       isOn: light.isOn,
     };
   }
 
-  visitWindow(window: Window): ComponentSerialization {
+  visitWindow(window: Window): DeviceSerialization {
     return {
       id: window.id,
       name: window.name,
       roomId: window.roomId,
-      type: ComponentTypes.WINDOW,
+      type: DeviceTypes.WINDOW,
       isOpen: window.isOpen,
     };
   }
 
-  visitThermostat(thermostat: Thermostat): ComponentSerialization {
+  visitThermostat(thermostat: Thermostat): DeviceSerialization {
     return {
       id: thermostat.id,
       name: thermostat.name,
       roomId: thermostat.roomId,
-      type: ComponentTypes.THERMOSTAT,
+      type: DeviceTypes.THERMOSTAT,
       temperature: thermostat.temperature,
     };
   }
 
-  visitLock(lock: SmartLock): ComponentSerialization {
+  visitLock(lock: SmartLock): DeviceSerialization {
     return {
       id: lock.id,
       name: lock.name,
       roomId: lock.roomId,
-      type: ComponentTypes.LOCK,
+      type: DeviceTypes.LOCK,
       isLocked: lock.isLocked,
     };
   }
 
-  visitFan(fan: Fan): ComponentSerialization {
+  visitFan(fan: Fan): DeviceSerialization {
     return {
       id: fan.id,
       name: fan.name,
       roomId: fan.roomId,
-      type: ComponentTypes.FAN,
+      type: DeviceTypes.FAN,
       mode: fan.mode,
     };
   }

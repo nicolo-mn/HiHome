@@ -58,7 +58,7 @@ describe("RuleController", () => {
         observableId: "weather",
         operatorTarget: "Rain",
         actions: [
-          { componentType: "light", command: "turnOn", componentId: "comp-1" },
+          { deviceType: "light", command: "turnOn", deviceId: "comp-1" },
         ],
       };
 
@@ -74,9 +74,9 @@ describe("RuleController", () => {
           operatorTarget: "Rain",
           actions: [
             {
-              componentType: "light",
+              deviceType: "light",
               command: "turnOn",
-              componentId: "comp-1",
+              deviceId: "comp-1",
             },
           ],
         }),
@@ -88,11 +88,11 @@ describe("RuleController", () => {
     it("should add a numeric rule", async () => {
       req.body = {
         ruleName: "Temp Rule",
-        observableId: "external-thermometer",
+        observableId: "outdoor-thermometer",
         operator: "gt",
         operatorTarget: "25",
         actions: [
-          { componentType: "window", command: "open", componentId: "comp-2" },
+          { deviceType: "window", command: "open", deviceId: "comp-2" },
         ],
       };
 
@@ -104,14 +104,14 @@ describe("RuleController", () => {
         expect.objectContaining({
           homeId: "home-1",
           ruleName: "Temp Rule",
-          observableId: "external-thermometer",
+          observableId: "outdoor-thermometer",
           operator: "gt",
           operatorTarget: "25",
           actions: [
             {
-              componentType: "window",
+              deviceType: "window",
               command: "open",
-              componentId: "comp-2",
+              deviceId: "comp-2",
             },
           ],
         }),
@@ -122,14 +122,14 @@ describe("RuleController", () => {
     it("should add a thermostat rule", async () => {
       req.body = {
         ruleName: "Thermo Rule",
-        observableId: "internal-thermometer",
+        observableId: "indoor-thermometer",
         operator: "lt",
         operatorTarget: "20",
         actions: [
           {
-            componentType: "thermostat",
+            deviceType: "thermostat",
             command: "setTemperature",
-            componentId: "comp-3",
+            deviceId: "comp-3",
             targetTemp: "22",
           },
         ],
@@ -143,14 +143,14 @@ describe("RuleController", () => {
         expect.objectContaining({
           homeId: "home-1",
           ruleName: "Thermo Rule",
-          observableId: "internal-thermometer",
+          observableId: "indoor-thermometer",
           operator: "lt",
           operatorTarget: "20",
           actions: [
             {
-              componentType: "thermostat",
+              deviceType: "thermostat",
               command: "setTemperature",
-              componentId: "comp-3",
+              deviceId: "comp-3",
               targetTemp: "22",
             },
           ],

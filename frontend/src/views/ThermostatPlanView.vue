@@ -99,13 +99,13 @@ onUnmounted(() => {
     <ErrorBanner v-if="saveError" :error="saveError" />
 
     <div v-if="loading" class="flex justify-center py-16">
-      <div class="text-gray-400">Loading plan…</div>
+      <div class="text-white">Loading plan…</div>
     </div>
 
     <div v-else class="flex flex-col gap-4">
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div
-          class="flex items-center gap-3 text-gray-400 text-[15px] md:text-[17px]"
+          class="flex items-center gap-3 text-white text-[15px] md:text-[17px]"
         >
           <BaseIcon
             name="device_thermostat"
@@ -120,7 +120,7 @@ onUnmounted(() => {
           :class="[
             'h-12 px-6 rounded-[24px] font-semibold text-[15px] flex items-center justify-center gap-2 transition-colors',
             saving
-              ? 'bg-yellow-500/25 text-gray-400 cursor-not-allowed'
+              ? 'bg-yellow-500/25 text-white cursor-not-allowed'
               : 'bg-yellow-500 text-gray-900 hover:bg-yellow-400',
           ]"
           @click="save"
@@ -160,9 +160,7 @@ onUnmounted(() => {
                   <div class="w-full h-1 bg-white/30 absolute top-0"></div>
                 </div>
               </div>
-              <div
-                class="text-[11px] text-gray-400 mt-2 font-medium tabular-nums"
-              >
+              <div class="text-[11px] text-white mt-2 font-medium tabular-nums">
                 {{ String(i).padStart(2, "0") }}
               </div>
             </div>

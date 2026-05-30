@@ -1,6 +1,6 @@
 export type FanMode = "off" | "low" | "medium" | "high";
 
-export interface ComponentActionVisitor<T> {
+export interface DeviceActionVisitor<T> {
   visitLightTurnOnAction(action: LightTurnOnAction): T;
   visitLightTurnOffAction(action: LightTurnOffAction): T;
   visitWindowOpenAction(action: WindowOpenAction): T;
@@ -13,92 +13,92 @@ export interface ComponentActionVisitor<T> {
   visitFanSetModeAction(action: FanSetModeAction): T;
 }
 
-export interface ComponentAction {
+export interface DeviceAction {
   getHomeId(): string;
-  getComponentId(): string;
-  accept<T>(visitor: ComponentActionVisitor<T>): T;
+  getDeviceId(): string;
+  accept<T>(visitor: DeviceActionVisitor<T>): T;
 }
 
-export class LightTurnOnAction implements ComponentAction {
+export class LightTurnOnAction implements DeviceAction {
   constructor(
     private homeId: string,
-    private componentId: string,
+    private deviceId: string,
   ) {}
 
   getHomeId(): string {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitLightTurnOnAction(this);
   }
 }
 
-export class LightTurnOffAction implements ComponentAction {
+export class LightTurnOffAction implements DeviceAction {
   constructor(
     private homeId: string,
-    private componentId: string,
+    private deviceId: string,
   ) {}
 
   getHomeId(): string {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitLightTurnOffAction(this);
   }
 }
 
-export class WindowOpenAction implements ComponentAction {
+export class WindowOpenAction implements DeviceAction {
   constructor(
     private homeId: string,
-    private componentId: string,
+    private deviceId: string,
   ) {}
 
   getHomeId(): string {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitWindowOpenAction(this);
   }
 }
 
-export class WindowCloseAction implements ComponentAction {
+export class WindowCloseAction implements DeviceAction {
   constructor(
     private homeId: string,
-    private componentId: string,
+    private deviceId: string,
   ) {}
 
   getHomeId(): string {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitWindowCloseAction(this);
   }
 }
 
-export class ThermostatSetTemperatureAction implements ComponentAction {
+export class ThermostatSetTemperatureAction implements DeviceAction {
   constructor(
     private homeId: string,
-    public componentId: string,
+    public deviceId: string,
     public targetTemperature: number,
   ) {}
 
@@ -106,57 +106,57 @@ export class ThermostatSetTemperatureAction implements ComponentAction {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitThermostatSetTemperatureAction(this);
   }
 }
 
-export class LockLockAction implements ComponentAction {
+export class LockLockAction implements DeviceAction {
   constructor(
     private homeId: string,
-    private componentId: string,
+    private deviceId: string,
   ) {}
 
   getHomeId(): string {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitLockLockAction(this);
   }
 }
 
-export class LockUnlockAction implements ComponentAction {
+export class LockUnlockAction implements DeviceAction {
   constructor(
     private homeId: string,
-    private componentId: string,
+    private deviceId: string,
   ) {}
 
   getHomeId(): string {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitLockUnlockAction(this);
   }
 }
 
-export class FanSetModeAction implements ComponentAction {
+export class FanSetModeAction implements DeviceAction {
   constructor(
     private homeId: string,
-    public componentId: string,
+    public deviceId: string,
     public mode: FanMode,
   ) {}
 
@@ -164,11 +164,11 @@ export class FanSetModeAction implements ComponentAction {
     return this.homeId;
   }
 
-  getComponentId(): string {
-    return this.componentId;
+  getDeviceId(): string {
+    return this.deviceId;
   }
 
-  accept<T>(visitor: ComponentActionVisitor<T>): T {
+  accept<T>(visitor: DeviceActionVisitor<T>): T {
     return visitor.visitFanSetModeAction(this);
   }
 }

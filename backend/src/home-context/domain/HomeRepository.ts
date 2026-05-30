@@ -1,8 +1,8 @@
-import { Component, Home } from ".";
+import { Device, Home } from ".";
 
 export interface HomeRepository {
   getHome(id: string): Promise<Home | null>;
   getAllHomes(): Promise<Home[]>;
-  getComponentById(id: string): Promise<Component | null>;
+  getDeviceById(id: string): Promise<Device | null>;
   saveHome(home: Home): Promise<void>;
 }

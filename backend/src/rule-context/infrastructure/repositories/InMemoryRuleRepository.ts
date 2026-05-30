@@ -1,5 +1,5 @@
 import { ObservableCondition } from "../../domain/Observables";
-import { ComponentAction } from "../../domain/Actions";
+import { DeviceAction } from "../../domain/Actions";
 import { RuleRepository } from "../../application/repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
@@ -30,7 +30,7 @@ export class InMemoryRuleRepository implements RuleRepository {
     homeId: string,
     name: string,
     condition: ObservableCondition,
-    actions: ComponentAction[],
+    actions: DeviceAction[],
     order: number,
   ): Promise<Rule> {
     if (actions.length === 0)

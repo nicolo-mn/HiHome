@@ -1,28 +1,28 @@
 import { randomUUID } from "crypto";
 import {
-  Component,
+  Device,
   Light,
   Coordinates,
   Window,
   Thermostat,
   Home,
   HomeRepository,
-  ComponentTypes,
-  ComponentEvent,
-  ComponentEventActor,
+  DeviceTypes,
+  DeviceEvent,
+  DeviceEventActor,
   TemperatureState,
   SensorUpdatePort,
-  ExternalSensorsUpdate,
+  OutdoorSensorsUpdate,
   Room,
-  createComponent,
-  ComponentUpdatePort,
+  createDevice,
+  DeviceUpdatePort,
   SmartLock,
   Fan,
 } from "../../domain";
 import { SensorRegistry } from "../SensorRegistry";
-import { ExternalSensorsDataPort } from "../ports/ExternalSensorsDataPort";
+import { OutdoorSensorsDataPort } from "../ports/OutdoorSensorsDataPort";
 import { RuleServicePort } from "../ports/RuleServicePort";
-import { CreateComponentInput } from "../dtos/ComponentDTO";
+import { CreateDeviceInput } from "../dtos/DeviceDTO";
 import { ensureHomeExists, persistAndBroadcast } from "./ServiceHelpers";
 
 export class HomeService {
@@ -31,21 +31,21 @@ export class HomeService {
     private sensorRegistry: SensorRegistry,
     private sensorUpdatePort: SensorUpdatePort,
     private ruleServicePort: RuleServicePort,
-    private externalSensorsDataPort: ExternalSensorsDataPort,
-    private componentUpdatePort?: ComponentUpdatePort,
+    private outdoorSensorsDataPort: OutdoorSensorsDataPort,
+    private deviceUpdatePort?: DeviceUpdatePort,
   ) {}
 
-  async getComponents(homeId: string): Promise<Component[]> {
+  async getDevices(homeId: string): Promise<Device[]> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
-    return home.getAllComponents();
+    return home.getAllDevices();
   }
 
-  async getComponentsWithRoomNames(
+  async getDevicesWithRoomNames(
     homeId: string,
-  ): Promise<{ component: Component; roomName: string }[]> {
+  ): Promise<{ device: Device; roomName: string }[]> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
     return home.rooms.flatMap((room) =>
-      room.components.map((component) => ({ component, roomName: room.name })),
+      room.devices.map((device) => ({ device: device, roomName: room.name })),
     );
   }
 
@@ -54,91 +54,81 @@ export class HomeService {
     return home.rooms;
   }
 
-  async getComponent(componentId: string): Promise<Component | undefined> {
-    const component = await this.homeRepo.getComponentById(componentId);
-    if (!component) throw new Error("Component not found");
-    return component;
+  async getDevice(deviceId: string): Promise<Device | undefined> {
+    const device = await this.homeRepo.getDeviceById(deviceId);
+    if (!device) throw new Error("Device not found");
+    return device;
   }
 
-  async getComponentEvents(homeId: string): Promise<ComponentEvent[]> {
+  async getDeviceEvents(homeId: string): Promise<DeviceEvent[]> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
     return [...home.eventLog].sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
   }
 
-  async addComponent(
-    homeId: string,
-    input: CreateComponentInput,
-  ): Promise<Component> {
+  async addDevice(homeId: string, input: CreateDeviceInput): Promise<Device> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
     const room = home.rooms.find((r) => r.id === input.roomId);
     if (!room) throw new Error("Room not found");
 
-    const component = createComponent(randomUUID(), input);
-    room.components.push(component);
+    const device = createDevice(randomUUID(), input);
+    room.devices.push(device);
     await this.homeRepo.saveHome(home);
-    return component;
+    return device;
   }
 
   async executeAction(
     homeId: string,
-    componentId: string,
+    deviceId: string,
     action: string,
     param?: number | string,
-    actor?: ComponentEventActor,
-  ): Promise<{ component: Component; roomName: string }> {
+    actor?: DeviceEventActor,
+  ): Promise<{ device: Device; roomName: string }> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
 
-    const component = home.getComponentById(componentId);
-    if (!component) {
+    const device = home.getDeviceById(deviceId);
+    if (!device) {
       console.error(
-        `Failed to execute action ${action}: Component ${componentId} not found in home ${homeId}`,
+        `Failed to execute action ${action}: Device ${deviceId} not found in home ${homeId}`,
       );
-      throw new Error("Component not found");
+      throw new Error("Device not found");
     }
 
-    if (typeof (component as any)[action] !== "function") {
+    if (typeof (device as any)[action] !== "function") {
       console.error(
-        `Failed to execute action ${action}: Action not supported on component ${componentId}`,
+        `Failed to execute action ${action}: Action not supported on device ${deviceId}`,
       );
       throw new Error("Action not supported");
     }
 
     console.log(
-      `Executing component action ${action} for home ${homeId} on component ${componentId}`,
+      `Executing device action ${action} for home ${homeId} on device ${deviceId}`,
     );
     await persistAndBroadcast(
       this.homeRepo,
       home,
-      component,
-      this.componentUpdatePort,
+      device,
+      this.deviceUpdatePort,
     );
-    const event = (component as any)[action](param) as ComponentEvent;
+    const event = (device as any)[action](param) as DeviceEvent;
     if (event) {
-      home.addComponentEvent({ ...event, actor });
+      home.addDeviceEvent({ ...event, actor });
     }
 
     await this.homeRepo.saveHome(home);
-    const room = home.rooms.find((r) => r.id === component.roomId);
-    return { component, roomName: room?.name ?? "" };
+    const room = home.rooms.find((r) => r.id === device.roomId);
+    return { device, roomName: room?.name ?? "" };
   }
 
-  async getComponentTypes(): Promise<string[]> {
-    return Object.values(ComponentTypes); // The component types come from an enum
-  }
-
-  async getComponentsByType(
-    homeId: string,
-    type: string,
-  ): Promise<Component[]> {
-    const components = await this.getComponents(homeId);
-    return components.filter((c) => {
-      if (type === ComponentTypes.LIGHT) return c instanceof Light;
-      if (type === ComponentTypes.WINDOW) return c instanceof Window;
-      if (type === ComponentTypes.THERMOSTAT) return c instanceof Thermostat;
-      if (type === ComponentTypes.LOCK) return c instanceof SmartLock;
-      if (type === ComponentTypes.FAN) return c instanceof Fan;
+  async getDevicesByType(homeId: string, type: string): Promise<Device[]> {
+    const devices = await this.getDevices(homeId);
+    return devices.filter((c) => {
+      if (type === DeviceTypes.LIGHT) return c instanceof Light;
+      if (type === DeviceTypes.WINDOW) return c instanceof Window;
+      if (type === DeviceTypes.THERMOSTAT) return c instanceof Thermostat;
+      if (type === DeviceTypes.LOCK) return c instanceof SmartLock;
+      if (type === DeviceTypes.FAN) return c instanceof Fan;
       return false;
     });
   }
@@ -195,74 +185,69 @@ export class HomeService {
           return;
         }
 
-        await this.updateInternalTemperature(home.id, { temperature });
+        await this.updateIndoorTemperature(home.id, { temperature });
       }),
     );
   }
 
-  async sendExternalSensorsUpdate(homeId: string): Promise<void> {
+  async sendOutdoorSensorsUpdate(homeId: string): Promise<void> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
 
-    const resolvedUpdate =
-      this.sensorRegistry.getState(homeId)?.externalSensors;
+    const resolvedUpdate = this.sensorRegistry.getState(homeId)?.outdoorSensors;
     if (!resolvedUpdate) return;
 
-    this.sendExternalSensorsUpdateToClients(home, resolvedUpdate);
+    this.sendOutdoorSensorsUpdateToClients(home, resolvedUpdate);
   }
 
-  async sendInternalSensorsUpdate(homeId: string): Promise<void> {
+  async sendIndoorSensorsUpdate(homeId: string): Promise<void> {
     const home = await ensureHomeExists(this.homeRepo, homeId);
 
     const resolvedTemperature =
-      this.sensorRegistry.getState(homeId)?.internalTemperature;
+      this.sensorRegistry.getState(homeId)?.indoorTemperature;
     if (resolvedTemperature === undefined) return;
 
-    this.sendInternalSensorsUpdateToClients(home, resolvedTemperature);
+    this.sendIndoorSensorsUpdateToClients(home, resolvedTemperature);
   }
 
-  async pollAllHomesExternalSensorsData(): Promise<void> {
+  async pollAllHomesOutdoorSensorsData(): Promise<void> {
     const homes = await this.homeRepo.getAllHomes();
 
     await Promise.all(
       homes.map(async (home) => {
         try {
           const extSensorsData =
-            await this.externalSensorsDataPort.getExternalSensorsData(home);
+            await this.outdoorSensorsDataPort.getOutdoorSensorsData(home);
 
           console.log(
-            `External sensors update received for home ${home.id}: temp=${extSensorsData.externalTemperature.temperature} AQI=${extSensorsData.airQuality.AQI}`,
+            `Outdoor sensors update received for home ${home.id}: temp=${extSensorsData.outdoorTemperature.temperature} AQI=${extSensorsData.airQuality.AQI}`,
           );
 
-          this.sensorRegistry.setExternalSensorsUpdate(home.id, extSensorsData);
+          this.sensorRegistry.setOutdoorSensorsUpdate(home.id, extSensorsData);
 
-          await this.sendExternalSensorsUpdate(home.id);
+          await this.sendOutdoorSensorsUpdate(home.id);
 
-          const internalTemperatureValue = this.sensorRegistry.getState(
+          const indoorTemperatureValue = this.sensorRegistry.getState(
             home.id,
-          )?.internalTemperature;
-          if (internalTemperatureValue === undefined) {
+          )?.indoorTemperature;
+          if (indoorTemperatureValue === undefined) {
             console.warn(
-              `No internal temperature found for home ${home.id}, skipping rules evaluation`,
+              `No indoor temperature found for home ${home.id}, skipping rules evaluation`,
             );
             return;
           }
 
-          const internalTemperature: TemperatureState =
-            internalTemperatureValue;
+          const indoorTemperature: TemperatureState = indoorTemperatureValue;
 
-          this.sendInternalSensorsUpdateToClients(
-            home,
-            internalTemperatureValue,
-          );
+          this.sendIndoorSensorsUpdateToClients(home, indoorTemperatureValue);
 
           this.ruleServicePort.evaluateRules(
             home.id,
             extSensorsData,
-            internalTemperature,
+            indoorTemperature,
           );
         } catch (error) {
           console.error(
-            `Failed to poll external sensors data for home ${home.id}:`,
+            `Failed to poll outdoor sensors data for home ${home.id}:`,
             error,
           );
         }
@@ -270,34 +255,34 @@ export class HomeService {
     );
   }
 
-  async updateInternalTemperature(
+  async updateIndoorTemperature(
     homeId: string,
     update: TemperatureState,
   ): Promise<void> {
-    this.sensorRegistry.setInternalTemperature(homeId, update);
+    this.sensorRegistry.setIndoorTemperature(homeId, update);
     console.log(
-      `Internal temperature update received for home ${homeId}: temp=${update.temperature}`,
+      `Indoor temperature update received for home ${homeId}: temp=${update.temperature}`,
     );
-    await this.sendInternalSensorsUpdate(homeId);
+    await this.sendIndoorSensorsUpdate(homeId);
   }
 
-  private sendExternalSensorsUpdateToClients(
+  private sendOutdoorSensorsUpdateToClients(
     home: Home,
-    update: ExternalSensorsUpdate,
+    update: OutdoorSensorsUpdate,
   ): void {
-    this.sensorUpdatePort.sendExternalTemperatureUpdate(
+    this.sensorUpdatePort.sendOutdoorTemperatureUpdate(
       home,
-      update.externalTemperature,
+      update.outdoorTemperature,
     );
     this.sensorUpdatePort.sendAirQualityUpdate(home, update.airQuality);
     this.sensorUpdatePort.sendWindUpdate(home, update.wind);
     this.sensorUpdatePort.sendWeatherUpdate(home, update.weather);
   }
 
-  private sendInternalSensorsUpdateToClients(
+  private sendIndoorSensorsUpdateToClients(
     home: Home,
     update: TemperatureState,
   ): void {
-    this.sensorUpdatePort.sendInternalTemperatureUpdate(home, update);
+    this.sensorUpdatePort.sendIndoorTemperatureUpdate(home, update);
   }
 }

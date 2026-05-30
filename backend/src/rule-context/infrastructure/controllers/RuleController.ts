@@ -6,15 +6,15 @@ import {
 import {
   NumericGreaterOperator,
   NumericLowerOperator,
-  ExternalTemperatureCondition,
-  InternalTemperatureCondition,
+  OutdoorTemperatureCondition,
+  IndoorTemperatureCondition,
   WindSpeedCondition,
   AirQualityCondition,
   WeatherCondition,
   ObservableCondition,
 } from "../../domain/Observables";
 import {
-  ComponentAction,
+  DeviceAction,
   FanMode,
   FanSetModeAction,
   LightTurnOnAction,
@@ -30,7 +30,7 @@ import { Rule } from "../../domain/Rule";
 type ConditionDto = { type: string; operator: string; target: string | number };
 type ActionDto = {
   type: string;
-  componentId: string;
+  deviceId: string;
   targetTemperature?: number;
   mode?: FanMode;
 };
@@ -52,8 +52,8 @@ function conditionToDto(condition: ObservableCondition): ConditionDto {
   }
 
   const bounded = condition as
-    | ExternalTemperatureCondition
-    | InternalTemperatureCondition
+    | OutdoorTemperatureCondition
+    | IndoorTemperatureCondition
     | AirQualityCondition
     | WindSpeedCondition;
   const op = bounded.operator;
@@ -63,10 +63,10 @@ function conditionToDto(condition: ObservableCondition): ConditionDto {
   else operatorStr = "eq";
 
   let type: string;
-  if (condition instanceof ExternalTemperatureCondition)
-    type = "external-thermometer";
-  else if (condition instanceof InternalTemperatureCondition)
-    type = "internal-thermometer";
+  if (condition instanceof OutdoorTemperatureCondition)
+    type = "outdoor-thermometer";
+  else if (condition instanceof IndoorTemperatureCondition)
+    type = "indoor-thermometer";
   else if (condition instanceof AirQualityCondition) type = "air-quality";
   else if (condition instanceof WindSpeedCondition) type = "wind-speed";
   else throw new Error("Unsupported condition type");
@@ -74,30 +74,30 @@ function conditionToDto(condition: ObservableCondition): ConditionDto {
   return { type, operator: operatorStr, target: op.getBoundaryValue() };
 }
 
-function actionToDto(action: ComponentAction): ActionDto {
+function actionToDto(action: DeviceAction): ActionDto {
   if (action instanceof LightTurnOnAction)
-    return { type: "light-turn-on", componentId: action.getComponentId() };
+    return { type: "light-turn-on", deviceId: action.getDeviceId() };
   if (action instanceof LightTurnOffAction)
-    return { type: "light-turn-off", componentId: action.getComponentId() };
+    return { type: "light-turn-off", deviceId: action.getDeviceId() };
   if (action instanceof WindowOpenAction)
-    return { type: "window-open", componentId: action.getComponentId() };
+    return { type: "window-open", deviceId: action.getDeviceId() };
   if (action instanceof WindowCloseAction)
-    return { type: "window-close", componentId: action.getComponentId() };
+    return { type: "window-close", deviceId: action.getDeviceId() };
   if (action instanceof ThermostatSetTemperatureAction) {
     return {
       type: "thermostat-set-temperature",
-      componentId: action.getComponentId(),
+      deviceId: action.getDeviceId(),
       targetTemperature: action.targetTemperature,
     };
   }
   if (action instanceof LockLockAction)
-    return { type: "lock-lock", componentId: action.getComponentId() };
+    return { type: "lock-lock", deviceId: action.getDeviceId() };
   if (action instanceof LockUnlockAction)
-    return { type: "lock-unlock", componentId: action.getComponentId() };
+    return { type: "lock-unlock", deviceId: action.getDeviceId() };
   if (action instanceof FanSetModeAction) {
     return {
       type: "fan-set-mode",
-      componentId: action.getComponentId(),
+      deviceId: action.getDeviceId(),
       mode: action.mode,
     };
   }

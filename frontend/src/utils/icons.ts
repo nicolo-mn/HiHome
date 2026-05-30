@@ -1,5 +1,5 @@
 // Material Symbols-style icon paths. ViewBox 24×24, single-path each.
-// Used by the <BaseIcon> Vue component. Kept compact so the bundle stays small.
+// Used by the <BaseIcon> Vue device. Kept compact so the bundle stays small.
 
 import type { IconName } from "@/types/ui";
 

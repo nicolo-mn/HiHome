@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { rulesApi, componentsApi } from "@/api";
+import { rulesApi, devicesApi } from "@/api";
 import type { RuleDto } from "@/api/rules";
-import type { HomeComponent } from "@/api/components";
+import type { HomeDevice } from "@/api/devices";
 import { useAuthStore } from "@/stores/auth";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import AppHeader from "@/components/AppHeader.vue";
@@ -15,7 +15,7 @@ const authStore = useAuthStore();
 const homeId = computed(() => authStore.homeId);
 
 const rules = ref<RuleDto[]>([]);
-const components = ref<HomeComponent[]>([]);
+const devices = ref<HomeDevice[]>([]);
 
 const sortedRules = computed(() =>
   [...rules.value].sort((a, b) => a.order - b.order),
@@ -28,12 +28,12 @@ const {
 } = useAsyncAction(
   async () => {
     if (!homeId.value) return;
-    const [rulesData, componentsData] = await Promise.all([
+    const [rulesData, devicesData] = await Promise.all([
       rulesApi.getRules(homeId.value),
-      componentsApi.getComponents(homeId.value),
+      devicesApi.getDevices(homeId.value),
     ]);
     rules.value = rulesData;
-    components.value = componentsData;
+    devices.value = devicesData;
   },
   { action: "load your rules" },
 );
@@ -115,11 +115,11 @@ onMounted(load);
       action="reorder your rules"
     />
 
-    <p v-if="isLoading && rules.length === 0" class="text-gray-400 text-sm">
+    <p v-if="isLoading && rules.length === 0" class="text-white text-sm">
       Loading rules…
     </p>
 
-    <p v-else-if="rules.length === 0" class="text-gray-400 text-sm">
+    <p v-else-if="rules.length === 0" class="text-white text-sm">
       No rules configured yet.
     </p>
 
@@ -128,7 +128,7 @@ onMounted(load);
         v-for="(rule, index) in sortedRules"
         :key="rule.id"
         :rule="rule"
-        :components="components"
+        :devices="devices"
         :can-move-up="index > 0"
         :can-move-down="index < sortedRules.length - 1"
         @delete="remove(rule.id)"

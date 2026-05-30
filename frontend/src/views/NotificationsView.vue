@@ -33,7 +33,7 @@ const TYPE_META: Record<
     accent: "yellow",
     kind: "rule",
   },
-  ComponentAction: {
+  DeviceAction: {
     label: "Device action",
     icon: "devices",
     accent: "sky",
@@ -149,7 +149,7 @@ onMounted(() => store.fetchAll());
             'text-[13px] px-2 py-0.5 rounded-xl font-semibold',
             filter === f.id
               ? 'bg-gray-900/15 text-gray-900'
-              : 'bg-white/[0.08] text-gray-400',
+              : 'bg-white/[0.08] text-white',
           ]"
         >
           {{ f.count() }}
@@ -167,20 +167,20 @@ onMounted(() => store.fetchAll());
 
     <p
       v-if="isLoading && notifications.length === 0"
-      class="text-gray-400 text-sm"
+      class="text-white text-sm"
     >
       Loading notifications…
     </p>
 
     <p
       v-if="!isLoading && !error && notifications.length === 0"
-      class="text-gray-400 text-sm"
+      class="text-white text-sm"
     >
       No notifications yet.
     </p>
 
     <section v-if="todayItems.length">
-      <div class="font-medium text-base text-gray-400 mb-3">Today</div>
+      <div class="font-medium text-base text-white mb-3">Today</div>
       <div class="flex flex-col gap-2.5">
         <button
           v-for="n in todayItems"
@@ -212,7 +212,7 @@ onMounted(() => store.fetchAll());
                 {{ metaFor(n.type).label }}
               </span>
               <span class="text-[13px] text-gray-500">·</span>
-              <span class="text-[13px] text-gray-400">
+              <span class="text-[13px] text-white">
                 {{ formatTime(n.createdAt) }}
               </span>
             </div>
@@ -235,7 +235,7 @@ onMounted(() => store.fetchAll());
     </section>
 
     <section v-if="earlierItems.length">
-      <div class="font-medium text-base text-gray-400 mb-3">Earlier</div>
+      <div class="font-medium text-base text-white mb-3">Earlier</div>
       <div class="flex flex-col gap-2.5">
         <button
           v-for="n in earlierItems"
@@ -266,7 +266,7 @@ onMounted(() => store.fetchAll());
                 {{ metaFor(n.type).label }}
               </span>
               <span class="text-[13px] text-gray-500">·</span>
-              <span class="text-[13px] text-gray-400">
+              <span class="text-[13px] text-white">
                 {{ formatTime(n.createdAt) }}
               </span>
             </div>

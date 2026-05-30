@@ -7,7 +7,7 @@ describe("Notification Context Integration Tests", () => {
   let token: string;
   let port: number;
   beforeAll(async () => {
-    const loginRes = await request(app).post("/api/login").send({
+    const loginRes = await request(app).post("/api/v1/login").send({
       username: "mockuser",
       homeId: "1",
       password: "mockpassword",
@@ -40,7 +40,7 @@ describe("Notification Context Integration Tests", () => {
 
       socket.once("connect", () => {
         request(app)
-          .post("/api/home/1/components/light-1/turnOn")
+          .post("/api/v1/home/1/devices/light-1/turnOn")
           .set("Authorization", `Bearer ${token}`)
           .then((res) => {
             if (res.status !== 200) {
@@ -63,7 +63,7 @@ describe("Notification Context Integration Tests", () => {
       socket.once("notification", (data) => {
         try {
           expect(data.homeId).toBe("1");
-          expect(data.type).toBe("ComponentAction");
+          expect(data.type).toBe("DeviceAction");
           expect(typeof data.message).toBe("string");
           clearTimeout(timeout);
           socket.close();

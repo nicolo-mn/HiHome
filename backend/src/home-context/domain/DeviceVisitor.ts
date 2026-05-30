@@ -1,6 +1,6 @@
-import { Fan, Light, SmartLock, Thermostat, Window } from "./Component";
+import { Fan, Light, SmartLock, Thermostat, Window } from "./Device";
 
-export interface ComponentVisitor<T> {
+export interface DeviceVisitor<T> {
   visitLight(light: Light): T;
   visitWindow(window: Window): T;
   visitThermostat(thermostat: Thermostat): T;

@@ -1,64 +1,64 @@
 import { apiFetch } from "./client";
 
-export type ComponentEventActor = {
+export type DeviceEventActor = {
   username: string;
   role: string;
 };
 
-export type ComponentEventDTOBase = {
+export type DeviceEventDTOBase = {
   id: string;
-  componentId: string;
-  componentName?: string;
-  componentType: string;
-  actor?: ComponentEventActor;
+  deviceId: string;
+  deviceName?: string;
+  deviceType: string;
+  actor?: DeviceEventActor;
   createdAt: string;
 };
 
-export type LightTurnedOnEventDTO = ComponentEventDTOBase & {
+export type LightTurnedOnEventDTO = DeviceEventDTOBase & {
   eventType: "LightTurnedOn";
-  componentType: "light";
+  deviceType: "light";
 };
 
-export type LightTurnedOffEventDTO = ComponentEventDTOBase & {
+export type LightTurnedOffEventDTO = DeviceEventDTOBase & {
   eventType: "LightTurnedOff";
-  componentType: "light";
+  deviceType: "light";
 };
 
-export type WindowOpenedEventDTO = ComponentEventDTOBase & {
+export type WindowOpenedEventDTO = DeviceEventDTOBase & {
   eventType: "WindowOpened";
-  componentType: "window";
+  deviceType: "window";
 };
 
-export type WindowClosedEventDTO = ComponentEventDTOBase & {
+export type WindowClosedEventDTO = DeviceEventDTOBase & {
   eventType: "WindowClosed";
-  componentType: "window";
+  deviceType: "window";
 };
 
-export type ThermostatSetEventDTO = ComponentEventDTOBase & {
+export type ThermostatSetEventDTO = DeviceEventDTOBase & {
   eventType: "ThermostatSet";
-  componentType: "thermostat";
+  deviceType: "thermostat";
   targetTemperature: number;
 };
 
-export type LockLockedEventDTO = ComponentEventDTOBase & {
+export type LockLockedEventDTO = DeviceEventDTOBase & {
   eventType: "LockLocked";
-  componentType: "lock";
+  deviceType: "lock";
 };
 
-export type LockUnlockedEventDTO = ComponentEventDTOBase & {
+export type LockUnlockedEventDTO = DeviceEventDTOBase & {
   eventType: "LockUnlocked";
-  componentType: "lock";
+  deviceType: "lock";
 };
 
 export type FanMode = "off" | "low" | "medium" | "high";
 
-export type FanModeSetEventDTO = ComponentEventDTOBase & {
+export type FanModeSetEventDTO = DeviceEventDTOBase & {
   eventType: "FanModeSet";
-  componentType: "fan";
+  deviceType: "fan";
   mode: FanMode;
 };
 
-export type ComponentEventDTO =
+export type DeviceEventDTO =
   | LightTurnedOnEventDTO
   | LightTurnedOffEventDTO
   | WindowOpenedEventDTO
@@ -68,11 +68,11 @@ export type ComponentEventDTO =
   | LockUnlockedEventDTO
   | FanModeSetEventDTO;
 
-export async function getComponentEvents(
+export async function getDeviceEvents(
   homeId: string,
-): Promise<ComponentEventDTO[]> {
-  const data = await apiFetch<{ events: ComponentEventDTO[] }>(
-    `/api/home/${encodeURIComponent(homeId)}/components/events`,
+): Promise<DeviceEventDTO[]> {
+  const data = await apiFetch<{ events: DeviceEventDTO[] }>(
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices/events`,
   );
   return data.events;
 }

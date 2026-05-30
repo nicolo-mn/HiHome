@@ -10,7 +10,7 @@ import { authMiddleware } from "./home-context/infrastructure/middlewares/Routes
 import { InMemoryHomeRepository } from "./home-context/infrastructure/repositories/InMemoryHomeRepository";
 import { MongoHomeRepository } from "./home-context/infrastructure/repositories/MongoHomeRepository";
 import { SocketIOSensorUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOSensorUpdateAdapter";
-import { SocketIOComponentUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIOComponentUpdateAdapter";
+import { SocketIODeviceUpdateAdapter } from "./home-context/infrastructure/adapters/SocketIODeviceUpdateAdapter";
 import { HomeService } from "./home-context/application/services/HomeService";
 import { ActionService } from "./home-context/application/services/ActionService";
 import { UsageService } from "./home-context/application/services/UsageService";
@@ -42,7 +42,7 @@ import { AsyncBus } from "./rule-context/infrastructure/AsyncBus";
 import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/adapters/ActionExecutionAdapter";
 import { NotificationContextAdapter as RuleNotificationContextAdapter } from "./rule-context/infrastructure/adapters/NotificationContextAdapter";
-import { HomeServiceComponentNameResolver } from "./rule-context/infrastructure/adapters/HomeServiceComponentNameResolver";
+import { HomeServiceDeviceNameResolver } from "./rule-context/infrastructure/adapters/HomeServiceDeviceNameResolver";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/repositories/InMemoryHistoricalWeatherRepository";
 import { seedDatabase } from "./bootstrap/seedDatabase";
@@ -89,8 +89,8 @@ const DEEPSEEK_API_BASE_URL =
 const EXT_API_BASE_URL =
   process.env.EXT_API_BASE_URL || "http://ext_api_service:8080";
 const CHAT_MAX_HISTORY = Number(process.env.CHAT_MAX_HISTORY || 30);
-const EXTERNAL_SENSORS_POLL_INTERVAL_MS = Number(
-  process.env.EXTERNAL_SENSORS_POLL_INTERVAL_MS || 200000,
+const OUTDOOR_SENSORS_POLL_INTERVAL_MS = Number(
+  process.env.OUTDOOR_SENSORS_POLL_INTERVAL_MS || 200000,
 );
 const HOUR_IN_MS = 60 * 60 * 1000;
 
@@ -99,13 +99,13 @@ const sensorUpdatePort = new SocketIOSensorUpdateAdapter(
   io,
   homeNotificationPort,
 );
-const componentUpdatePort = new SocketIOComponentUpdateAdapter(io);
+const deviceUpdatePort = new SocketIODeviceUpdateAdapter(io);
 const eventEmitter = new EventEmitter();
 const ruleServicePort = new AsyncBusRuleServiceAdapter(
   eventEmitter,
   "observables-updated",
 );
-const externalSensorsDataPort = new ExtApiServiceDataAdapter(EXT_API_BASE_URL);
+const outdoorSensorsDataPort = new ExtApiServiceDataAdapter(EXT_API_BASE_URL);
 const sensorRegistry = new InMemorySensorRegistry();
 const historicalWeatherRepo = new InMemoryHistoricalWeatherRepository();
 const homeRepo =
@@ -117,8 +117,8 @@ const homeService = new HomeService(
   sensorRegistry,
   sensorUpdatePort,
   ruleServicePort,
-  externalSensorsDataPort,
-  componentUpdatePort,
+  outdoorSensorsDataPort,
+  deviceUpdatePort,
 );
 export const homeController = new HomeController(
   homeService,
@@ -133,23 +133,23 @@ const ruleRepo =
   process.env.NODE_ENV === "test"
     ? new InMemoryRuleRepository()
     : new MongoRuleRepository();
-const actionService = new ActionService(homeRepo, componentUpdatePort);
+const actionService = new ActionService(homeRepo, deviceUpdatePort);
 const actionExecutor = new ActionExecutionAdapter(actionService);
 const ruleNotificationAdapter = new RuleNotificationContextAdapter(
   notificationContext.notificationPort,
 );
-const componentNameResolver = new HomeServiceComponentNameResolver(homeService);
+const deviceNameResolver = new HomeServiceDeviceNameResolver(homeService);
 const ruleService = new RuleService(
   ruleRepo,
   actionExecutor,
   ruleNotificationAdapter,
-  componentNameResolver,
+  deviceNameResolver,
 );
 export const ruleController = new RuleController(ruleService);
 const ruleRouter = new RuleRouter(ruleController);
 const ruleBus = new AsyncBus(eventEmitter, "observables-updated", ruleService);
 
-const forecastPort = externalSensorsDataPort;
+const forecastPort = outdoorSensorsDataPort;
 const chatCompletionPort = new DeepSeekChatCompletionAdapter(
   {
     apiKey: DEEPSEEK_API_KEY,
@@ -172,21 +172,21 @@ app.use(cors());
 app.use(express.json());
 
 // --- Non authenticated routes ---
-app.post("/api/login", (req, res) => authController.login(req, res));
-app.get("/api/health", (req: Request, res: Response) => {
+app.post("/api/v1/login", (req, res) => authController.login(req, res));
+app.get("/api/v1/health", (req: Request, res: Response) => {
   res.json({ status: "ok", db: mongoose.connection.readyState });
 });
-app.post("/api/home/:id/sensors/internal-temperature", (req, res) => {
-  homeController.updateInternalTemperature(req, res);
+app.post("/api/v1/home/:id/sensors/indoor-temperature", (req, res) => {
+  homeController.updateIndoorTemperature(req, res);
 });
 
 // --- Authenticated routes ---
 app.use(authMiddleware);
-app.use("/api/home", homeRouter.router);
-app.use("/api/home", ruleRouter.router);
-app.use("/api/home", notificationRouter.router);
-app.use("/api/home", preferencesRouter.router);
-app.use("/api/home", userRouter.router);
+app.use("/api/v1/home", homeRouter.router);
+app.use("/api/v1/home", ruleRouter.router);
+app.use("/api/v1/home", notificationRouter.router);
+app.use("/api/v1/home", preferencesRouter.router);
+app.use("/api/v1/home", userRouter.router);
 
 // --- Socket.IO ---
 io.use(wsAuthMiddleware);
@@ -204,15 +204,15 @@ io.on("connection", (socket) => {
   if (typeof username === "string" && username.length > 0) {
     socket.join(`user-${username}`);
   }
-  void homeService.sendExternalSensorsUpdate(homeId).catch((error) => {
+  void homeService.sendOutdoorSensorsUpdate(homeId).catch((error) => {
     console.error(
-      `Failed to send external sensors snapshot for home ${homeId}:`,
+      `Failed to send outdoor sensors snapshot for home ${homeId}:`,
       error,
     );
   });
-  void homeService.sendInternalSensorsUpdate(homeId).catch((error) => {
+  void homeService.sendIndoorSensorsUpdate(homeId).catch((error) => {
     console.error(
-      `Failed to send internal sensors snapshot for home ${homeId}:`,
+      `Failed to send indoor sensors snapshot for home ${homeId}:`,
       error,
     );
   });
@@ -271,30 +271,6 @@ io.on("connection", (socket) => {
   );
 });
 
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Protected: Hello from MEVN backend!" });
-});
-
-app.get("/api/message", async (req: Request, res: Response) => {
-  try {
-    const extApiRes = await fetch("http://ext-api-service:8080/api/mock");
-    if (extApiRes.ok) {
-      const data = await extApiRes.json();
-      res.json({
-        text: `Success: Backend received "${data.message}" from external service.`,
-      });
-    } else {
-      res.json({
-        text:
-          "Error: Call to external service failed with status " +
-          extApiRes.status,
-      });
-    }
-  } catch {
-    res.json({ text: "Error: Could not reach external service." });
-  }
-});
-
 // --- Scheduling helpers (defined here, called only inside bootstrap) ---
 const runUpdate = () => {
   void homeService.applyHourlyTemperaturePlan().catch((error) => {
@@ -308,7 +284,7 @@ const pollHistoricalWeatherData = async () => {
   await Promise.all(
     homes.map(async (home) => {
       try {
-        const summary = await externalSensorsDataPort.getHistoricalSummary(
+        const summary = await outdoorSensorsDataPort.getHistoricalSummary(
           home.coordinates,
         );
         if (!summary) return;
@@ -341,7 +317,7 @@ export async function bootstrap() {
     await mongoose.connect(MONGO_URI);
     await seedDatabase(homeRepo);
 
-    await homeService.pollAllHomesExternalSensorsData();
+    await homeService.pollAllHomesOutdoorSensorsData();
     await pollHistoricalWeatherData();
     await scheduleHourlyPlanUpdates();
     setInterval(() => {
@@ -349,11 +325,11 @@ export async function bootstrap() {
     }, HOUR_IN_MS);
     setInterval(async () => {
       try {
-        await homeService.pollAllHomesExternalSensorsData();
+        await homeService.pollAllHomesOutdoorSensorsData();
       } catch (error) {
-        console.error("Error polling external sensors data:", error);
+        console.error("Error polling outdoor sensors data:", error);
       }
-    }, EXTERNAL_SENSORS_POLL_INTERVAL_MS);
+    }, OUTDOOR_SENSORS_POLL_INTERVAL_MS);
 
     server.listen(PORT, () => {
       console.log(`Backend is running on http://localhost:${PORT}`);

@@ -32,19 +32,17 @@ defineEmits<{ (e: "open"): void }>();
       <BaseIcon :name="icon" :size="22" />
     </div>
     <div class="flex flex-col flex-1 min-w-0">
-      <span
-        class="text-[12px] font-medium uppercase tracking-wider text-gray-400"
-      >
+      <span class="text-[12px] font-medium uppercase tracking-wider text-white">
         {{ prefix }}
       </span>
       <span
         class="text-[18px] md:text-[19px] font-semibold text-gray-200 flex items-baseline gap-2 truncate"
       >
         {{ value }}
-        <span v-if="suffix" class="font-mono text-[16px] text-gray-400">
+        <span v-if="suffix" class="font-mono text-[16px] text-white">
           {{ suffix }}
         </span>
-        <span v-if="sub" class="text-sm text-gray-400 font-normal">
+        <span v-if="sub" class="text-sm text-white font-normal">
           · {{ sub }}
         </span>
       </span>

@@ -2,11 +2,11 @@
 import BaseIcon from "@/components/BaseIcon.vue";
 import { ACCENT } from "@/utils/accents";
 import type { RuleDto } from "@/api/rules";
-import type { HomeComponent } from "@/api/components";
+import type { HomeDevice } from "@/api/devices";
 
 const props = defineProps<{
   rule: RuleDto;
-  components?: HomeComponent[];
+  devices?: HomeDevice[];
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   reorderDisabled?: boolean;
@@ -19,16 +19,16 @@ defineEmits<{
 }>();
 
 const CONDITION_LABELS: Record<string, string> = {
-  "internal-thermometer": "Internal temperature",
-  "external-thermometer": "External temperature",
+  "indoor-thermometer": "Indoor temperature",
+  "outdoor-thermometer": "Outdoor temperature",
   "wind-speed": "Wind speed",
   "air-quality": "Air quality",
   weather: "Weather",
 };
 
 const CONDITION_UNITS: Record<string, string> = {
-  "internal-thermometer": "°C",
-  "external-thermometer": "°C",
+  "indoor-thermometer": "°C",
+  "outdoor-thermometer": "°C",
   "wind-speed": " m/s",
   "air-quality": " AQI",
 };
@@ -72,9 +72,9 @@ function actionSummary(action: RuleDto["actions"][number]): string {
   return label;
 }
 
-function getComponentName(componentId: string): string {
-  const component = props.components?.find((c) => c.id === componentId);
-  return component?.name ?? componentId;
+function getDeviceName(deviceId: string): string {
+  const device = props.devices?.find((c) => c.id === deviceId);
+  return device?.name ?? deviceId;
 }
 </script>
 
@@ -89,7 +89,7 @@ function getComponentName(componentId: string): string {
       <div class="flex flex-col">
         <button
           type="button"
-          class="text-gray-400 hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
+          class="text-white hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
           :disabled="!canMoveUp || reorderDisabled"
           aria-label="Move rule up"
           @click="$emit('move-up')"
@@ -98,7 +98,7 @@ function getComponentName(componentId: string): string {
         </button>
         <button
           type="button"
-          class="text-gray-400 hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
+          class="text-white hover:text-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition leading-none text-sm"
           :disabled="!canMoveDown || reorderDisabled"
           aria-label="Move rule down"
           @click="$emit('move-down')"
@@ -123,14 +123,14 @@ function getComponentName(componentId: string): string {
             {{ rule.name }}
           </h3>
         </div>
-        <p class="text-sm text-gray-400 mt-0.5 truncate">
+        <p class="text-sm text-white mt-0.5 truncate">
           <span class="font-semibold" :class="accent.text">When</span>
           {{ conditionSummary(rule) }}
         </p>
       </div>
       <button
         type="button"
-        class="w-9 h-9 rounded-2xl text-gray-400 hover:text-rose-400 hover:bg-white/5 flex items-center justify-center shrink-0"
+        class="w-9 h-9 rounded-2xl text-white hover:text-rose-400 hover:bg-white/5 flex items-center justify-center shrink-0"
         aria-label="Delete rule"
         @click="$emit('delete')"
       >
@@ -146,7 +146,7 @@ function getComponentName(componentId: string): string {
       >
         {{ actionSummary(action) }}
         <span class="text-gray-500 ml-1">
-          ({{ getComponentName(action.componentId) }})
+          ({{ getDeviceName(action.deviceId) }})
         </span>
       </span>
     </div>

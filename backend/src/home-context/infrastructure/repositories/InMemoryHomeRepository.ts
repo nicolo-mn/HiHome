@@ -1,4 +1,4 @@
-import { Home, Light, Room, SensorUpdatePort, Component } from "../../domain";
+import { Home, Light, Room, SensorUpdatePort, Device } from "../../domain";
 import { HomeRepository } from "../../domain/HomeRepository";
 
 export class InMemoryHomeRepository implements HomeRepository {
@@ -29,12 +29,12 @@ export class InMemoryHomeRepository implements HomeRepository {
     return Array.from(this.homes.values());
   }
 
-  async getComponentById(id: string): Promise<Component | null> {
+  async getDeviceById(id: string): Promise<Device | null> {
     // Convert map values to an array and search through them
     for (const home of this.homes.values()) {
-      const component = home.getAllComponents().find((c) => c.id === id);
-      if (component) {
-        return component;
+      const device = home.getAllDevices().find((c) => c.id === id);
+      if (device) {
+        return device;
       }
     }
     return null;

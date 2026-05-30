@@ -16,41 +16,41 @@ export class ActionExecutionAdapter implements ActionExecutionPort {
 
   async executeLightTurnOn(action: LightTurnOnAction): Promise<void> {
     console.log(
-      `Rule action: LightTurnOn home=${action.getHomeId()} component=${action.getComponentId()}`,
+      `Rule action: LightTurnOn home=${action.getHomeId()} device=${action.getDeviceId()}`,
     );
     await this.actionService.lightTurnOn(
       action.getHomeId(),
-      action.getComponentId(),
+      action.getDeviceId(),
     );
   }
 
   async executeLightTurnOff(action: LightTurnOffAction): Promise<void> {
     console.log(
-      `Rule action: LightTurnOff home=${action.getHomeId()} component=${action.getComponentId()}`,
+      `Rule action: LightTurnOff home=${action.getHomeId()} device=${action.getDeviceId()}`,
     );
     await this.actionService.lightTurnOff(
       action.getHomeId(),
-      action.getComponentId(),
+      action.getDeviceId(),
     );
   }
 
   async executeWindowOpen(action: WindowOpenAction): Promise<void> {
     console.log(
-      `Rule action: WindowOpen home=${action.getHomeId()} component=${action.getComponentId()}`,
+      `Rule action: WindowOpen home=${action.getHomeId()} device=${action.getDeviceId()}`,
     );
     await this.actionService.windowOpen(
       action.getHomeId(),
-      action.getComponentId(),
+      action.getDeviceId(),
     );
   }
 
   async executeWindowClose(action: WindowCloseAction): Promise<void> {
     console.log(
-      `Rule action: WindowClose home=${action.getHomeId()} component=${action.getComponentId()}`,
+      `Rule action: WindowClose home=${action.getHomeId()} device=${action.getDeviceId()}`,
     );
     await this.actionService.windowClose(
       action.getHomeId(),
-      action.getComponentId(),
+      action.getDeviceId(),
     );
   }
 
@@ -58,42 +58,39 @@ export class ActionExecutionAdapter implements ActionExecutionPort {
     action: ThermostatSetTemperatureAction,
   ): Promise<void> {
     console.log(
-      `Rule action: ThermostatSetTemperature home=${action.getHomeId()} component=${action.getComponentId()} target=${action.targetTemperature}`,
+      `Rule action: ThermostatSetTemperature home=${action.getHomeId()} device=${action.getDeviceId()} target=${action.targetTemperature}`,
     );
     await this.actionService.thermostatSetTemperature(
       action.getHomeId(),
-      action.getComponentId(),
+      action.getDeviceId(),
       action.targetTemperature,
     );
   }
 
   async executeLockLock(action: LockLockAction): Promise<void> {
     console.log(
-      `Rule action: LockLock home=${action.getHomeId()} component=${action.getComponentId()}`,
+      `Rule action: LockLock home=${action.getHomeId()} device=${action.getDeviceId()}`,
     );
-    await this.actionService.lockLock(
-      action.getHomeId(),
-      action.getComponentId(),
-    );
+    await this.actionService.lockLock(action.getHomeId(), action.getDeviceId());
   }
 
   async executeLockUnlock(action: LockUnlockAction): Promise<void> {
     console.log(
-      `Rule action: LockUnlock home=${action.getHomeId()} component=${action.getComponentId()}`,
+      `Rule action: LockUnlock home=${action.getHomeId()} device=${action.getDeviceId()}`,
     );
     await this.actionService.lockUnlock(
       action.getHomeId(),
-      action.getComponentId(),
+      action.getDeviceId(),
     );
   }
 
   async executeFanSetMode(action: FanSetModeAction): Promise<void> {
     console.log(
-      `Rule action: FanSetMode home=${action.getHomeId()} component=${action.getComponentId()} mode=${action.mode}`,
+      `Rule action: FanSetMode home=${action.getHomeId()} device=${action.getDeviceId()} mode=${action.mode}`,
     );
     await this.actionService.fanSetMode(
       action.getHomeId(),
-      action.getComponentId(),
+      action.getDeviceId(),
       action.mode,
     );
   }

@@ -19,8 +19,8 @@ describe("HomeController", () => {
     const homeRepo = new InMemoryHomeRepository();
     sensorRegistry = new InMemorySensorRegistry();
     const sensorUpdatePort = {
-      sendInternalTemperatureUpdate: vi.fn(),
-      sendExternalTemperatureUpdate: vi.fn(),
+      sendIndoorTemperatureUpdate: vi.fn(),
+      sendOutdoorTemperatureUpdate: vi.fn(),
       sendAirQualityUpdate: vi.fn(),
       sendWindUpdate: vi.fn(),
       sendWeatherUpdate: vi.fn(),
@@ -28,8 +28,8 @@ describe("HomeController", () => {
     const ruleServicePort = {
       evaluateRules: vi.fn(),
     };
-    const externalSensorsDataPort = {
-      getExternalSensorsData: vi.fn(),
+    const outdoorSensorsDataPort = {
+      getOutdoorSensorsData: vi.fn(),
     };
 
     const homeService = new HomeService(
@@ -37,26 +37,26 @@ describe("HomeController", () => {
       sensorRegistry,
       sensorUpdatePort,
       ruleServicePort,
-      externalSensorsDataPort,
+      outdoorSensorsDataPort,
     );
 
     controller = new HomeController(homeService);
   });
 
-  it("updates the sensor registry on internal temperature update", async () => {
+  it("updates the sensor registry on indoor temperature update", async () => {
     const req = {
       params: { id: "1" },
       body: { temperature: 21 },
     } as unknown as Request;
     const res = createResponse();
 
-    await controller.updateInternalTemperature(req, res);
+    await controller.updateIndoorTemperature(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
-      message: "Internal temperature updated",
+      message: "Indoor temperature updated",
     });
-    expect(sensorRegistry.getState("1")?.internalTemperature).toEqual({
+    expect(sensorRegistry.getState("1")?.indoorTemperature).toEqual({
       temperature: 21,
     });
   });
@@ -68,7 +68,7 @@ describe("HomeController", () => {
     } as unknown as Request;
     const res = createResponse();
 
-    await controller.updateInternalTemperature(req, res);
+    await controller.updateIndoorTemperature(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({
@@ -76,7 +76,7 @@ describe("HomeController", () => {
     });
   });
 
-  describe("addComponent", () => {
+  describe("addDevice", () => {
     const addRequest = (body: unknown, homeId = "1") =>
       ({ params: { id: homeId }, body }) as unknown as Request;
 
@@ -88,7 +88,7 @@ describe("HomeController", () => {
       const req = addRequest({ name: `My ${type}`, type, roomId: "room-1" });
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(201);
       const payload = (res.json as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -105,16 +105,16 @@ describe("HomeController", () => {
     it.each([
       [{ type: "light", roomId: "room-1" }, "name must be a non-empty string"],
       [{ name: "X", type: "light" }, "roomId must be a non-empty string"],
-      [{ name: "X", roomId: "room-1" }, "Unsupported component type"],
+      [{ name: "X", roomId: "room-1" }, "Unsupported device type"],
       [
         { name: "X", type: "fridge", roomId: "room-1" },
-        "Unsupported component type",
+        "Unsupported device type",
       ],
     ])("returns 400 on invalid body %#", async (body, expectedError) => {
       const req = addRequest(body);
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: expectedError });
@@ -128,7 +128,7 @@ describe("HomeController", () => {
       });
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: "Room not found" });
@@ -141,7 +141,7 @@ describe("HomeController", () => {
       );
       const res = createResponse();
 
-      await controller.addComponent(req, res);
+      await controller.addDevice(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: "Home 999 not found" });

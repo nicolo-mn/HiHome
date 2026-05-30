@@ -7,8 +7,8 @@ import {
   Home,
   Coordinates,
   Room,
-  createComponent,
-  ComponentTypes,
+  createDevice,
+  DeviceTypes,
   WeatherForecast,
 } from "../../domain";
 
@@ -50,14 +50,14 @@ describe("SocketIOSensorUpdateAdapter", () => {
     httpServer.close();
   });
 
-  it("should broadcast external temperature update to the correct room", async () => {
+  it("should broadcast outdoor temperature update to the correct room", async () => {
     return new Promise<void>((resolve) => {
-      clientSocket.once("sensor:external-temperature", (data) => {
+      clientSocket.once("sensor:outdoor-temperature", (data) => {
         expect(data).toEqual({ temperature: 22.5 });
         resolve();
       });
 
-      adapter.sendExternalTemperatureUpdate(mockHome, { temperature: 22.5 });
+      adapter.sendOutdoorTemperatureUpdate(mockHome, { temperature: 22.5 });
     });
   });
 

@@ -1,7 +1,7 @@
 import { Coordinates } from "./Coordinates";
 import { Room } from "./Room";
-import { Component, ComponentTypes } from "./Component";
-import { ComponentEvent } from "./EventLog";
+import { Device, DeviceTypes } from "./Device";
+import { DeviceEvent } from "./EventLog";
 
 export class Home {
   constructor(
@@ -9,27 +9,27 @@ export class Home {
     public coordinates: Coordinates,
     public rooms: Room[] = [],
     public hourlyTemperatures: number[] = new Array(24).fill(20),
-    public eventLog: ComponentEvent[] = [],
+    public eventLog: DeviceEvent[] = [],
   ) {}
 
-  getAllComponents(): Component[] {
-    return this.rooms.flatMap((room) => room.components);
+  getAllDevices(): Device[] {
+    return this.rooms.flatMap((room) => room.devices);
   }
 
-  getComponentById(componentId: string): Component | undefined {
-    return this.getAllComponents().find((c) => c.id === componentId);
+  getDeviceById(deviceId: string): Device | undefined {
+    return this.getAllDevices().find((c) => c.id === deviceId);
   }
 
-  getComponentByIdAndType(
-    componentId: string,
-    type: ComponentTypes,
-  ): Component | undefined {
-    return this.getAllComponents().find(
-      (c) => c.id === componentId && c.getType() === type,
+  getDeviceByIdAndType(
+    deviceId: string,
+    type: DeviceTypes,
+  ): Device | undefined {
+    return this.getAllDevices().find(
+      (c) => c.id === deviceId && c.getType() === type,
     );
   }
 
-  addComponentEvent(event: ComponentEvent) {
+  addDeviceEvent(event: DeviceEvent) {
     this.eventLog.push(event);
   }
 }

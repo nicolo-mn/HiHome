@@ -12,7 +12,7 @@ const userSchema = new Schema(
       default: [
         "AirQualityThresholdBreach",
         "AutomationRuleExecuted",
-        "ComponentAction",
+        "DeviceAction",
       ],
     },
   },

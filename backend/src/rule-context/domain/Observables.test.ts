@@ -5,8 +5,8 @@ import {
   NumericLowerOperator,
   WeatherEqualityOperator,
   WeatherCondition,
-  ExternalTemperatureCondition,
-  InternalTemperatureCondition,
+  OutdoorTemperatureCondition,
+  IndoorTemperatureCondition,
   AirQualityCondition,
   WindSpeedCondition,
   WeatherForecast,
@@ -54,8 +54,8 @@ describe("Operators", () => {
 
 describe("Conditions", () => {
   const baseUpdate: ObservablesUpdatedDomainEvent = {
-    externalTemperature: 20,
-    internalTemperature: 22,
+    outdoorTemperature: 20,
+    indoorTemperature: 22,
     airQuality: 50,
     windSpeed: 10,
     weatherForecast: WeatherForecast.Clear,
@@ -111,44 +111,44 @@ describe("Conditions", () => {
   });
 
   describe("BoundedNumericConditions", () => {
-    describe("ExternalTemperatureCondition", () => {
-      it("should verify external temperature against the threshold", () => {
+    describe("OutdoorTemperatureCondition", () => {
+      it("should verify outdoor temperature against the threshold", () => {
         const op = new NumericGreaterOperator(25);
-        const cond = new ExternalTemperatureCondition(op);
+        const cond = new OutdoorTemperatureCondition(op);
 
-        expect(cond.verify({ ...baseUpdate, externalTemperature: 30 })).toBe(
+        expect(cond.verify({ ...baseUpdate, outdoorTemperature: 30 })).toBe(
           true,
         );
-        expect(cond.verify({ ...baseUpdate, externalTemperature: 30 })).toBe(
+        expect(cond.verify({ ...baseUpdate, outdoorTemperature: 30 })).toBe(
           true,
         );
-        expect(cond.verify({ ...baseUpdate, externalTemperature: 20 })).toBe(
+        expect(cond.verify({ ...baseUpdate, outdoorTemperature: 20 })).toBe(
           false,
         );
-        expect(cond.verify({ ...baseUpdate, externalTemperature: 30 })).toBe(
+        expect(cond.verify({ ...baseUpdate, outdoorTemperature: 30 })).toBe(
           true,
         );
       });
 
       it("should throw BoundaryViolationError when boundary value is out of range on creation", () => {
         const op = new NumericGreaterOperator(100);
-        expect(() => new ExternalTemperatureCondition(op)).toThrow(
+        expect(() => new OutdoorTemperatureCondition(op)).toThrow(
           BoundaryViolationError,
         );
       });
 
       it("should throw BoundaryViolationError when verified value is out of range", () => {
         const op = new NumericGreaterOperator(25);
-        const cond = new ExternalTemperatureCondition(op);
+        const cond = new OutdoorTemperatureCondition(op);
 
         expect(() =>
-          cond.verify({ ...baseUpdate, externalTemperature: 100 }),
+          cond.verify({ ...baseUpdate, outdoorTemperature: 100 }),
         ).toThrow(BoundaryViolationError);
       });
 
       it("should accept visitor", () => {
         const op = new NumericGreaterOperator(25);
-        const cond = new ExternalTemperatureCondition(op);
+        const cond = new OutdoorTemperatureCondition(op);
         const mockVisitor = {
           visitWeatherCondition: vi.fn(),
           visitTemperatureCondition: vi.fn().mockReturnValue("temp"),
@@ -163,22 +163,22 @@ describe("Conditions", () => {
       });
     });
 
-    describe("InternalTemperatureCondition", () => {
-      it("should verify internal temperature against the threshold", () => {
+    describe("IndoorTemperatureCondition", () => {
+      it("should verify indoor temperature against the threshold", () => {
         const op = new NumericLowerOperator(20);
-        const cond = new InternalTemperatureCondition(op);
+        const cond = new IndoorTemperatureCondition(op);
 
-        expect(cond.verify({ ...baseUpdate, internalTemperature: 15 })).toBe(
+        expect(cond.verify({ ...baseUpdate, indoorTemperature: 15 })).toBe(
           true,
         );
-        expect(cond.verify({ ...baseUpdate, internalTemperature: 18 })).toBe(
+        expect(cond.verify({ ...baseUpdate, indoorTemperature: 18 })).toBe(
           true,
         );
       });
 
       it("should throw BoundaryViolationError when boundary value is out of range on creation", () => {
         const op = new NumericGreaterOperator(100);
-        expect(() => new InternalTemperatureCondition(op)).toThrow(
+        expect(() => new IndoorTemperatureCondition(op)).toThrow(
           BoundaryViolationError,
         );
       });

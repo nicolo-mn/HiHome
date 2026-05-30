@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { componentsApi, rulesApi } from "@/api";
+import { devicesApi, rulesApi } from "@/api";
 import { ApiError } from "@/api/errors";
-import type { HomeComponent, ComponentType } from "@/api/components";
+import type { HomeDevice, DeviceType } from "@/api/devices";
 import { useAuthStore } from "@/stores/auth";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import AppHeader from "@/components/AppHeader.vue";
@@ -46,8 +46,8 @@ type ActionOption = {
 
 type ActionDraft = {
   id: string;
-  componentId: string;
-  componentType: ComponentType | "";
+  deviceId: string;
+  deviceType: DeviceType | "";
   command: string;
   targetTemp: string;
 };
@@ -71,8 +71,8 @@ const weatherOptions: EnumOption[] = [
 
 const sensorOptions: SensorOption[] = [
   {
-    id: "internal-thermometer",
-    label: "Internal temperature",
+    id: "indoor-thermometer",
+    label: "Indoor temperature",
     kind: "numeric",
     operators: numericOperators,
     min: 5,
@@ -84,8 +84,8 @@ const sensorOptions: SensorOption[] = [
     defaultTarget: 20,
   },
   {
-    id: "external-thermometer",
-    label: "External temperature",
+    id: "outdoor-thermometer",
+    label: "Outdoor temperature",
     kind: "numeric",
     operators: numericOperators,
     min: 5,
@@ -134,10 +134,7 @@ const sensorOptions: SensorOption[] = [
   },
 ];
 
-const COMPONENT_META: Record<
-  ComponentType,
-  { icon: IconName; accent: Accent }
-> = {
+const DEVICE_META: Record<DeviceType, { icon: IconName; accent: Accent }> = {
   light: { icon: "lamp", accent: "yellow" },
   window: { icon: "window", accent: "emerald" },
   thermostat: { icon: "device_thermostat", accent: "orange" },
@@ -146,7 +143,7 @@ const COMPONENT_META: Record<
   unknown: { icon: "info", accent: "sky" },
 };
 
-const RULE_SUPPORTED_TYPES: ReadonlySet<ComponentType> = new Set([
+const RULE_SUPPORTED_TYPES: ReadonlySet<DeviceType> = new Set([
   "light",
   "window",
   "thermostat",
@@ -154,7 +151,7 @@ const RULE_SUPPORTED_TYPES: ReadonlySet<ComponentType> = new Set([
   "fan",
 ]);
 
-const actionOptionsByType: Record<ComponentType, ActionOption[]> = {
+const actionOptionsByType: Record<DeviceType, ActionOption[]> = {
   light: [
     { value: "turnOn", label: "Turn on" },
     { value: "turnOff", label: "Turn off" },
@@ -193,16 +190,16 @@ const router = useRouter();
 const authStore = useAuthStore();
 const homeId = computed(() => authStore.homeId);
 
-const components = ref<HomeComponent[]>([]);
-const { run: loadComponents, error: loadError } = useAsyncAction(
+const devices = ref<HomeDevice[]>([]);
+const { run: loadDevices, error: loadError } = useAsyncAction(
   async () => {
     if (!homeId.value) return;
-    components.value = await componentsApi.getComponents(homeId.value);
+    devices.value = await devicesApi.getDevices(homeId.value);
   },
   { action: "load your devices" },
 );
 
-onMounted(loadComponents);
+onMounted(loadDevices);
 
 const ruleName = ref("");
 const sensorId = ref<string>(sensorOptions[0]?.id ?? "weather");
@@ -239,62 +236,62 @@ const targetDisplay = computed(() => {
   return opt?.label ?? String(target.value);
 });
 
-const usedComponentIds = computed(
-  () => new Set(actions.value.map((a) => a.componentId).filter(Boolean)),
+const usedDeviceIds = computed(
+  () => new Set(actions.value.map((a) => a.deviceId).filter(Boolean)),
 );
 const canAddAction = computed(
-  () => actions.value.length < components.value.length,
+  () => actions.value.length < devices.value.length,
 );
 const canSave = computed(
   () =>
     ruleName.value.trim().length > 0 &&
     actions.value.length > 0 &&
-    actions.value.every((a) => a.componentId && a.command),
+    actions.value.every((a) => a.deviceId && a.command),
 );
 
 function createActionDraft(): ActionDraft {
   nextActionId += 1;
   return {
     id: `action-${nextActionId}`,
-    componentId: "",
-    componentType: "",
+    deviceId: "",
+    deviceType: "",
     command: "",
     targetTemp: "",
   };
 }
 
-function componentMeta(type: ComponentType | "") {
-  if (!type) return COMPONENT_META.unknown;
-  return COMPONENT_META[type];
+function deviceMeta(type: DeviceType | "") {
+  if (!type) return DEVICE_META.unknown;
+  return DEVICE_META[type];
 }
 
-function componentForAction(action: ActionDraft): HomeComponent | undefined {
-  return components.value.find((c) => c.id === action.componentId);
+function deviceForAction(action: ActionDraft): HomeDevice | undefined {
+  return devices.value.find((c) => c.id === action.deviceId);
 }
 
-function availableComponents(actionId: string): HomeComponent[] {
-  const used = new Set(usedComponentIds.value);
+function availableDevices(actionId: string): HomeDevice[] {
+  const used = new Set(usedDeviceIds.value);
   const current = actions.value.find((a) => a.id === actionId);
-  if (current?.componentId) used.delete(current.componentId);
-  return components.value.filter(
+  if (current?.deviceId) used.delete(current.deviceId);
+  return devices.value.filter(
     (c) => RULE_SUPPORTED_TYPES.has(c.type) && !used.has(c.id),
   );
 }
 
-function getActionOptions(type: ComponentType | ""): ActionOption[] {
+function getActionOptions(type: DeviceType | ""): ActionOption[] {
   if (!type) return [];
   return actionOptionsByType[type] ?? [];
 }
 
 function getActionDefinition(
-  type: ComponentType | "",
+  type: DeviceType | "",
   command: string,
 ): ActionOption | undefined {
   return getActionOptions(type).find((o) => o.value === command);
 }
 
 function actionDef(action: ActionDraft): ActionOption | undefined {
-  return getActionDefinition(action.componentType, action.command);
+  return getActionDefinition(action.deviceType, action.command);
 }
 
 function actionLabel(action: ActionDraft): string {
@@ -348,8 +345,8 @@ const {
               ? Number(def.defaultTarget)
               : undefined;
         return {
-          componentId: a.componentId,
-          componentType: a.componentType as ComponentType,
+          deviceId: a.deviceId,
+          deviceType: a.deviceType as DeviceType,
           command: a.command,
           targetTemp: def?.needsTarget ? numericTarget : undefined,
         };
@@ -365,7 +362,7 @@ type SheetState =
   | { kind: "sensor" }
   | { kind: "operator" }
   | { kind: "target" }
-  | { kind: "component"; index: number }
+  | { kind: "device"; index: number }
   | { kind: "action"; index: number }
   | { kind: "param"; index: number };
 
@@ -400,15 +397,15 @@ function onTargetInput(ev: Event) {
   target.value = Number((ev.target as HTMLInputElement).value);
 }
 
-function pickComponent(i: number, id: string) {
-  const comp = components.value.find((c) => c.id === id);
+function pickDevice(i: number, id: string) {
+  const comp = devices.value.find((c) => c.id === id);
   if (!comp) return;
   const opts = getActionOptions(comp.type);
   const def = opts[0];
   actions.value[i] = {
     ...actions.value[i]!,
-    componentId: id,
-    componentType: comp.type,
+    deviceId: id,
+    deviceType: comp.type,
     command: def?.value ?? "",
     targetTemp:
       def?.needsTarget && def.defaultTarget !== undefined
@@ -420,7 +417,7 @@ function pickComponent(i: number, id: string) {
 
 function pickActionId(i: number, id: string) {
   const a = actions.value[i]!;
-  const def = getActionDefinition(a.componentType, id);
+  const def = getActionDefinition(a.deviceType, id);
   actions.value[i] = {
     ...a,
     command: id,
@@ -483,14 +480,14 @@ function bgFor(accent: Accent) {
       v-if="loadError"
       :error="loadError"
       action="load your devices"
-      :on-retry="() => loadComponents()"
+      :on-retry="() => loadDevices()"
     />
     <ErrorBanner v-if="saveError" :error="saveError" action="save the rule" />
 
     <div class="max-w-[720px] flex flex-col gap-7">
       <section>
         <div class="flex justify-between items-baseline mb-3">
-          <span class="font-medium text-[18px] md:text-[20px] text-gray-400">
+          <span class="font-medium text-[18px] md:text-[20px] text-white">
             Rule title
           </span>
           <span class="hidden sm:inline text-sm text-gray-500">
@@ -511,7 +508,7 @@ function bgFor(accent: Accent) {
 
       <section>
         <div class="flex justify-between items-baseline mb-3">
-          <span class="font-medium text-[18px] md:text-[20px] text-gray-400">
+          <span class="font-medium text-[18px] md:text-[20px] text-white">
             When
           </span>
           <span class="hidden sm:inline text-sm text-gray-500">
@@ -548,7 +545,7 @@ function bgFor(accent: Accent) {
 
       <section>
         <div class="flex justify-between items-baseline mb-3">
-          <span class="font-medium text-[18px] md:text-[20px] text-gray-400">
+          <span class="font-medium text-[18px] md:text-[20px] text-white">
             Then
           </span>
           <span class="text-sm text-gray-500">
@@ -557,7 +554,7 @@ function bgFor(accent: Accent) {
           </span>
         </div>
 
-        <p v-if="components.length === 0" class="text-sm text-gray-500 mb-3">
+        <p v-if="devices.length === 0" class="text-sm text-gray-500 mb-3">
           No devices available yet.
         </p>
 
@@ -567,14 +564,14 @@ function bgFor(accent: Accent) {
             :key="a.id"
             :class="[
               'rounded-[24px] md:rounded-[28px] p-3 md:p-4 flex flex-col gap-2 relative',
-              tintFor(componentMeta(a.componentType).accent),
+              tintFor(deviceMeta(a.deviceType).accent),
             ]"
           >
             <div class="flex justify-between items-center px-1 pb-1">
               <span
                 :class="[
                   'font-semibold text-sm uppercase tracking-wider',
-                  textFor(componentMeta(a.componentType).accent),
+                  textFor(deviceMeta(a.deviceType).accent),
                 ]"
               >
                 Action {{ i + 1 }}
@@ -582,7 +579,7 @@ function bgFor(accent: Accent) {
               <button
                 v-if="actions.length > 1"
                 type="button"
-                class="w-8 h-8 rounded-2xl text-gray-400 flex items-center justify-center hover:bg-white/5"
+                class="w-8 h-8 rounded-2xl text-white flex items-center justify-center hover:bg-white/5"
                 @click="removeAction(a.id)"
               >
                 <BaseIcon name="close" :size="20" />
@@ -590,24 +587,24 @@ function bgFor(accent: Accent) {
             </div>
             <BasePickerRow
               prefix="Device"
-              :icon="componentMeta(a.componentType).icon"
-              :accent="componentMeta(a.componentType).accent"
-              :value="componentForAction(a)?.name ?? 'Select device'"
-              :sub="componentForAction(a)?.roomName ?? ''"
-              @open="sheet = { kind: 'component', index: i }"
+              :icon="deviceMeta(a.deviceType).icon"
+              :accent="deviceMeta(a.deviceType).accent"
+              :value="deviceForAction(a)?.name ?? 'Select device'"
+              :sub="deviceForAction(a)?.roomName ?? ''"
+              @open="sheet = { kind: 'device', index: i }"
             />
             <BasePickerRow
               prefix="Action"
               icon="bolt"
-              :accent="componentMeta(a.componentType).accent"
+              :accent="deviceMeta(a.deviceType).accent"
               :value="actionLabel(a)"
-              @open="a.componentId && (sheet = { kind: 'action', index: i })"
+              @open="a.deviceId && (sheet = { kind: 'action', index: i })"
             />
             <BasePickerRow
               v-if="actionDef(a)?.needsTarget"
               prefix="Parameter"
               icon="more"
-              :accent="componentMeta(a.componentType).accent"
+              :accent="deviceMeta(a.deviceType).accent"
               :value="actionParamDisplay(a)"
               @open="sheet = { kind: 'param', index: i }"
             />
@@ -640,7 +637,7 @@ function bgFor(accent: Accent) {
             'flex-[2] h-16 rounded-[28px] md:rounded-[32px] font-bold text-[18px] md:text-[20px] flex items-center justify-center gap-2',
             canSave && !saving
               ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400'
-              : 'bg-yellow-500/20 text-gray-400 cursor-not-allowed',
+              : 'bg-yellow-500/20 text-white cursor-not-allowed',
           ]"
           @click="save"
         >
@@ -679,7 +676,7 @@ function bgFor(accent: Accent) {
               <div class="text-[18px] font-semibold text-gray-200">
                 {{ s.label }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5">
+              <div class="text-sm text-white mt-0.5">
                 {{ s.kind === "numeric" ? "Numeric value" : "Categorical" }}
               </div>
             </div>
@@ -717,7 +714,7 @@ function bgFor(accent: Accent) {
               <div class="text-[18px] font-semibold text-gray-200">
                 {{ o.label }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5 font-mono">
+              <div class="text-sm text-white mt-0.5 font-mono">
                 {{ o.symbol }}
               </div>
             </div>
@@ -746,7 +743,7 @@ function bgFor(accent: Accent) {
               ]"
             >
               {{ target
-              }}<span class="text-[28px] text-gray-400 ml-1.5">{{
+              }}<span class="text-[28px] text-white ml-1.5">{{
                 sensor.unit
               }}</span>
             </div>
@@ -775,7 +772,7 @@ function bgFor(accent: Accent) {
                 <BaseIcon name="add" :size="20" />
               </button>
             </div>
-            <div class="text-sm text-gray-400">
+            <div class="text-sm text-white">
               Range: {{ sensor.min }}{{ sensor.unit }} – {{ sensor.max
               }}{{ sensor.unit }}
             </div>
@@ -824,43 +821,43 @@ function bgFor(accent: Accent) {
         </template>
       </template>
 
-      <template v-else-if="sheet?.kind === 'component'">
+      <template v-else-if="sheet?.kind === 'device'">
         <div class="font-bold text-2xl mb-3 text-gray-200">Choose a device</div>
         <div
           class="flex flex-col gap-1.5 overflow-y-auto"
           style="max-height: 60vh"
         >
           <button
-            v-for="c in availableComponents(actions[sheet.index]!.id)"
+            v-for="c in availableDevices(actions[sheet.index]!.id)"
             :key="c.id"
             type="button"
             :class="[
               'flex items-center gap-3.5 p-3.5 rounded-[18px] text-left transition-colors',
-              c.id === actions[sheet.index]!.componentId
+              c.id === actions[sheet.index]!.deviceId
                 ? 'bg-white/5'
                 : 'hover:bg-white/[0.02]',
             ]"
-            @click="pickComponent(sheet.index, c.id)"
+            @click="pickDevice(sheet.index, c.id)"
           >
             <div
               class="w-11 h-11 rounded-2xl bg-gray-900/60 flex items-center justify-center"
-              :class="textFor(componentMeta(c.type).accent)"
+              :class="textFor(deviceMeta(c.type).accent)"
             >
-              <BaseIcon :name="componentMeta(c.type).icon" :size="22" />
+              <BaseIcon :name="deviceMeta(c.type).icon" :size="22" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="text-[18px] font-semibold text-gray-200 truncate">
                 {{ c.name }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5 truncate">
+              <div class="text-sm text-white mt-0.5 truncate">
                 {{ c.roomName ?? "—" }}
               </div>
             </div>
             <BaseIcon
-              v-if="c.id === actions[sheet.index]!.componentId"
+              v-if="c.id === actions[sheet.index]!.deviceId"
               name="check"
               :size="24"
-              :class="textFor(componentMeta(c.type).accent)"
+              :class="textFor(deviceMeta(c.type).accent)"
             />
           </button>
         </div>
@@ -872,7 +869,7 @@ function bgFor(accent: Accent) {
         </div>
         <div class="flex flex-col gap-1.5">
           <button
-            v-for="o in getActionOptions(actions[sheet.index]!.componentType)"
+            v-for="o in getActionOptions(actions[sheet.index]!.deviceType)"
             :key="o.value"
             type="button"
             :class="[
@@ -886,9 +883,7 @@ function bgFor(accent: Accent) {
             <div
               class="w-11 h-11 rounded-2xl bg-gray-900/60 flex items-center justify-center"
               :class="
-                textFor(
-                  componentMeta(actions[sheet.index]!.componentType).accent,
-                )
+                textFor(deviceMeta(actions[sheet.index]!.deviceType).accent)
               "
             >
               <BaseIcon name="bolt" :size="22" />
@@ -897,7 +892,7 @@ function bgFor(accent: Accent) {
               <div class="text-[18px] font-semibold text-gray-200">
                 {{ o.label }}
               </div>
-              <div class="text-sm text-gray-400 mt-0.5">
+              <div class="text-sm text-white mt-0.5">
                 {{ o.needsTarget ? "Requires parameter" : "No parameter" }}
               </div>
             </div>
@@ -906,9 +901,7 @@ function bgFor(accent: Accent) {
               name="check"
               :size="24"
               :class="
-                textFor(
-                  componentMeta(actions[sheet.index]!.componentType).accent,
-                )
+                textFor(deviceMeta(actions[sheet.index]!.deviceType).accent)
               "
             />
           </button>
@@ -925,13 +918,11 @@ function bgFor(accent: Accent) {
           <div
             :class="[
               'font-bold text-[64px] leading-[68px]',
-              textFor(
-                componentMeta(actions[sheet.index]!.componentType).accent,
-              ),
+              textFor(deviceMeta(actions[sheet.index]!.deviceType).accent),
             ]"
           >
             {{ paramValue(actions[sheet.index]!)
-            }}<span class="text-[28px] text-gray-400 ml-1.5">{{
+            }}<span class="text-[28px] text-white ml-1.5">{{
               actionDef(actions[sheet.index]!)?.unit ?? ""
             }}</span>
           </div>
@@ -977,7 +968,7 @@ function bgFor(accent: Accent) {
           type="button"
           :class="[
             'mt-4 w-full h-14 rounded-[24px] text-gray-900 font-bold text-lg',
-            bgFor(componentMeta(actions[sheet.index]!.componentType).accent),
+            bgFor(deviceMeta(actions[sheet.index]!.deviceType).accent),
           ]"
           @click="sheet = null"
         >
