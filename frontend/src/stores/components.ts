@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { io, type Socket } from "socket.io-client";
 import { componentsApi } from "@/api";
+import { UnauthorizedError } from "@/api/errors";
 import { humanizeErrorMessage } from "@/utils/humanizeError";
 import { getRooms } from "@/api/rooms";
 import type {
@@ -75,6 +76,7 @@ export const useComponentsStore = defineStore("components", () => {
       components.value = loaded.map(enrichRoomName);
       loadedHomeId.value = homeId.value;
     } catch (e) {
+      if (e instanceof UnauthorizedError) return;
       error.value = humanizeErrorMessage(e, "load your devices");
     } finally {
       isLoading.value = false;
@@ -150,6 +152,7 @@ export const useComponentsStore = defineStore("components", () => {
         c.id === updated.id ? updated : c,
       );
     } catch (e) {
+      if (e instanceof UnauthorizedError) return;
       if (!error.value) {
         error.value = humanizeErrorMessage(e, "control that device");
       }
@@ -194,7 +197,9 @@ export const useComponentsStore = defineStore("components", () => {
       components.value = [...components.value, resolved];
       return created;
     } catch (e) {
-      error.value = humanizeErrorMessage(e, "add the device");
+      if (!(e instanceof UnauthorizedError)) {
+        error.value = humanizeErrorMessage(e, "add the device");
+      }
       throw e;
     }
   }
