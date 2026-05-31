@@ -40,15 +40,18 @@ const canSend = computed(() =>
 );
 
 const suggestions = [
-  "What is the indoor temperature?",
+  "What's tomorrow's AQI level at noon?",
   "Turn off all the lights",
   "Set the thermostat to 21°C",
-  "What's the weather forecast?",
+  "What's the weather forecast for tomorrow?",
 ];
 
 const TOOL_LABELS: Record<string, string> = {
-  get_forecast_summary: "Getting forecast",
-  add_rule: "Creating automation rule",
+  get_forecast_summary: "Get forecast",
+  add_rule: "Create automation rule",
+  add_device: "Add new device",
+  get_device_states: "Get device states",
+  execute_device_actions: "Modify devices states",
 };
 
 function toolLabel(name: string): string {
@@ -138,14 +141,19 @@ function persistMessages(key: string, value: ChatMessage[]) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-const welcomeMessage: ChatMessage = {
+const USER_WELCOME_MESSAGE =
+  "Hi! I'm your personal assistant, I can check and modify device status, and fetch weather or air quality forecasts for your home (up to a week). How can I help you today?";
+const ADMIN_WELCOME_MESSAGE =
+  "Hi! I'm your personal assistant, I can check and modify device status, and fetch weather or air quality forecasts for your home (up to a week). As an admin, you can also create automation rules and add new devices. How can I help you today?";
+
+const welcomeMessage = computed<ChatMessage>(() => ({
   role: "assistant",
-  content: "Welcome! How can I help you today?",
-};
+  content: authStore.isAdmin ? ADMIN_WELCOME_MESSAGE : USER_WELCOME_MESSAGE,
+}));
 
 function resetChat() {
-  messages.value = [welcomeMessage];
-  persistMessages(storageKey.value, [welcomeMessage]);
+  messages.value = [welcomeMessage.value];
+  persistMessages(storageKey.value, [welcomeMessage.value]);
   streamingContent.value = "";
   activeToolCalls.value = [];
   sendError.value = null;
@@ -153,7 +161,7 @@ function resetChat() {
 }
 
 function ensureWelcomeMessage() {
-  messages.value = [welcomeMessage];
+  messages.value = [welcomeMessage.value];
   streamingContent.value = "";
   activeToolCalls.value = [];
   sendError.value = null;
