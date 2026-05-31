@@ -73,6 +73,7 @@ export const conditionValidator = [
     .if((_value, { req }) => req.body?.observableId === "weather")
     .isIn([
       "clear",
+      "cloudy",
       "drizzle",
       "fog",
       "overcast",
@@ -81,7 +82,7 @@ export const conditionValidator = [
       "thunderstorm",
     ])
     .withMessage(
-      "operatorTarget must be one of: clear, drizzle, fog, overcast, rain, snow, thunderstorm for weather observable",
+      "operatorTarget must be one of: clear, cloudy, drizzle, fog, overcast, rain, snow, thunderstorm for weather observable",
     ),
 
   validate,
