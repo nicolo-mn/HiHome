@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass{report}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -13,6 +13,7 @@
 \usepackage{longtable}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{natbib}
 \definecolor{blue}{rgb}{0.13, 0.13, 1}
 \definecolor{green}{rgb}{0, 0.5, 0}
 \definecolor{red}{rgb}{0.9, 0, 0}
@@ -47,8 +48,15 @@
 }
 \geometry{margin=1in}
 
-\title{HiHome}
-\author{Denise Nanni\\\href{mailto:denise.nanni@studio.unibo.it}{denise.nanni@studio.unibo.it} \and Juri Guglielmi\\\href{mailto:juri.guglielmi@studio.unibo.it}{juri.guglielmi@studio.unibo.it} \and Nicolò Monaldini\\\href{mailto:nicolo.monaldini@studio.unibo.it}{nicolo.monaldini@studio.unibo.it}}
+\title{
+    HiHome \\
+    \large Applicazioni e Servizi Web
+}
+\author{
+    Denise Nanni - 0001176519 \{denise.nanni@studio.unibo.it\} \\
+    Juri Guglielmi - 0001182994 \{juri.guglielmi@studio.unibo.it\} \\
+    Nicolò Monaldini - 0001186789 \{nicolo.monaldini@studio.unibo.it\}
+}
 \date{Giugno 2026}
 
 \begin{document}
@@ -731,7 +739,7 @@ Per fare fronte a questi problemi abbiamo implementato le seguenti modifiche:
 \end{itemize}
 
 \newpage
-\section{Deployment ed esecuzione locale}
+\section{Deployment}
 Il sistema \texttt{HiHome} può essere facilmente distribuito ed eseguito localmente sia in modalità di "produzione" che di sviluppo (con hot-reloading abilitato per consentire lo sviluppo attivo) grazie all'utilizzo di Docker Compose.
 
 \subsection{Comandi per il Deployment}
