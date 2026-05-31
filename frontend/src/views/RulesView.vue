@@ -123,7 +123,7 @@ onMounted(load);
       No rules configured yet.
     </p>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div v-else class="grid grid-cols-1 gap-3">
       <RuleCard
         v-for="(rule, index) in sortedRules"
         :key="rule.id"
