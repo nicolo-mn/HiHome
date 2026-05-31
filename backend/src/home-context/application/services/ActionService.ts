@@ -132,6 +132,11 @@ export class ActionService {
     const thermostat = device as Thermostat;
     const event = thermostat.setTemperature(temperature);
     home.addDeviceEvent(event);
+
+    const hour = new Date().getHours();
+    home.hourlyTemperatures ??= new Array(24).fill(20);
+    home.hourlyTemperatures[hour] = temperature;
+
     await persistAndBroadcast(
       this.homeRepo,
       home,
