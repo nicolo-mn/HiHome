@@ -20,8 +20,8 @@ import type {
 } from "@/api/devices";
 import { FAN_MODES } from "@/api/devices";
 
-const MIN_SETPOINT = 5;
-const MAX_SETPOINT = 40;
+const MIN_SETPOINT = 10;
+const MAX_SETPOINT = 30;
 
 const props = defineProps<{
   device: HomeDevice;

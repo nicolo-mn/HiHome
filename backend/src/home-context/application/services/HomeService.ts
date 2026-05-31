@@ -115,6 +115,12 @@ export class HomeService {
       home.addDeviceEvent({ ...event, actor });
     }
 
+    if (action === "setTemperature" && typeof param === "number") {
+      const hour = new Date().getHours();
+      home.hourlyTemperatures ??= new Array(24).fill(20);
+      home.hourlyTemperatures[hour] = param;
+    }
+
     await persistAndBroadcast(
       this.homeRepo,
       home,
@@ -162,7 +168,17 @@ export class HomeService {
       throw new Error("Hourly temperatures must have exactly 24 values");
     }
     home.hourlyTemperatures = temperatures;
+
+    const hour = new Date().getHours();
+    const currentTemp = temperatures[hour];
+    const thermostat = home
+      .getAllDevices()
+      .find((device) => device instanceof Thermostat) as Thermostat;
+    thermostat.temperature = currentTemp;
+
     await this.homeRepo.saveHome(home);
+
+    this.deviceUpdatePort?.sendDeviceUpdate(home, thermostat);
   }
 
   async applyHourlyTemperaturePlan(date = new Date()): Promise<void> {
