@@ -23,11 +23,9 @@ const primary: NavItem[] = [
 ];
 
 const secondary: NavItem[] = [
-  { to: "/notifications", label: "Activity", icon: "bell" },
   { to: "/usage-insights", label: "Insights", icon: "chart" },
   { to: "/thermostat-plan", label: "Plan", icon: "device_thermostat" },
   { to: "/event-log", label: "Event log", icon: "log", admin: true },
-  { to: "/settings", label: "Settings", icon: "settings" },
 ];
 
 const visiblePrimary = computed(() =>
@@ -56,9 +54,6 @@ function isActive(to: string) {
         class="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-700/40 flex items-center justify-center shrink-0"
       >
         <BaseIcon name="home" :size="22" class="text-yellow-500" />
-        <span
-          class="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-gray-900 border-[2px] border-sky-500"
-        />
       </div>
       <span
         class="hidden lg:inline font-bold text-[18px] text-gray-200 tracking-tight"
@@ -119,9 +114,6 @@ function isActive(to: string) {
       <div class="hidden lg:flex flex-col min-w-0">
         <span class="text-sm font-semibold text-gray-200 truncate">
           {{ auth.username ?? "User" }}
-        </span>
-        <span class="text-xs text-gray-500 truncate">
-          {{ auth.homeId ?? "" }}
         </span>
       </div>
     </RouterLink>
