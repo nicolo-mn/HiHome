@@ -32,6 +32,7 @@ import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
 import { RuleNotificationPort } from "../ports/RuleNotificationPort";
 import { ActionDescriptionVisitor } from "../ActionDescriptionVisitor";
 import { DeviceNameResolverPort } from "../ports/DeviceNameResolverPort";
+import { RuleEvaluationTriggerPort } from "../ports/RuleEvaluationTriggerPort";
 
 export type RuleActionDto = {
   deviceType: "light" | "window" | "thermostat" | "lock" | "fan";
@@ -75,12 +76,14 @@ export type AddRuleDto = {
 
 export class RuleService {
   private lastMatchByRuleId = new Map<string, boolean>();
+  private evalChains = new Map<string, Promise<void>>();
 
   constructor(
     private ruleRepo: RuleRepository,
     private actionExecutionPort: ActionExecutionPort,
     private ruleNotificationPort?: RuleNotificationPort,
     private deviceNameResolver?: DeviceNameResolverPort,
+    private ruleEvaluationTrigger?: RuleEvaluationTriggerPort,
   ) {}
 
   async getRulesForHome(homeId: string): Promise<Rule[]> {
@@ -94,7 +97,7 @@ export class RuleService {
       ? new TimeWindow(dto.timeWindow)
       : undefined;
     const ruleSet = await this.ruleRepo.findHomeRuleSet(dto.homeId);
-    return await this.ruleRepo.addRule(
+    const rule = await this.ruleRepo.addRule(
       dto.homeId,
       dto.ruleName,
       condition,
@@ -102,6 +105,8 @@ export class RuleService {
       ruleSet.nextOrder(),
       timeWindow,
     );
+    this.ruleEvaluationTrigger?.requestEvaluation(dto.homeId);
+    return rule;
   }
 
   async deleteRule(ruleId: string): Promise<void> {
@@ -118,7 +123,24 @@ export class RuleService {
     await this.ruleRepo.reorderRules(homeId, ruleSet.positions());
   }
 
-  async executeRulesForHome(
+  executeRulesForHome(
+    homeId: string,
+    update: ObservablesUpdatedDomainEvent,
+  ): Promise<void> {
+    const prev = this.evalChains.get(homeId) ?? Promise.resolve();
+    const next = prev
+      .catch(() => {})
+      .then(() => this.runRuleEvaluation(homeId, update));
+    this.evalChains.set(homeId, next);
+    void next.finally(() => {
+      if (this.evalChains.get(homeId) === next) {
+        this.evalChains.delete(homeId);
+      }
+    });
+    return next;
+  }
+
+  private async runRuleEvaluation(
     homeId: string,
     update: ObservablesUpdatedDomainEvent,
   ): Promise<void> {

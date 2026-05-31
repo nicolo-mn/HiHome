@@ -275,6 +275,18 @@ export class HomeService {
     );
   }
 
+  async evaluateRulesNow(homeId: string): Promise<void> {
+    const state = this.sensorRegistry.getState(homeId);
+    if (!state?.outdoorSensors || state.indoorTemperature === undefined) {
+      return;
+    }
+    this.ruleServicePort.evaluateRules(
+      homeId,
+      state.outdoorSensors,
+      state.indoorTemperature,
+    );
+  }
+
   async updateIndoorTemperature(
     homeId: string,
     update: TemperatureState,

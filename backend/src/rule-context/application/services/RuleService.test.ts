@@ -122,6 +122,66 @@ describe("RuleService", () => {
     expect(order).toBe(0);
   });
 
+  it("should request an immediate evaluation after adding a rule", async () => {
+    const ruleEvaluationTrigger = { requestEvaluation: vi.fn() };
+    const service = new RuleService(
+      mockRuleRepository,
+      mockActionExecutionPort,
+      mockRuleNotificationPort,
+      undefined,
+      ruleEvaluationTrigger,
+    );
+    vi.mocked(mockRuleRepository.findHomeRuleSet).mockResolvedValue(
+      HomeRuleSet.empty("home-1"),
+    );
+    vi.mocked(mockRuleRepository.addRule).mockResolvedValue(
+      makeRule({ id: "r1", order: 0 }),
+    );
+
+    await service.addRule({
+      homeId: "home-1",
+      ruleName: "First",
+      observableId: "weather",
+      operatorTarget: "Rain",
+      actions: [{ deviceType: "light", command: "turnOn", deviceId: "c" }],
+    });
+
+    expect(ruleEvaluationTrigger.requestEvaluation).toHaveBeenCalledWith(
+      "home-1",
+    );
+  });
+
+  it("serializes concurrent evaluations for the same home", async () => {
+    const order: string[] = [];
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let call = 0;
+    vi.mocked(mockRuleRepository.getHomeRules).mockImplementation(async () => {
+      call += 1;
+      const id = call;
+      order.push(`start-${id}`);
+      if (id === 1) await firstGate;
+      order.push(`end-${id}`);
+      return [];
+    });
+    const update = {} as ObservablesUpdatedDomainEvent;
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    const p1 = ruleService.executeRulesForHome("home-1", update);
+    const p2 = ruleService.executeRulesForHome("home-1", update);
+
+    // The second evaluation must not start while the first is still running.
+    await flush();
+    expect(order).toEqual(["start-1"]);
+
+    releaseFirst();
+    await Promise.all([p1, p2]);
+
+    expect(order).toEqual(["start-1", "end-1", "start-2", "end-2"]);
+  });
+
   it("should delete a rule and recompact remaining orders", async () => {
     const existing = [
       makeRule({ id: "r1", order: 0 }),
