@@ -26,6 +26,7 @@ import {
 import { RuleRepository } from "../../application/repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
+import { TimeWindow, TimeWindowSpec } from "../../domain/TimeWindow";
 import { RuleModel } from "../models/RuleModel";
 
 const WEATHER_TYPE = "weather";
@@ -59,6 +60,7 @@ type RuleRecord = {
   order: number;
   condition: ConditionRecord;
   actions: ActionRecord[];
+  timeWindow?: TimeWindowSpec;
 };
 
 export class MongoRuleRepository implements RuleRepository {
@@ -89,6 +91,7 @@ export class MongoRuleRepository implements RuleRepository {
     condition: ObservableCondition,
     actions: DeviceAction[],
     order: number,
+    timeWindow?: TimeWindow,
   ): Promise<Rule> {
     if (actions.length === 0)
       throw new Error("A rule must have at least one action");
@@ -99,6 +102,7 @@ export class MongoRuleRepository implements RuleRepository {
       order,
       condition: this.toConditionRecord(condition),
       actions: actions.map((action) => this.toActionRecord(action)),
+      timeWindow: timeWindow?.value,
     };
 
     const doc = await RuleModel.create(record);
@@ -135,6 +139,9 @@ export class MongoRuleRepository implements RuleRepository {
       order: record.order,
       condition: this.toCondition(record.condition),
       actions: record.actions.map((action) => this.toAction(action)),
+      timeWindow: record.timeWindow
+        ? new TimeWindow(record.timeWindow)
+        : undefined,
     };
   }
 

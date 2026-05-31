@@ -5,6 +5,7 @@ import {
   conditionValidator,
   namingAndOwnershipValidator,
   reorderValidator,
+  timeWindowValidator,
 } from "../middlewares/RuleValidator";
 import { adminMiddleware } from "../../../shared/middlewares/AdminMiddleware";
 
@@ -26,6 +27,7 @@ export class RuleRouter {
       ...namingAndOwnershipValidator,
       ...conditionValidator,
       ...actionsValidator,
+      ...timeWindowValidator,
       (req, res) => this.ruleController.addRule(req, res),
     );
 

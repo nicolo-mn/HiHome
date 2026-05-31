@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { RuleService } from "./RuleService";
+import { TimeWindow } from "../../domain/TimeWindow";
 import { RuleRepository } from "../repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
@@ -308,6 +309,98 @@ describe("RuleService", () => {
     await ruleService.executeRulesForHome("home-1", update);
 
     expect(mockAction.accept).toHaveBeenCalledTimes(2);
+  });
+
+  describe("time window gating", () => {
+    // Rome (CET, UTC+1) instants used to drive the fake clock.
+    const ROME_NOON = "2026-01-15T11:00:00Z"; // Rome Thu 12:00
+    const ROME_2230 = "2026-01-15T21:30:00Z"; // Rome Thu 22:30
+
+    const update: ObservablesUpdatedDomainEvent = {
+      outdoorTemperature: 20,
+      indoorTemperature: 22,
+      airQuality: 50,
+      windSpeed: 10,
+      weatherForecast: WeatherForecast.Clear,
+    };
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function windowedRule(action: DeviceAction): Rule {
+      return makeRule({
+        id: "rule-1",
+        order: 0,
+        condition: {
+          verify: vi.fn().mockReturnValue(true),
+        } as unknown as ObservableCondition,
+        actions: [action],
+        timeWindow: new TimeWindow({ start: "22:00", end: "23:00" }),
+      });
+    }
+
+    function mockAction(): DeviceAction {
+      return {
+        getDeviceId: vi.fn().mockReturnValue("comp-1"),
+        accept: vi.fn().mockResolvedValue(undefined),
+      } as unknown as DeviceAction;
+    }
+
+    it("does not fire when now is outside the time window", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(ROME_NOON));
+      ruleService = new RuleService(
+        mockRuleRepository,
+        mockActionExecutionPort,
+      );
+      const action = mockAction();
+      vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue([
+        windowedRule(action),
+      ]);
+
+      await ruleService.executeRulesForHome("home-1", update);
+
+      expect(action.accept).not.toHaveBeenCalled();
+    });
+
+    it("fires when now is inside the time window", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(ROME_2230));
+      ruleService = new RuleService(
+        mockRuleRepository,
+        mockActionExecutionPort,
+      );
+      const action = mockAction();
+      vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue([
+        windowedRule(action),
+      ]);
+
+      await ruleService.executeRulesForHome("home-1", update);
+
+      expect(action.accept).toHaveBeenCalledTimes(1);
+    });
+
+    it("re-arms after leaving and re-entering the window", async () => {
+      vi.useFakeTimers();
+      ruleService = new RuleService(
+        mockRuleRepository,
+        mockActionExecutionPort,
+      );
+      const action = mockAction();
+      vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue([
+        windowedRule(action),
+      ]);
+
+      vi.setSystemTime(new Date(ROME_2230)); // inside -> fires
+      await ruleService.executeRulesForHome("home-1", update);
+      vi.setSystemTime(new Date(ROME_NOON)); // outside -> re-arms
+      await ruleService.executeRulesForHome("home-1", update);
+      vi.setSystemTime(new Date(ROME_2230)); // inside -> fires again
+      await ruleService.executeRulesForHome("home-1", update);
+
+      expect(action.accept).toHaveBeenCalledTimes(2);
+    });
   });
 
   it("should execute one action for device when multiple are accepted", async () => {

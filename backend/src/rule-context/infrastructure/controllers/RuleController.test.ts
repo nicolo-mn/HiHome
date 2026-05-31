@@ -158,6 +158,29 @@ describe("RuleController", () => {
       );
       expect(res.status).toHaveBeenCalledWith(201);
     });
+
+    it("should pass a time window through to the service", async () => {
+      req.body = {
+        ruleName: "Night Rule",
+        observableId: "weather",
+        operatorTarget: "Rain",
+        actions: [
+          { deviceType: "light", command: "turnOn", deviceId: "comp-1" },
+        ],
+        timeWindow: { days: [1, 2, 3, 4, 5], start: "22:00", end: "06:00" },
+      };
+
+      ruleService.addRule.mockResolvedValue({ id: "new-rule-id" });
+
+      await ruleController.addRule(req as Request, res as Response);
+
+      expect(ruleService.addRule).toHaveBeenCalledWith(
+        expect.objectContaining({
+          timeWindow: { days: [1, 2, 3, 4, 5], start: "22:00", end: "06:00" },
+        }),
+      );
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
   });
 
   describe("deleteRule", () => {

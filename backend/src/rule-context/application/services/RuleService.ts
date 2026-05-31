@@ -26,6 +26,7 @@ import {
 } from "../../domain/Actions";
 import { RuleRepository } from "../repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
+import { TimeWindow, TimeWindowSpec } from "../../domain/TimeWindow";
 import { DeviceActionExecutionVisitor } from "../DeviceActionExecutionVisitor";
 import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
 import { RuleNotificationPort } from "../ports/RuleNotificationPort";
@@ -69,6 +70,7 @@ export type AddRuleDto = {
   operator?: "gt" | "lt" | "eq";
   operatorTarget: string | number;
   actions: RuleActionDto[];
+  timeWindow?: TimeWindowSpec;
 };
 
 export class RuleService {
@@ -88,6 +90,9 @@ export class RuleService {
   async addRule(dto: AddRuleDto): Promise<Rule> {
     const condition = this.buildCondition(dto);
     const actions = this.buildActions(dto.homeId, dto.actions);
+    const timeWindow = dto.timeWindow
+      ? new TimeWindow(dto.timeWindow)
+      : undefined;
     const ruleSet = await this.ruleRepo.findHomeRuleSet(dto.homeId);
     return await this.ruleRepo.addRule(
       dto.homeId,
@@ -95,6 +100,7 @@ export class RuleService {
       condition,
       actions,
       ruleSet.nextOrder(),
+      timeWindow,
     );
   }
 
@@ -117,11 +123,13 @@ export class RuleService {
     update: ObservablesUpdatedDomainEvent,
   ): Promise<void> {
     console.log(`Executing rules for home ${homeId} with update:`, update);
+    const now = new Date();
     const rulesByPriority = await this.ruleRepo.getHomeRules(homeId);
     const actionPerDevice = new Map<string, DeviceAction>();
     const ruleNameByAction = new Map<DeviceAction, string>();
     for (const rule of rulesByPriority) {
-      const currentMatch = rule.condition.verify(update);
+      const inWindow = rule.timeWindow ? rule.timeWindow.contains(now) : true;
+      const currentMatch = rule.condition.verify(update) && inWindow;
       const prevMatch = this.lastMatchByRuleId.get(rule.id) ?? false;
       const shouldFire = currentMatch && !prevMatch;
       this.lastMatchByRuleId.set(rule.id, currentMatch);
