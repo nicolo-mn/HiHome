@@ -2,6 +2,7 @@ import { ObservableCondition } from "../../domain/Observables";
 import { DeviceAction } from "../../domain/Actions";
 import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
+import { TimeWindow } from "../../domain/TimeWindow";
 
 export interface RuleRepository {
   addRule(
@@ -10,6 +11,7 @@ export interface RuleRepository {
     condition: ObservableCondition,
     actions: DeviceAction[],
     order: number,
+    timeWindow?: TimeWindow,
   ): Promise<Rule>;
   // Returned rules are sorted by `order` ASC. Callers rely on this for
   // conflict resolution in RuleService.executeRulesForHome.

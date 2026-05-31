@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BaseIcon from "@/components/BaseIcon.vue";
 import { ACCENT } from "@/utils/accents";
+import { formatTimeWindow } from "@/utils/timeWindow";
 import type { RuleDto } from "@/api/rules";
 import type { HomeDevice } from "@/api/devices";
 
@@ -76,6 +77,10 @@ function getDeviceName(deviceId: string): string {
   const device = props.devices?.find((c) => c.id === deviceId);
   return device?.name ?? deviceId;
 }
+
+function timeWindowSummary(rule: RuleDto): string | null {
+  return rule.timeWindow ? formatTimeWindow(rule.timeWindow) : null;
+}
 </script>
 
 <template>
@@ -126,6 +131,13 @@ function getDeviceName(deviceId: string): string {
         <p class="text-sm text-white mt-0.5 truncate">
           <span class="font-semibold" :class="accent.text">When</span>
           {{ conditionSummary(rule) }}
+        </p>
+        <p
+          v-if="timeWindowSummary(rule)"
+          class="text-sm text-white mt-0.5 truncate flex items-center gap-1.5"
+        >
+          <BaseIcon name="schedule" :size="15" class="text-gray-500 shrink-0" />
+          {{ timeWindowSummary(rule) }}
         </p>
       </div>
       <button

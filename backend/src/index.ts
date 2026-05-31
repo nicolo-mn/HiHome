@@ -43,6 +43,7 @@ import { EventEmitter } from "events";
 import { ActionExecutionAdapter } from "./rule-context/infrastructure/adapters/ActionExecutionAdapter";
 import { NotificationContextAdapter as RuleNotificationContextAdapter } from "./rule-context/infrastructure/adapters/NotificationContextAdapter";
 import { HomeServiceDeviceNameResolver } from "./rule-context/infrastructure/adapters/HomeServiceDeviceNameResolver";
+import { HomeServiceRuleEvaluationTrigger } from "./rule-context/infrastructure/adapters/HomeServiceRuleEvaluationTrigger";
 import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySensorRegistry";
 import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/repositories/InMemoryHistoricalWeatherRepository";
 import { seedDatabase } from "./bootstrap/seedDatabase";
@@ -139,11 +140,13 @@ const ruleNotificationAdapter = new RuleNotificationContextAdapter(
   notificationContext.notificationPort,
 );
 const deviceNameResolver = new HomeServiceDeviceNameResolver(homeService);
+const ruleEvaluationTrigger = new HomeServiceRuleEvaluationTrigger(homeService);
 const ruleService = new RuleService(
   ruleRepo,
   actionExecutor,
   ruleNotificationAdapter,
   deviceNameResolver,
+  ruleEvaluationTrigger,
 );
 export const ruleController = new RuleController(ruleService);
 const ruleRouter = new RuleRouter(ruleController);

@@ -20,6 +20,15 @@ const actionSchema = new Schema(
   { _id: false },
 );
 
+const timeWindowSchema = new Schema(
+  {
+    days: { type: [Number] },
+    start: { type: String },
+    end: { type: String },
+  },
+  { _id: false },
+);
+
 const ruleSchema = new Schema(
   {
     homeId: { type: String, required: true },
@@ -27,6 +36,7 @@ const ruleSchema = new Schema(
     order: { type: Number, required: true },
     condition: { type: conditionSchema, required: true },
     actions: { type: [actionSchema], default: [] },
+    timeWindow: { type: timeWindowSchema, required: false },
   },
   { timestamps: true },
 );

@@ -73,6 +73,7 @@ export const conditionValidator = [
     .if((_value, { req }) => req.body?.observableId === "weather")
     .isIn([
       "clear",
+      "cloudy",
       "drizzle",
       "fog",
       "overcast",
@@ -81,7 +82,7 @@ export const conditionValidator = [
       "thunderstorm",
     ])
     .withMessage(
-      "operatorTarget must be one of: clear, drizzle, fog, overcast, rain, snow, thunderstorm for weather observable",
+      "operatorTarget must be one of: clear, cloudy, drizzle, fog, overcast, rain, snow, thunderstorm for weather observable",
     ),
 
   validate,
@@ -138,6 +139,47 @@ export const actionsValidator = [
     .withMessage(
       'targetTemp should only be provided when command is "setTemperature"',
     ),
+
+  validate,
+];
+
+const HHMM_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export const timeWindowValidator = [
+  body("timeWindow")
+    .optional()
+    .isObject()
+    .withMessage("timeWindow must be an object"),
+
+  body("timeWindow.days")
+    .optional()
+    .isArray()
+    .withMessage("timeWindow.days must be an array")
+    .bail()
+    .custom((days: unknown[]) => {
+      if (
+        !days.every(
+          (d) =>
+            typeof d === "number" && Number.isInteger(d) && d >= 0 && d <= 6,
+        )
+      ) {
+        throw new Error("timeWindow.days must be integers between 0 and 6");
+      }
+      if (new Set(days).size !== days.length) {
+        throw new Error("timeWindow.days must not contain duplicates");
+      }
+      return true;
+    }),
+
+  body("timeWindow.start")
+    .optional()
+    .matches(HHMM_REGEX)
+    .withMessage("timeWindow.start must be a valid HH:MM time"),
+
+  body("timeWindow.end")
+    .optional()
+    .matches(HHMM_REGEX)
+    .withMessage("timeWindow.end must be a valid HH:MM time"),
 
   validate,
 ];

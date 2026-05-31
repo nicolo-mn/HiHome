@@ -26,11 +26,13 @@ import {
 } from "../../domain/Actions";
 import { RuleRepository } from "../repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
+import { TimeWindow, TimeWindowSpec } from "../../domain/TimeWindow";
 import { DeviceActionExecutionVisitor } from "../DeviceActionExecutionVisitor";
 import { ActionExecutionPort } from "../../domain/ActionExecutionPort";
 import { RuleNotificationPort } from "../ports/RuleNotificationPort";
 import { ActionDescriptionVisitor } from "../ActionDescriptionVisitor";
 import { DeviceNameResolverPort } from "../ports/DeviceNameResolverPort";
+import { RuleEvaluationTriggerPort } from "../ports/RuleEvaluationTriggerPort";
 
 export type RuleActionDto = {
   deviceType: "light" | "window" | "thermostat" | "lock" | "fan";
@@ -69,16 +71,19 @@ export type AddRuleDto = {
   operator?: "gt" | "lt" | "eq";
   operatorTarget: string | number;
   actions: RuleActionDto[];
+  timeWindow?: TimeWindowSpec;
 };
 
 export class RuleService {
   private lastMatchByRuleId = new Map<string, boolean>();
+  private evalChains = new Map<string, Promise<void>>();
 
   constructor(
     private ruleRepo: RuleRepository,
     private actionExecutionPort: ActionExecutionPort,
     private ruleNotificationPort?: RuleNotificationPort,
     private deviceNameResolver?: DeviceNameResolverPort,
+    private ruleEvaluationTrigger?: RuleEvaluationTriggerPort,
   ) {}
 
   async getRulesForHome(homeId: string): Promise<Rule[]> {
@@ -88,14 +93,20 @@ export class RuleService {
   async addRule(dto: AddRuleDto): Promise<Rule> {
     const condition = this.buildCondition(dto);
     const actions = this.buildActions(dto.homeId, dto.actions);
+    const timeWindow = dto.timeWindow
+      ? new TimeWindow(dto.timeWindow)
+      : undefined;
     const ruleSet = await this.ruleRepo.findHomeRuleSet(dto.homeId);
-    return await this.ruleRepo.addRule(
+    const rule = await this.ruleRepo.addRule(
       dto.homeId,
       dto.ruleName,
       condition,
       actions,
       ruleSet.nextOrder(),
+      timeWindow,
     );
+    this.ruleEvaluationTrigger?.requestEvaluation(dto.homeId);
+    return rule;
   }
 
   async deleteRule(ruleId: string): Promise<void> {
@@ -112,16 +123,35 @@ export class RuleService {
     await this.ruleRepo.reorderRules(homeId, ruleSet.positions());
   }
 
-  async executeRulesForHome(
+  executeRulesForHome(
+    homeId: string,
+    update: ObservablesUpdatedDomainEvent,
+  ): Promise<void> {
+    const prev = this.evalChains.get(homeId) ?? Promise.resolve();
+    const next = prev
+      .catch(() => {})
+      .then(() => this.runRuleEvaluation(homeId, update));
+    this.evalChains.set(homeId, next);
+    void next.finally(() => {
+      if (this.evalChains.get(homeId) === next) {
+        this.evalChains.delete(homeId);
+      }
+    });
+    return next;
+  }
+
+  private async runRuleEvaluation(
     homeId: string,
     update: ObservablesUpdatedDomainEvent,
   ): Promise<void> {
     console.log(`Executing rules for home ${homeId} with update:`, update);
+    const now = new Date();
     const rulesByPriority = await this.ruleRepo.getHomeRules(homeId);
     const actionPerDevice = new Map<string, DeviceAction>();
     const ruleNameByAction = new Map<DeviceAction, string>();
     for (const rule of rulesByPriority) {
-      const currentMatch = rule.condition.verify(update);
+      const inWindow = rule.timeWindow ? rule.timeWindow.contains(now) : true;
+      const currentMatch = rule.condition.verify(update) && inWindow;
       const prevMatch = this.lastMatchByRuleId.get(rule.id) ?? false;
       const shouldFire = currentMatch && !prevMatch;
       this.lastMatchByRuleId.set(rule.id, currentMatch);

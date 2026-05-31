@@ -34,12 +34,14 @@ type ActionDto = {
   targetTemperature?: number;
   mode?: FanMode;
 };
+type TimeWindowDto = { days?: number[]; start?: string; end?: string };
 type RuleDto = {
   id: string;
   name: string;
   order: number;
   condition: ConditionDto;
   actions: ActionDto[];
+  timeWindow?: TimeWindowDto;
 };
 
 function conditionToDto(condition: ObservableCondition): ConditionDto {
@@ -111,6 +113,7 @@ function ruleToDto(rule: Rule): RuleDto {
     order: rule.order,
     condition: conditionToDto(rule.condition),
     actions: rule.actions.map(actionToDto),
+    timeWindow: rule.timeWindow?.value,
   };
 }
 export class RuleController {
@@ -137,6 +140,7 @@ export class RuleController {
         operator: req.body.operator as AddRuleDto["operator"],
         operatorTarget: req.body.operatorTarget,
         actions: req.body.actions as AddRuleDto["actions"],
+        timeWindow: req.body.timeWindow as AddRuleDto["timeWindow"],
       };
 
       const newRule = await this.ruleService.addRule(dto);

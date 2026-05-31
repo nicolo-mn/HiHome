@@ -3,6 +3,7 @@ import { DeviceAction } from "../../domain/Actions";
 import { RuleRepository } from "../../application/repositories/RuleRepository";
 import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
+import { TimeWindow } from "../../domain/TimeWindow";
 
 export class InMemoryRuleRepository implements RuleRepository {
   private rules: Map<string, Rule[]> = new Map();
@@ -32,6 +33,7 @@ export class InMemoryRuleRepository implements RuleRepository {
     condition: ObservableCondition,
     actions: DeviceAction[],
     order: number,
+    timeWindow?: TimeWindow,
   ): Promise<Rule> {
     if (actions.length === 0)
       throw new Error("A rule must have at least one action");
@@ -43,6 +45,7 @@ export class InMemoryRuleRepository implements RuleRepository {
       order,
       condition,
       actions,
+      timeWindow,
     };
     const homeRules = this.rules.get(homeId) ?? [];
     homeRules.push(newRule);
