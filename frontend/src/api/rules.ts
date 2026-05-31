@@ -16,12 +16,19 @@ export type ActionDto = {
   mode?: FanMode;
 };
 
+export type TimeWindowDto = {
+  days?: number[];
+  start?: string;
+  end?: string;
+};
+
 export type RuleDto = {
   id: string;
   name: string;
   order: number;
   condition: ConditionDto;
   actions: ActionDto[];
+  timeWindow?: TimeWindowDto;
 };
 
 export type CreateRulePayload = {
@@ -35,6 +42,7 @@ export type CreateRulePayload = {
     command: string;
     targetTemp?: number;
   }[];
+  timeWindow?: TimeWindowDto;
 };
 
 export async function getRules(homeId: string): Promise<RuleDto[]> {

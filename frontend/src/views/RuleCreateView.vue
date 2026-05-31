@@ -12,6 +12,16 @@ import BasePickerRow from "@/components/BasePickerRow.vue";
 import BaseBottomSheet from "@/components/BaseBottomSheet.vue";
 import ErrorBanner from "@/components/ErrorBanner.vue";
 import { ACCENT } from "@/utils/accents";
+import {
+  DAY_LABELS_LETTER,
+  DAY_LABELS_SHORT,
+  DAY_ORDER,
+  formatDays,
+  formatTimeInput,
+  formatTimeRange,
+  isOvernight,
+  isValidTime,
+} from "@/utils/timeWindow";
 import type { Accent, IconName } from "@/types/ui";
 
 type OperatorOption = { value: string; label: string; symbol: string };
@@ -206,6 +216,56 @@ const sensorId = ref<string>(sensorOptions[0]?.id ?? "weather");
 const operatorId = ref<string>(sensorOptions[0]?.operators[0]?.value ?? "is");
 const target = ref<number | string>(sensorOptions[0]?.defaultTarget ?? "");
 
+const timeWindowEnabled = ref(false);
+const selectedDays = ref<number[]>([]);
+const startTime = ref("");
+const endTime = ref("");
+
+function toggleDay(day: number) {
+  selectedDays.value = selectedDays.value.includes(day)
+    ? selectedDays.value.filter((d) => d !== day)
+    : [...selectedDays.value, day];
+}
+
+function onTimeInput(ev: Event, field: "start" | "end") {
+  const el = ev.target as HTMLInputElement;
+  const formatted = formatTimeInput(el.value);
+  if (field === "start") startTime.value = formatted;
+  else endTime.value = formatted;
+  // Keep the DOM in sync even when the masked value matches the previous ref
+  // (e.g. an illegal character was stripped), otherwise Vue skips the update.
+  el.value = formatted;
+}
+
+const startInvalid = computed(
+  () => startTime.value !== "" && !isValidTime(startTime.value),
+);
+const endInvalid = computed(
+  () => endTime.value !== "" && !isValidTime(endTime.value),
+);
+
+const validStart = computed(() =>
+  isValidTime(startTime.value) ? startTime.value : undefined,
+);
+const validEnd = computed(() =>
+  isValidTime(endTime.value) ? endTime.value : undefined,
+);
+
+const hasTimeWindow = computed(
+  () =>
+    timeWindowEnabled.value &&
+    (selectedDays.value.length > 0 || !!validStart.value || !!validEnd.value),
+);
+
+const timeWindowSummary = computed(() => {
+  const days = formatDays(selectedDays.value);
+  const range = formatTimeRange(validStart.value, validEnd.value);
+  const overnight = isOvernight(validStart.value, validEnd.value)
+    ? " (overnight)"
+    : "";
+  return `${days} · ${range}${overnight}`;
+});
+
 let nextActionId = 0;
 const actions = ref<ActionDraft[]>([createActionDraft()]);
 
@@ -246,7 +306,9 @@ const canSave = computed(
   () =>
     ruleName.value.trim().length > 0 &&
     actions.value.length > 0 &&
-    actions.value.every((a) => a.deviceId && a.command),
+    actions.value.every((a) => a.deviceId && a.command) &&
+    !startInvalid.value &&
+    !endInvalid.value,
 );
 
 function createActionDraft(): ActionDraft {
@@ -351,6 +413,15 @@ const {
           targetTemp: def?.needsTarget ? numericTarget : undefined,
         };
       }),
+      timeWindow: hasTimeWindow.value
+        ? {
+            ...(selectedDays.value.length
+              ? { days: [...selectedDays.value].sort((a, b) => a - b) }
+              : {}),
+            ...(validStart.value ? { start: validStart.value } : {}),
+            ...(validEnd.value ? { end: validEnd.value } : {}),
+          }
+        : undefined,
     });
     router.push({ name: "rules" });
   },
@@ -540,6 +611,157 @@ function bgFor(accent: Accent) {
             :value="targetDisplay"
             @open="sheet = { kind: 'target' }"
           />
+        </div>
+      </section>
+
+      <section>
+        <div class="flex justify-between items-baseline mb-3">
+          <span class="font-medium text-[18px] md:text-[20px] text-white">
+            Active hours
+          </span>
+          <span class="text-sm text-gray-500">
+            Optional · limit when this rule can run
+          </span>
+        </div>
+        <div
+          class="bg-gray-800/50 border-2 border-gray-800 rounded-[24px] md:rounded-[28px] p-3 md:p-4 flex flex-col gap-4"
+        >
+          <button
+            type="button"
+            class="flex items-center gap-3.5 text-left"
+            @click="timeWindowEnabled = !timeWindowEnabled"
+          >
+            <div
+              class="w-11 h-11 rounded-2xl bg-gray-900 flex items-center justify-center shrink-0 text-violet-500"
+            >
+              <BaseIcon name="schedule" :size="22" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <span
+                class="block text-[12px] font-medium uppercase tracking-wider text-white"
+              >
+                Time window
+              </span>
+              <span
+                class="block text-[18px] md:text-[19px] font-semibold text-gray-200"
+              >
+                {{
+                  timeWindowEnabled
+                    ? "On — runs only inside the window"
+                    : "Off — runs anytime"
+                }}
+              </span>
+            </div>
+            <span
+              :class="[
+                'w-12 h-7 rounded-full p-1 transition-colors shrink-0 flex items-center',
+                timeWindowEnabled ? 'bg-violet-500' : 'bg-gray-700',
+              ]"
+            >
+              <span
+                :class="[
+                  'w-5 h-5 rounded-full bg-white transition-transform',
+                  timeWindowEnabled ? 'translate-x-5' : '',
+                ]"
+              />
+            </span>
+          </button>
+
+          <div v-if="timeWindowEnabled" class="flex flex-col gap-4">
+            <div
+              class="flex flex-col md:flex-row md:items-start md:gap-8 gap-4"
+            >
+              <div class="flex-1">
+                <span
+                  class="block text-[12px] font-medium uppercase tracking-wider text-white mb-2"
+                >
+                  Days
+                </span>
+                <div class="flex gap-1.5">
+                  <button
+                    v-for="day in DAY_ORDER"
+                    :key="day"
+                    type="button"
+                    :title="DAY_LABELS_SHORT[day]"
+                    :class="[
+                      'w-9 h-9 rounded-xl text-sm font-semibold transition-colors',
+                      selectedDays.includes(day)
+                        ? 'bg-violet-500 text-gray-900'
+                        : 'bg-gray-900/60 text-gray-300 hover:bg-gray-900',
+                    ]"
+                    @click="toggleDay(day)"
+                  >
+                    {{ DAY_LABELS_LETTER[day] }}
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                  None selected = every day
+                </p>
+              </div>
+
+              <div>
+                <span
+                  class="block text-[12px] font-medium uppercase tracking-wider text-white mb-2"
+                >
+                  Time
+                </span>
+                <div class="flex items-center gap-2">
+                  <input
+                    :value="startTime"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="5"
+                    placeholder="22:00"
+                    :class="[
+                      'w-[84px] bg-gray-900/60 rounded-xl px-3 h-11 text-center font-mono text-[17px] text-gray-200 outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-violet-500/50',
+                      startInvalid ? 'ring-1 ring-rose-500/70' : '',
+                    ]"
+                    @input="(e) => onTimeInput(e, 'start')"
+                  />
+                  <span class="text-gray-500">–</span>
+                  <input
+                    :value="endTime"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="5"
+                    placeholder="06:00"
+                    :class="[
+                      'w-[84px] bg-gray-900/60 rounded-xl px-3 h-11 text-center font-mono text-[17px] text-gray-200 outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-violet-500/50',
+                      endInvalid ? 'ring-1 ring-rose-500/70' : '',
+                    ]"
+                    @input="(e) => onTimeInput(e, 'end')"
+                  />
+                </div>
+                <p
+                  :class="[
+                    'text-xs mt-2',
+                    startInvalid || endInvalid
+                      ? 'text-rose-400'
+                      : 'text-gray-500',
+                  ]"
+                >
+                  24-hour format, e.g. 22:00 · empty = all day
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="rounded-2xl bg-gray-900/50 px-4 py-3 flex items-center gap-2"
+            >
+              <BaseIcon
+                name="schedule"
+                :size="18"
+                class="text-violet-500 shrink-0"
+              />
+              <span class="text-sm text-gray-200">
+                {{
+                  hasTimeWindow
+                    ? timeWindowSummary
+                    : "No limit set — runs anytime"
+                }}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
