@@ -3,18 +3,35 @@ import { computed, ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useSensorStore } from "@/stores/sensors";
+import { useNotificationsStore } from "@/stores/notifications";
 import { homeApi } from "@/api";
 import SensorCard from "@/components/cards/SensorCard.vue";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
+import type { TopBarAction } from "@/components/AppHeader.vue";
 
 const auth = useAuthStore();
 const sensorStore = useSensorStore();
+const notificationsStore = useNotificationsStore();
 const { readings } = storeToRefs(sensorStore);
+const { notifications } = storeToRefs(notificationsStore);
 
 const locationName = ref<string | null>(null);
 
+const hasUnread = computed(() => notifications.value.some((n) => !n.read));
+
+const rightActions = computed<TopBarAction[]>(() => [
+  {
+    icon: "bell",
+    label: "Notifications",
+    to: "/notifications",
+    highlight: hasUnread.value,
+  },
+  { icon: "settings", label: "Settings", to: "/settings" },
+]);
+
 onMounted(async () => {
+  notificationsStore.load();
   if (auth.homeId) {
     locationName.value = await homeApi.getLocationName(auth.homeId);
   }
@@ -60,13 +77,7 @@ const otherOutdoorCards = computed(() =>
 
 <template>
   <div class="flex flex-col gap-10 md:gap-12">
-    <AppHeader
-      title="Home"
-      :right-actions="[
-        { icon: 'bell', label: 'Notifications', to: '/notifications' },
-        { icon: 'user', label: 'Settings', to: '/settings' },
-      ]"
-    />
+    <AppHeader title="Home" :right-actions="rightActions" />
 
     <section v-if="outdoorReadings.length" class="flex flex-col gap-3">
       <div class="font-medium text-[18px] md:text-[20px] text-white">

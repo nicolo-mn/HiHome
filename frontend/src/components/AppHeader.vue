@@ -11,6 +11,7 @@ import type { IconName } from "@/types/ui";
 export interface TopBarAction {
   icon: IconName;
   badge?: boolean;
+  highlight?: boolean;
   to?: string;
   label?: string;
 }
@@ -66,7 +67,11 @@ const emit = defineEmits<{
           :aria-label="a.label"
           class="relative w-11 h-11 md:w-12 md:h-12 rounded-full bg-gray-700 text-gray-200 flex items-center justify-center hover:bg-gray-600 transition-colors no-underline"
         >
-          <BaseIcon :name="a.icon" :size="22" />
+          <BaseIcon
+            :name="a.icon"
+            :size="22"
+            :class="a.highlight ? 'text-yellow-500' : ''"
+          />
           <span
             v-if="a.badge"
             class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-gray-700 box-content"
@@ -79,7 +84,11 @@ const emit = defineEmits<{
           class="relative w-11 h-11 md:w-12 md:h-12 rounded-full bg-gray-700 text-gray-200 flex items-center justify-center hover:bg-gray-600 transition-colors"
           @click="emit('action', i)"
         >
-          <BaseIcon :name="a.icon" :size="22" />
+          <BaseIcon
+            :name="a.icon"
+            :size="22"
+            :class="a.highlight ? 'text-yellow-500' : ''"
+          />
           <span
             v-if="a.badge"
             class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-gray-700 box-content"

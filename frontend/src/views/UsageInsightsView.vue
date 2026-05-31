@@ -73,6 +73,10 @@ const peakHour = computed(() =>
     : "—",
 );
 
+// Real peak count for display (0 when no activity); maxHour keeps its 1 floor
+// only for chart scaling.
+const peakCount = computed(() => Math.max(0, ...hours.value));
+
 const totalDay = computed(() => hours.value.reduce((sum, n) => sum + n, 0));
 
 const hoveredBar = ref<number | null>(null);
@@ -227,7 +231,7 @@ onMounted(() => store.load());
             <div
               class="font-bold text-3xl md:text-4xl text-gray-200 leading-10 tabular-nums"
             >
-              {{ maxHour }}
+              {{ peakCount > 0 ? peakCount : "—" }}
             </div>
             <div class="text-[12px] md:text-[13px] font-semibold text-sky-500">
               Peak · {{ peakHour }}
@@ -336,9 +340,9 @@ onMounted(() => store.load());
               <span
                 class="font-bold text-[22px] md:text-[26px] leading-[30px] text-sky-500 tabular-nums"
               >
-                {{ maxHour }}
+                {{ peakCount > 0 ? peakCount : "—" }}
               </span>
-              <span class="text-xs text-white">/h</span>
+              <span v-if="peakCount > 0" class="text-xs text-white">/h</span>
             </div>
             <div class="text-xs text-white mt-0.5">{{ peakHour }}</div>
           </div>

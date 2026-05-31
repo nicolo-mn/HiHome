@@ -85,9 +85,6 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
               class="relative w-20 h-20 rounded-[28px] bg-gradient-to-br from-gray-700 to-gray-700/40 shadow-2xl flex items-center justify-center"
             >
               <BaseIcon name="home" :size="44" class="text-yellow-500" />
-              <span
-                class="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-gray-900 border-[3px] border-sky-500"
-              />
             </div>
             <span class="font-bold text-[40px] tracking-tight text-gray-200">
               HiHome
@@ -103,7 +100,7 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
             class="text-[18px] xl:text-[20px] text-white max-w-[520px] leading-[1.5]"
           >
             Manage devices, set rules, and keep an eye on your home — all from
-            the same place, on any screen.
+            the same place.
           </div>
         </div>
 
@@ -116,9 +113,6 @@ function borderFor(key: string, hasError: boolean, accentClass: string) {
               class="relative w-20 h-20 rounded-[24px] bg-gradient-to-br from-gray-700 to-gray-700/40 shadow-2xl flex items-center justify-center"
             >
               <BaseIcon name="home" :size="42" class="text-yellow-500" />
-              <span
-                class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gray-900 border-[3px] border-sky-500"
-              />
             </div>
             <div>
               <div
