@@ -213,7 +213,9 @@ const onlyWelcome = computed(
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 md:gap-8 pb-40 md:pb-8">
+  <div
+    class="flex flex-col gap-6 md:gap-8 h-[calc(100dvh-8.5rem)] md:h-[calc(100dvh-7rem)] overflow-hidden pb-24 md:pb-6"
+  >
     <AppHeader
       title="Assistant"
       :right-actions="[{ icon: 'add', label: 'New chat' }]"
@@ -245,7 +247,7 @@ const onlyWelcome = computed(
     </section>
 
     <section
-      class="flex-1 flex flex-col gap-3 rounded-[26px] md:rounded-[32px] bg-gray-800/30 p-4 md:p-5 min-h-[280px]"
+      class="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 rounded-[26px] md:rounded-[32px] bg-gray-800/30 p-4 md:p-5"
     >
       <div class="flex flex-col gap-3">
         <div
