@@ -74,7 +74,12 @@ export class HomeService {
 
     const device = createDevice(randomUUID(), input);
     room.devices.push(device);
-    await this.homeRepo.saveHome(home);
+    await persistAndBroadcast(
+      this.homeRepo,
+      home,
+      device,
+      this.deviceUpdatePort,
+    );
     return device;
   }
 
@@ -105,18 +110,17 @@ export class HomeService {
     console.log(
       `Executing device action ${action} for home ${homeId} on device ${deviceId}`,
     );
+    const event = (device as any)[action](param) as DeviceEvent;
+    if (event) {
+      home.addDeviceEvent({ ...event, actor });
+    }
+
     await persistAndBroadcast(
       this.homeRepo,
       home,
       device,
       this.deviceUpdatePort,
     );
-    const event = (device as any)[action](param) as DeviceEvent;
-    if (event) {
-      home.addDeviceEvent({ ...event, actor });
-    }
-
-    await this.homeRepo.saveHome(home);
     const room = home.rooms.find((r) => r.id === device.roomId);
     return { device, roomName: room?.name ?? "" };
   }
