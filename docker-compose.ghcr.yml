@@ -1,0 +1,57 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ext-api-service:
+    image: ${EXT_API_IMAGE:-ghcr.io/nicolo-mn/hihome-ext-api-service:latest}
+    container_name: ext_api_service
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/nicolo-mn/hihome-backend:latest}
+    container_name: mevn_backend
+    environment:
+      - PORT=3000
+      - MONGO_URI=mongodb://mongodb:27017/test-db
+      - JWT_SECRET=${JWT_SECRET}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/v1/health', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ext-api-service:
+        condition: service_healthy
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/nicolo-mn/hihome-frontend:latest}
+    container_name: mevn_frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mongodb_data:
