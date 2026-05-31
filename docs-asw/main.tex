@@ -430,32 +430,32 @@ In Figura \ref{ref:backend-apis} sono riportati i principali endpoint esposti da
 \begin{itemize}
     \item \textbf{Backend Node.js}:
     \begin{itemize}
-        \item \texttt{POST /api/login}: Autenticazione dell'utente e generazione del token di sessione.
-        \item \texttt{GET /api/health}: Endpoint di health check per verificare lo stato di salute del backend.
-        \item \texttt{POST /api/home/:id/sensors/internal-temperature}: Aggiornamento della rilevazione della temperatura interna della casa.
-        \item \texttt{GET /api/home/:id/rooms}: Recupero della lista delle stanze presenti nella casa.
-        \item \texttt{GET /api/home/:id/components/types}: Ottenimento dei tipi di dispositivi smart supportati.
-        \item \texttt{GET /api/home/:id/components/types/:type}: Ottenimento dei dispositivi smart filtrati per tipologia.
-        \item \texttt{GET/POST /api/home/:id/components}: Ottenimento della lista dei dispositivi smart della casa o aggiunta di un nuovo dispositivo.
-        \item \texttt{GET /api/home/:id/components/:componentId}: Ottenimento dei dettagli di un dispositivo specifico.
-        \item \texttt{POST /api/home/:id/components/:componentId/:action}: Esecuzione di un'azione (es. accensione/spegnimento) su uno specifico dispositivo smart.
-        \item \texttt{GET /api/home/:id/components/events}: Ottenimento del log degli eventi relativi ai dispositivi smart.
-        \item \texttt{GET/PUT /api/home/:id/hourly-temperatures}: Visualizzazione o modifica del piano giornaliero delle temperature.
-        \item \texttt{GET /api/home/:id/usage}: Recupero delle statistiche di utilizzo dei dispositivi.
-        \item \texttt{GET/POST /api/home/:id/rules}: Ottenimento della lista delle regole di automazione o creazione di una nuova regola.
-        \item \texttt{PUT /api/home/:id/rules/order}: Aggiornamento dell'ordine di valutazione delle automazioni.
-        \item \texttt{DELETE /api/home/:id/rules/:ruleId}: Eliminazione di una regola di automazione.
-        \item \texttt{GET /api/home/:id/notifications}: Ottenimento delle notifiche relative alla casa.
-        \item \texttt{GET/PUT /api/home/:homeId/users/me/preferences}: Visualizzazione o aggiornamento delle preferenze (es. ricezione notifiche) dell'utente corrente.
-        \item \texttt{GET /api/home/:id/users}: Ottenimento della lista degli utenti associati alla casa.
-        \item \texttt{PUT /api/home/:id/users/:userId/role}: Modifica dei privilegi (ruolo) di un utente specifico.
+        \item \texttt{POST /api/v1/login}: Autenticazione dell'utente e generazione del token di sessione.
+        \item \texttt{GET /api/v1/health}: Endpoint di health check per verificare lo stato di salute del backend.
+        \item \texttt{POST /api/v1/home/:id/sensors/indoor-temperature}: Aggiornamento della rilevazione della temperatura interna della casa.
+        \item \texttt{GET /api/v1/home/:id/rooms}: Recupero della lista delle stanze presenti nella casa.
+        \item \texttt{GET /api/v1/home/:id/devices/types/:type}: Ottenimento dei dispositivi smart filtrati per tipologia.
+        \item \texttt{GET/POST /api/v1/home/:id/devices}: Ottenimento della lista dei dispositivi smart della casa o aggiunta di un nuovo dispositivo.
+        \item \texttt{GET /api/v1/home/:id/devices/:deviceId}: Ottenimento dei dettagli di un dispositivo specifico.
+        \item \texttt{POST /api/v1/home/:id/devices/:deviceId/:action}: Esecuzione di un'azione (es. accensione/spegnimento) su uno specifico dispositivo smart.
+        \item \texttt{GET /api/v1/home/:id/devices/events}: Ottenimento del log degli eventi relativi ai dispositivi smart.
+        \item \texttt{GET /api/v1/home/:id/location-name}: Recupero del nome della località in cui si trova la casa.
+        \item \texttt{GET/PUT /api/v1/home/:id/hourly-temperatures}: Visualizzazione o modifica del piano giornaliero delle temperature.
+        \item \texttt{GET /api/v1/home/:id/usage}: Recupero delle statistiche di utilizzo dei dispositivi.
+        \item \texttt{GET/POST /api/v1/home/:id/rules}: Ottenimento della lista delle regole di automazione o creazione di una nuova regola.
+        \item \texttt{PUT /api/v1/home/:id/rules/order}: Aggiornamento dell'ordine di valutazione delle automazioni.
+        \item \texttt{DELETE /api/v1/home/:id/rules/:ruleId}: Eliminazione di una regola di automazione.
+        \item \texttt{GET /api/v1/home/:id/notifications}: Ottenimento delle notifiche relative alla casa.
+        \item \texttt{GET/PUT /api/v1/home/:homeId/users/me/preferences}: Visualizzazione o aggiornamento delle preferenze (es. ricezione notifiche) dell'utente corrente.
+        \item \texttt{GET /api/v1/home/:id/users}: Ottenimento della lista degli utenti associati alla casa.
+        \item \texttt{PUT /api/v1/home/:id/users/:userId/role}: Modifica dei privilegi (ruolo) di un utente specifico.
     \end{itemize}
     \item \textbf{Servizio Esterno Go (Meteo e Qualità dell'Aria)}:
     \begin{itemize}
         \item \texttt{GET /health}: Endpoint di health check per verificare lo stato del servizio.
-        \item \texttt{GET /api/weather}: Ottenimento delle condizioni meteorologiche e della qualità dell'aria attuali.
-        \item \texttt{GET /api/forecast}: Ottenimento delle previsioni meteorologiche e della qualità dell'aria.
-        \item \texttt{GET /api/historical}: Ottenimento dei dati storici su meteo e qualità dell'aria per i grafici.
+        \item \texttt{GET /api/v1/environment/current}: Ottenimento delle condizioni meteorologiche e della qualità dell'aria attuali.
+        \item \texttt{GET /api/v1/environment/forecast}: Ottenimento delle previsioni meteorologiche e della qualità dell'aria.
+        \item \texttt{GET /api/v1/environment/historical}: Ottenimento dei dati storici su meteo e qualità dell'aria per i grafici.
     \end{itemize}
 \end{itemize}
 

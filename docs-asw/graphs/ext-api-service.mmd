@@ -1,9 +1,9 @@
 flowchart TD
   root["/"]:::root
-  api["/api"]:::api
+  api["/api/v1/environment"]:::api
   root --> root_health["/health<br/>GET"]:::leaf
   root --> api
-  api --> weather["/weather<br/>GET"]:::leaf
+  api --> weather["/current<br/>GET"]:::leaf
   api --> forecast["/forecast<br/>GET"]:::leaf
   api --> historical["/historical<br/>GET"]:::leaf
   classDef root fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#4e342e;

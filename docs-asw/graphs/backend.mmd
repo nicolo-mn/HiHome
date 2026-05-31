@@ -1,16 +1,16 @@
 flowchart LR
-  api["/api"]:::api
+  api["/api/v1"]:::api
   api --> login["/login<br/>POST"]:::leaf
   api --> health["/health<br/>GET"]:::leaf
   api --> home["/home"]:::api
-  home --> sensors["/:id/sensors/internal-temperature<br/>POST"]:::leaf
+  home --> sensors["/:id/sensors/indoor-temperature<br/>POST"]:::leaf
   home --> rooms["/:id/rooms<br/>GET"]:::leaf
-  home --> comp_types["/:id/components/types<br/>GET"]:::api
-  comp_types --> comp_types_by["/:id/components/types/:type<br/>GET"]:::leaf
-  home --> comps["/:id/components<br/>GET, POST"]:::api
-  comps --> comp_get["/:id/components/:componentId<br/>GET"]:::api
-  comp_get --> comp_action["/:id/components/:componentId/:action<br/>POST"]:::leaf
-  home --> comp_events["/:id/components/events<br/>GET"]:::leaf
+  home --> comp_types_by["/:id/devices/types/:type<br/>GET"]:::leaf
+  home --> comps["/:id/devices<br/>GET, POST"]:::api
+  home --> comp_events["/:id/devices/events<br/>GET"]:::leaf
+  comps --> comp_get["/:id/devices/:deviceId<br/>GET"]:::api
+  comp_get --> comp_action["/:id/devices/:deviceId/:action<br/>POST"]:::leaf
+  home --> location_name["/:id/location-name<br/>GET"]:::leaf
   home --> hourly["/:id/hourly-temperatures<br/>GET, PUT"]:::leaf
   home --> usage["/:id/usage<br/>GET"]:::leaf
   home --> rules["/:id/rules<br/>GET, POST"]:::api
