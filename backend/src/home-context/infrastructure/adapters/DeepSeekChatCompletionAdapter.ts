@@ -140,7 +140,11 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
   }
 
   private buildTools(isAdmin: boolean): DeepSeekTool[] {
-    const tools = [this.buildForecastTool(), this.buildDeviceStatesTool()];
+    const tools = [
+      this.buildForecastTool(),
+      this.buildDeviceStatesTool(),
+      this.buildDeviceActionsTool(),
+    ];
     if (isAdmin) {
       tools.push(this.buildAddRuleTool(), this.buildAddDeviceTool());
     }
@@ -161,6 +165,51 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         parameters: {
           type: "object",
           properties: {},
+        },
+      },
+    };
+  }
+
+  private buildDeviceActionsTool(): DeepSeekTool {
+    return {
+      type: "function",
+      function: {
+        name: "execute_device_actions",
+        description:
+          "Execute one or more actions on devices in the current home. " +
+          "Use this when the user asks to control devices (including bulk actions like 'turn off all lights'). " +
+          "Each action item must include a deviceId and action. Supported actions: " +
+          "turnOn, turnOff, open, close, setTemperature, lock, unlock, setMode. " +
+          "For setTemperature, provide param as a number. For setMode, param is one of off, low, medium, high.",
+        parameters: {
+          type: "object",
+          properties: {
+            actions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  deviceId: { type: "string" },
+                  action: {
+                    type: "string",
+                    enum: [
+                      "turnOn",
+                      "turnOff",
+                      "open",
+                      "close",
+                      "setTemperature",
+                      "lock",
+                      "unlock",
+                      "setMode",
+                    ],
+                  },
+                  param: { type: ["string", "number"] },
+                },
+                required: ["deviceId", "action"],
+              },
+            },
+          },
+          required: ["actions"],
         },
       },
     };
@@ -491,6 +540,46 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
             role: "tool",
             tool_call_id: toolCall.id,
             content: `Device "${device.name}" (${device.getType()}) added with id ${device.id}.`,
+          });
+          continue;
+        }
+
+        if (toolCall.function.name === "execute_device_actions") {
+          const args = JSON.parse(toolCall.function.arguments) as {
+            actions: Array<{
+              deviceId: string;
+              action: string;
+              param?: number | string;
+            }>;
+          };
+
+          if (!Array.isArray(args.actions) || args.actions.length === 0) {
+            throw new Error("No actions provided.");
+          }
+
+          const results: string[] = [];
+          for (const actionItem of args.actions) {
+            try {
+              const { device } = await this.homeService.executeAction(
+                homeId,
+                actionItem.deviceId,
+                actionItem.action,
+                actionItem.param,
+              );
+              results.push(
+                `OK: ${device.name} (${device.id}) -> ${actionItem.action}`,
+              );
+            } catch (error: any) {
+              results.push(
+                `FAILED: ${actionItem.deviceId} -> ${actionItem.action} (${error?.message ?? "error"})`,
+              );
+            }
+          }
+
+          responses.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: results.join("\n"),
           });
           continue;
         }
