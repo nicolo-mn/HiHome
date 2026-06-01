@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, CustomValidator } from "express-validator";
 import { validate } from "../../../shared/middlewares/Validate";
 
 const DEVICE_TYPES = ["light", "window", "thermostat", "lock", "fan"] as const;
@@ -23,64 +23,69 @@ export const namingAndOwnershipValidator = [
   validate,
 ];
 
+const OBSERVABLE_IDS = [
+  "indoor-thermometer",
+  "outdoor-thermometer",
+  "wind-speed",
+  "weather",
+  "air-quality",
+];
+const NUMERIC_OBSERVABLES = [
+  "indoor-thermometer",
+  "outdoor-thermometer",
+  "wind-speed",
+  "air-quality",
+];
+const WEATHER_TARGETS = [
+  "clear",
+  "cloudy",
+  "drizzle",
+  "fog",
+  "overcast",
+  "rain",
+  "snow",
+  "thunderstorm",
+];
+
+const isNumericObservable: CustomValidator = (_value, { req }) =>
+  NUMERIC_OBSERVABLES.includes(req.body?.observableId);
+const isWeatherObservable: CustomValidator = (_value, { req }) =>
+  req.body?.observableId === "weather";
+
 export const conditionValidator = [
   body("observableId")
     .notEmpty()
     .withMessage("observableId is required")
-    .isIn([
-      "indoor-thermometer",
-      "outdoor-thermometer",
-      "wind-speed",
-      "weather",
-      "air-quality",
-    ])
+    .isIn(OBSERVABLE_IDS)
     .withMessage(
       "observableId must be one of: indoor-thermometer, outdoor-thermometer, wind-speed, weather, air-quality",
     ),
 
+  body("operator").notEmpty().withMessage("operator is required"),
+
+  // Separate chains per observable family: chaining both `.if()` on a single
+  // chain would short-circuit the second branch (express-validator stops the
+  // chain on the first false condition), leaving the weather rules unenforced.
   body("operator")
-    .notEmpty()
-    .withMessage("operator is required")
-    .bail()
-    .if((_value, { req }) =>
-      [
-        "indoor-thermometer",
-        "outdoor-thermometer",
-        "wind-speed",
-        "air-quality",
-      ].includes(req.body?.observableId),
-    )
+    .if(isNumericObservable)
     .isIn(["gt", "lt", "eq"])
-    .withMessage("operator must be one of: gt, lt, eq for this observable")
-    .if((_value, { req }) => req.body?.observableId === "weather")
+    .withMessage("operator must be one of: gt, lt, eq for this observable"),
+
+  body("operator")
+    .if(isWeatherObservable)
     .isIn(["is"])
     .withMessage('operator must be "is" for weather observable'),
 
+  body("operatorTarget").notEmpty().withMessage("operatorTarget is required"),
+
   body("operatorTarget")
-    .notEmpty()
-    .withMessage("operatorTarget is required")
-    .bail()
-    .if((_value, { req }) =>
-      [
-        "indoor-thermometer",
-        "outdoor-thermometer",
-        "wind-speed",
-        "air-quality",
-      ].includes(req.body?.observableId),
-    )
+    .if(isNumericObservable)
     .isNumeric()
-    .withMessage("operatorTarget must be a number for this observable")
-    .if((_value, { req }) => req.body?.observableId === "weather")
-    .isIn([
-      "clear",
-      "cloudy",
-      "drizzle",
-      "fog",
-      "overcast",
-      "rain",
-      "snow",
-      "thunderstorm",
-    ])
+    .withMessage("operatorTarget must be a number for this observable"),
+
+  body("operatorTarget")
+    .if(isWeatherObservable)
+    .isIn(WEATHER_TARGETS)
     .withMessage(
       "operatorTarget must be one of: clear, cloudy, drizzle, fog, overcast, rain, snow, thunderstorm for weather observable",
     ),
@@ -130,7 +135,11 @@ export const actionsValidator = [
     .isNumeric()
     .withMessage("targetTemp must be a number")
     .isFloat({ min: 5, max: 40 })
-    .withMessage("targetTemp must be between 5 and 40")
+    .withMessage("targetTemp must be between 5 and 40"),
+
+  // Separate chain so this branch runs (a single chain would stop at the first
+  // `.if()` above, leaving the "only for setTemperature" rule unenforced).
+  body("actions[*].targetTemp")
     .if((_value, { req, path }) => {
       const index = getActionIndex(path);
       return req.body?.actions?.[index]?.command !== "setTemperature";
