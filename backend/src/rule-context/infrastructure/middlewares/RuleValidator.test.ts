@@ -42,13 +42,11 @@ describe("namingAndOwnershipValidator", () => {
 
 describe("conditionValidator", () => {
   it("accepts a numeric observable with a gt/lt/eq operator and numeric target", async () => {
-    const res = await request(app)
-      .post("/condition")
-      .send({
-        observableId: "indoor-thermometer",
-        operator: "gt",
-        operatorTarget: 22,
-      });
+    const res = await request(app).post("/condition").send({
+      observableId: "indoor-thermometer",
+      operator: "gt",
+      operatorTarget: 22,
+    });
     expect(res.status).toBe(200);
   });
 
@@ -77,35 +75,29 @@ describe("conditionValidator", () => {
   });
 
   it("rejects a numeric observable with a non-numeric target", async () => {
-    const res = await request(app)
-      .post("/condition")
-      .send({
-        observableId: "wind-speed",
-        operator: "gt",
-        operatorTarget: "abc",
-      });
+    const res = await request(app).post("/condition").send({
+      observableId: "wind-speed",
+      operator: "gt",
+      operatorTarget: "abc",
+    });
     expect(res.status).toBe(400);
   });
 
   it("rejects a weather observable with an operator other than 'is'", async () => {
-    const res = await request(app)
-      .post("/condition")
-      .send({
-        observableId: "weather",
-        operator: "gt",
-        operatorTarget: "rain",
-      });
+    const res = await request(app).post("/condition").send({
+      observableId: "weather",
+      operator: "gt",
+      operatorTarget: "rain",
+    });
     expect(res.status).toBe(400);
   });
 
   it("rejects a weather observable with a target outside the weather set", async () => {
-    const res = await request(app)
-      .post("/condition")
-      .send({
-        observableId: "weather",
-        operator: "is",
-        operatorTarget: "tornado",
-      });
+    const res = await request(app).post("/condition").send({
+      observableId: "weather",
+      operator: "is",
+      operatorTarget: "tornado",
+    });
     expect(res.status).toBe(400);
   });
 });
