@@ -2,7 +2,7 @@
 set -e # exit on failure
 
 # Run tests
-echo "Running Backend and Frontend Tests..."
+echo "Running MEVN application Tests..."
 pnpm test
 
 echo "Running Go Service Tests..."
