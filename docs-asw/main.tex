@@ -1,4 +1,4 @@
-\documentclass{report}
+\documentclass[a4paper,12pt]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -92,12 +92,15 @@ Il progetto HiHome consiste in un applicativo per gestire dispositivi all'intern
         \item Accensione/spegnimento per luci
         \item Apertura/chiusura per finestre
         \item Impostazione temperatura per termostato
+        \item Apertura o chiusura per serrature
+        \item Controllo velocità di ventilatori
     \end{itemize}
     \item (Admin) Possibilità di aggiunta di nuovi dispositivi smart, con specifica del tipo di dispositivo, del nome e della stanza in cui si trova
     \item (Admin) Possibilità di creare automazioni, ognuna definita da:
     \begin{itemize}
         \item Nome
         \item Condizione di attivazione composta da un sensore, un operatore e un valore
+        \item Finestra temporale opzionale che permette di specificare in quali giorni e orari l'automazione deve essere attiva
         \item Una o più azioni da eseguire quando la condizione è verificata, ognuna composta da un dispositivo smart e un'azione da eseguire su di esso
     \end{itemize}
     \item (Admin) Possibilità di visualizzare la lista completa di automazioni presenti
@@ -585,7 +588,7 @@ export const temperatureValidator = [
 \end{lstlisting}
 
 \subsection{Notifiche Real-Time con Socket.io}
-Il codice qui presente viene utilizzato per inviare aggiornamenti di stato dei dispositivi in tempo reale ai client connessi. Quando lo stato di un sensore viene aggiornato nel backend, questo adapter utilizza Socket.io per emetter un evento specifico a tutti i client connessi della casa interessata, garantendo così che le interfacce utente riflettano immediatamente i cambiamenti senza necessità di refresh manuali. Il metodo \texttt{broadcast} centralizza la logica di invio dei messaggi, semplificando l'implementazione di notifiche per i vari tipi di eventi.
+Il codice qui presente viene utilizzato per inviare aggiornamenti di stato dei dispositivi in tempo reale ai client connessi. Quando lo stato di un sensore viene aggiornato nel backend, questo adapter utilizza Socket.io per emettere un evento specifico a tutti i client connessi della casa interessata, garantendo così che le interfacce utente riflettano immediatamente i cambiamenti senza necessità di refresh manuali. Il metodo \texttt{broadcast} centralizza la logica di invio dei messaggi, semplificando l'implementazione di notifiche per i vari tipi di eventi.
 \begin{lstlisting}
 export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
   constructor(
@@ -642,7 +645,7 @@ Per quanto riguarda la produzione di mockup e l'implementazione del frontend, è
 \begin{itemize}
     \item \textbf{Visibilità dello stato del sistema}: sono state implementate notifiche in tempo reale per informare gli utenti su eventi importanti. Sono stati inseriti feedback visivi immediati quando lo stato di un dispositivo smart viene modificato, ad esempio, un riscontro visuale sul toogle corrispondente.
     \item \textbf{Corrispondenza tra il sistema e il mondo reale}: sono stati utilizzati termini e icone familiari agli utenti per rappresentare i dispositivi smart e le azioni disponibili, ad esempio un'icona di una lampadina per rappresentare una lampadina smart.
-    \item \textbf{Controllo e libertà dell'utente}: è stata implementata la possibilità di annullare azioni semplicemente, come il cambio istantaneo del toggle di dispositivi smart o la possibiltà di eliminare facilmente regole di automazione. Inoltre, la navbar permette una navigazione semplice e veloce tra le diverse sezioni dell'applicazione.
+    \item \textbf{Controllo e libertà dell'utente}: è stata implementata la possibilità di annullare azioni semplicemente, come il cambio istantaneo del toggle di dispositivi smart o la possibilità di eliminare facilmente regole di automazione. Inoltre, la navbar permette una navigazione semplice e veloce tra le diverse sezioni dell'applicazione.
     \item \textbf{Coerenza e standard}: è stata mantenuta una coerenza visiva e funzionale in tutte le pagine dell'applicazione, utilizzando la stessa palette colori, lo stesso stile dei pulsanti e lo stesso layout per elementi simili.
     \item \textbf{Prevenzione dell'errore}: abbiamo implementato meccanismi di prevenzione di errori, ad esempio, nel momento in cui l'utente agisce sul termostato: la temperatura viene modificata attraverso pulsanti di incremento/decremento che vengono disabilitati quando viene raggiunta la temperatura massima o minima consentita, evitando così l'inserimento di valori non validi.
     \item \textbf{Riconoscimento piuttosto che ricordo}: sono stati utilizzati menu a tendina, icone e pulsanti chiaramente etichettati per facilitare la navigazione e l'interazione, riducendo la necessità per gli utenti di ricordare comandi o percorsi specifici. Ad esempio, nella creazione di una regola di automazione i campi per la condizione e l'azione sono presentati come menu a tendina con opzioni predefinite, facilitando la selezione e riducendo la possibilità di errori, come l'inserimento di device non esistenti o azioni non valide.
