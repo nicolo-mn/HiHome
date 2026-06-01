@@ -98,17 +98,20 @@ export const useDevicesStore = defineStore("devices", () => {
     loadedHomeId.value = null;
   }
 
-  function applyRemoteUpdate(raw: RawDevice) {
-    if (!raw?.id) return;
-    const updated = enrichRoomName(normalizeDevice(raw));
-    const index = devices.value.findIndex((c) => c.id === updated.id);
+  function upsertDevice(device: HomeDevice) {
+    const index = devices.value.findIndex((c) => c.id === device.id);
     if (index === -1) {
-      devices.value = [...devices.value, updated];
+      devices.value = [...devices.value, device];
     } else {
       devices.value = devices.value.map((c) =>
-        c.id === updated.id ? updated : c,
+        c.id === device.id ? device : c,
       );
     }
+  }
+
+  function applyRemoteUpdate(raw: RawDevice) {
+    if (!raw?.id) return;
+    upsertDevice(enrichRoomName(normalizeDevice(raw)));
   }
 
   function connect() {
@@ -191,8 +194,7 @@ export const useDevicesStore = defineStore("devices", () => {
       if (created.roomId && !roomNames.value[created.roomId]) {
         await loadRoomNames();
       }
-      const resolved = enrichRoomName(created);
-      devices.value = [...devices.value, resolved];
+      upsertDevice(enrichRoomName(created));
       return created;
     } catch (e) {
       if (!(e instanceof UnauthorizedError)) {
