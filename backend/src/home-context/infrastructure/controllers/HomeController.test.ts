@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { Mock } from "vitest";
 import type { Request, Response } from "express";
 import { HomeController } from "./HomeController";
 import { HomeService } from "../../application/services/HomeService";
+import { HomeNotificationOutboundPort } from "../../application/ports/HomeNotificationPort";
 import { InMemoryHomeRepository } from "../repositories/InMemoryHomeRepository";
 import { InMemorySensorRegistry } from "../InMemorySensorRegistry";
 
@@ -17,7 +19,11 @@ const jsonArg = (res: Response) =>
 describe("HomeController", () => {
   let controller: HomeController;
   let sensorRegistry: InMemorySensorRegistry;
-  let notificationPort: { notifyDeviceAction: ReturnType<typeof vi.fn> };
+  let notificationPort: HomeNotificationOutboundPort & {
+    notifyDeviceAction: Mock<
+      HomeNotificationOutboundPort["notifyDeviceAction"]
+    >;
+  };
 
   beforeEach(() => {
     const homeRepo = new InMemoryHomeRepository();
@@ -45,7 +51,12 @@ describe("HomeController", () => {
     );
 
     notificationPort = {
-      notifyDeviceAction: vi.fn().mockResolvedValue(undefined),
+      notifyDeviceAction: vi
+        .fn<HomeNotificationOutboundPort["notifyDeviceAction"]>()
+        .mockResolvedValue(undefined),
+      notifySensorUpdate: vi
+        .fn<HomeNotificationOutboundPort["notifySensorUpdate"]>()
+        .mockResolvedValue(undefined),
     };
     controller = new HomeController(homeService, notificationPort);
   });

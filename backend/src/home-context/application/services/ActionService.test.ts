@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { Mock } from "vitest";
 import {
   DeviceEventActor,
+  DeviceUpdatePort,
   Fan,
   Home,
   Light,
@@ -26,14 +28,18 @@ const buildHome = (): Home =>
 describe("ActionService", () => {
   let repo: InMemoryHomeRepository;
   let home: Home;
-  let deviceUpdatePort: { sendDeviceUpdate: ReturnType<typeof vi.fn> };
+  let deviceUpdatePort: {
+    sendDeviceUpdate: Mock<DeviceUpdatePort["sendDeviceUpdate"]>;
+  };
   let service: ActionService;
 
   beforeEach(async () => {
     repo = new InMemoryHomeRepository();
     home = buildHome();
     await repo.saveHome(home);
-    deviceUpdatePort = { sendDeviceUpdate: vi.fn() };
+    deviceUpdatePort = {
+      sendDeviceUpdate: vi.fn<DeviceUpdatePort["sendDeviceUpdate"]>(),
+    };
     service = new ActionService(repo, deviceUpdatePort);
   });
 
