@@ -14,6 +14,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{natbib}
+\usepackage{float}
 \definecolor{blue}{rgb}{0.13, 0.13, 1}
 \definecolor{green}{rgb}{0, 0.5, 0}
 \definecolor{red}{rgb}{0.9, 0, 0}
@@ -203,8 +204,6 @@ Di seguito sono riportati i mockup delle principali schermate dell'applicazione,
     \label{fig:devices-mockup}
 \end{figure}
 
-\clearpage
-
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
@@ -242,8 +241,6 @@ Di seguito sono riportati i mockup delle principali schermate dell'applicazione,
     \caption{Chatbot}
     \label{fig:chatbot-mockup}
 \end{figure}
-
-\clearpage
 
 \begin{figure}[htbp]
     \centering
@@ -283,8 +280,6 @@ Di seguito sono riportati i mockup delle principali schermate dell'applicazione,
     \label{fig:new-rule-mockup}
 \end{figure}
 
-\clearpage
-
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
@@ -323,8 +318,6 @@ Di seguito sono riportati i mockup delle principali schermate dell'applicazione,
     \label{fig:insights-mockup}
 \end{figure}
 
-\clearpage
-
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
@@ -344,8 +337,6 @@ Di seguito sono riportati i mockup delle principali schermate dell'applicazione,
     \label{fig:event-log-mockup}
 \end{figure}
 
-\clearpage
-
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
@@ -364,6 +355,7 @@ Di seguito sono riportati i mockup delle principali schermate dell'applicazione,
     \caption{Impostazioni}
     \label{fig:settings-mockup}
 \end{figure}
+\clearpage
 \subsection{Design Architetturale}
 Il progetto è stato realizzato seguendo la filosofia di design \textbf{Domain-Driven Design (DDD)}. Come pattern architetturale, è stata adottata un'architettura esagonale (ports and adapters) per ogni bounded context identificato. In particolare, sono stati identificati i seguenti bounded contexts:
 \begin{itemize}
@@ -395,14 +387,14 @@ Per quanto riguarda i concetti di dominio, si definiscono di seguito i principal
 \subsection{Progettazione API}
 % TODO: IMPORTANTE modifica i grafici e le descrizioni degli endpoint quando li cambi
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{graphs/backend.png}
     \caption{API Backend Node.js}
     \label{ref:backend-apis}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{graphs/ext-api-service.png}
     \caption{API Servizio Esterno Go (Meteo e Qualità dell'Aria)}
@@ -827,8 +819,6 @@ Sono di seguito allegati gli screenshot finali dell'applicazione, sia in version
     \label{fig:devices-screenshot}
 \end{figure}
 
-\clearpage
-
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
@@ -867,7 +857,6 @@ Sono di seguito allegati gli screenshot finali dell'applicazione, sia in version
     \label{fig:chatbot-screenshot}
 \end{figure}
 
-\clearpage
 
 \begin{figure}[htbp]
     \centering
@@ -907,7 +896,6 @@ Sono di seguito allegati gli screenshot finali dell'applicazione, sia in version
     \label{fig:new-rule-screenshot}
 \end{figure}
 
-\clearpage
 
 \begin{figure}[htbp]
     \centering
@@ -947,7 +935,6 @@ Sono di seguito allegati gli screenshot finali dell'applicazione, sia in version
     \label{fig:insights-screenshot}
 \end{figure}
 
-\clearpage
 
 \begin{figure}[htbp]
     \centering
@@ -987,7 +974,6 @@ Sono di seguito allegati gli screenshot finali dell'applicazione, sia in version
     \label{fig:event-log-screenshot}
 \end{figure}
 
-\clearpage
 
 \begin{figure}[htbp]
     \centering
