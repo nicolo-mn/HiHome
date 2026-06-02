@@ -1,0 +1,994 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{natbib}
+\usepackage{float}
+\definecolor{blue}{rgb}{0.13, 0.13, 1}
+\definecolor{green}{rgb}{0, 0.5, 0}
+\definecolor{red}{rgb}{0.9, 0, 0}
+\definecolor{gray}{rgb}{0.46,0.45,0.48}
+\lstdefinelanguage{TypeScript}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break, const, let, export, import, from, async, await, class, constructor, implements, interface, extends, type, readonly, public, private, protected, Promise, string, number, boolean, void, any},
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywords={export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{gray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{green}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+\lstset{
+   language=TypeScript,
+   extendedchars=true,
+   basicstyle=\footnotesize\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   numbers=left,
+   numberstyle=\footnotesize\color{gray},
+   numbersep=9pt,
+   tabsize=2,
+   breaklines=true,
+   showtabs=false,
+   captionpos=b
+}
+\geometry{margin=1in}
+
+\title{
+    HiHome \\
+    \large Applicazioni e Servizi Web
+}
+\author{
+    Denise Nanni - 0001176519 \{denise.nanni@studio.unibo.it\} \\
+    Juri Guglielmi - 0001182994 \{juri.guglielmi@studio.unibo.it\} \\
+    Nicolò Monaldini - 0001186789 \{nicolo.monaldini@studio.unibo.it\}
+}
+\date{Giugno 2026}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introduzione}
+Il progetto HiHome consiste in un applicativo per gestire dispositivi all'interno di una smart home. Permette di gestire dispositivi smart da applicazione e aggiungere automazioni. Sono presenti funzionalità come notifiche, log di event relativi ai device smart, informazioni sullo stato attuale di temperatura, meteo e qualità dell'aria nella zona e grafici relativi ai valori passati di questi ultimi. Inoltre, è integrato con un agente AI in modo da effettuare alcune azioni a partire da istruzioni in linguaggio naturale. L'applicazione supporta due tipi di utenti:
+
+\begin{itemize}
+    \item \textbf{Admin}: ha accesso a funzioni avanzate sulla gestione della casa, come log di eventi relativi a manipolazione di smart device, creazione di automazioni e aggiunta di device.
+    \item \textbf{Utente Standard}: può agire sugli smart device, visualizzare statistiche relative allo stato attuale della casa, grafici relativi ad eventi passati, come lo stato della qualità dell'aria nella zona durante la settimana precedente e interagire con il chatbot.
+\end{itemize}
+
+\newpage
+\section{Requisiti}
+\subsection{Requisiti funzionali}
+\begin{itemize}
+    \item Login
+    \item Menu per navigazione tra le pagine 
+    \item Dashboard con informazioni sullo stato attuale della casa e del circondario:
+    \begin{itemize}
+        \item Temperatura (interna ed esterna)
+        \item Condizioni meteo attuali
+        \item Qualità dell'aria
+        \item Velocità e direzione del vento
+    \end{itemize}
+    \item Lista dispositivi smart, divisi per stanza, con possibilità di interagire con essi; in particolare:
+    \begin{itemize}
+        \item Accensione/spegnimento per luci
+        \item Apertura/chiusura per finestre
+        \item Impostazione temperatura per termostato
+        \item Apertura o chiusura per serrature
+        \item Controllo velocità di ventilatori
+    \end{itemize}
+    \item (Admin) Possibilità di aggiunta di nuovi dispositivi smart, con specifica del tipo di dispositivo, del nome e della stanza in cui si trova
+    \item (Admin) Possibilità di creare automazioni, ognuna definita da:
+    \begin{itemize}
+        \item Nome
+        \item Condizione di attivazione composta da un sensore, un operatore e un valore
+        \item Finestra temporale opzionale che permette di specificare in quali giorni e orari l'automazione deve essere attiva
+        \item Una o più azioni da eseguire quando la condizione è verificata, ognuna composta da un dispositivo smart e un'azione da eseguire su di esso
+    \end{itemize}
+    \item (Admin) Possibilità di visualizzare la lista completa di automazioni presenti
+    \item (Admin) Possibilità di visualizzare un log di eventi relativi alla manipolazione dei dispositivi smart, con specificate data, ora, dispositivo interessato, azione eseguita e utente che ha eseguito l'azione
+    \item Grafici relativi a dati passati, in particolare:
+    \begin{itemize}
+        \item Grafico della temperatura esterna durante la settimana precedente, con temperatura massima e minima per ogni giorno
+        \item Andamento della qualità dell'aria durante la settimana precedente
+        \item Grafico di utilizzo dei dispositivi smart durante la settimana precedente, con numero di azioni per fascia oraria
+        \item Dati relativi a numero di attivazioni manuali e automatiche per i dispositivi smart
+        \item Dati relativi alla percentuale di tempo settimanale in cui le luci sono rimaste accese e le finestre aperte
+    \end{itemize}
+    \item Chatbot con cui è possibile interagire in linguaggio naturale per eseguire azioni e chiedere informazioni a seconda dei privilegi dell'utente, ovvero:
+    \begin{itemize}
+        \item Aggiungere un dispositivo smart (Admin)
+        \item Aggiungere una regola di automazione (Admin)
+        \item Chiedere informazioni relative alle previsioni meteo per la settimana successiva
+        \item Domande generiche limitatamente all'ambito delle smart home
+    \end{itemize}
+    \item Notifiche relative a: 
+    \begin{itemize}
+        \item Esecuzione di un'automazione
+        \item Livelli critici della qualità dell'aria
+        \item (Admin) Azioni eseguite da utenti non admin
+    \end{itemize}
+    \item Impostazioni, con possibilità di:
+    \begin{itemize}
+        \item Effettuare logout
+        \item (Admin) Gestire gli utenti, con possibilità di visualizzare e modificare i permessi degli utenti della casa
+        \item Definire quali notifiche ricevere
+    \end{itemize}
+    \item Piano giornaliero delle temperature, con possibilità di visualizzare la temperatura prevista per ogni ora del giorno e di impostare una temperatura desiderata per ogni fascia oraria
+\end{itemize}
+\subsection{Requisiti non funzionali}
+\begin{itemize}
+    \item Aggiornamento in tempo reale dello stato dei dispositivi smart
+    \item Interfaccia user-friendly e responsive
+    \item Utilizzo di token per autenticazione della sessione
+    \item Aggiornamento della chat con streaming delle risposte da parte del modello AI, per evitare tempi di attesa eccessivi
+\end{itemize}
+\subsection{Requisiti di implementazione}
+\begin{itemize}
+    \item Utilizzo di API RESTful per comunicazione tra frontend e backend
+    \item Architettura MEVN (MongoDB, Express.js, Vue.js, Node.js), con aggiunta di un servizio esterno in Go per ottenere dati meteo e qualità dell'aria
+    \item Utilizzo di Socket.io per notifiche, aggiornamenti in tempo reale e streaming delle risposte del modello AI
+    \item Applicazione web responsive e mobile-first, con l'utilizzo di Tailwind CSS
+    \item Utilizzo di Docker come tecnologia di containerizzazione per facilitare lo sviluppo e la distribuzione dell'applicazione
+    \item Utilizzo di Semantic Versioning per il versionamento
+    \item Git e Semantic Commit per la gestione del codice sorgente
+\end{itemize}
+
+\newpage
+\section{Design}
+\subsection{User Interface}
+L'interfaccia utente è progettata per essere intuitiva e facile da navigare, con un design moderno e pulito. Il design si è basato su un approccio mobile-first. L'usabilità su dispositivi mobile è stata quindi una priorità, e le interfacce grafiche sono state poi estese a schermi desktop tramite layout responsive. Per prima cosa, è stata realizzata una moodboard per identificare la palette colori da utilizzare e il tono generale dell'applicazione, visibile in Figura \ref{fig:moodboard}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/moodboard.png}
+    \caption{Moodboard per il design dell'applicazione}
+    \label{fig:moodboard}
+\end{figure}
+Di seguito sono riportati i mockup delle principali schermate dell'applicazione, sia per la versione mobile che per la versione desktop. Sebbene siano state apportate lievi modifiche durante la fase di implementazione, l'interfaccia grafica è rimasta sostanzialmente fedele a questi mockup.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:dashboard-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:dashboard-desktop-mockup}
+    \end{subfigure}
+    \caption{Dashboard}
+    \label{fig:dashboard-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:devices-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:devices-desktop-mockup}
+    \end{subfigure}
+    \caption{Lista device}
+    \label{fig:devices-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:add-device-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:add-device-desktop-mockup}
+    \end{subfigure}
+    \caption{Aggiunta di un nuovo device}
+    \label{fig:add-device-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:chatbot-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:chatbot-desktop-mockup}
+    \end{subfigure}
+    \caption{Chatbot}
+    \label{fig:chatbot-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:rules-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:rules-desktop-mockup}
+    \end{subfigure}
+    \caption{Regole di automazione}
+    \label{fig:rules-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:new-rule-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:new-rule-desktop-mockup}
+    \end{subfigure}
+    \caption{Creazione nuova regola di automazione}
+    \label{fig:new-rule-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:activity-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:activity-desktop-mockup}
+    \end{subfigure}
+    \caption{Notifiche}
+    \label{fig:activity-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:insights-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:insights-desktop-mockup}
+    \end{subfigure}
+    \caption{Report settimanale}
+    \label{fig:insights-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:event-log-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:event-log-desktop-mockup}
+    \end{subfigure}
+    \caption{Log di eventi}
+    \label{fig:event-log-mockup}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-mobile-mockup.png}
+        \caption{Mobile}
+        \label{fig:settings-mobile-mockup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-desktop-mockup.png}
+        \caption{Desktop}
+        \label{fig:settings-desktop-mockup}
+    \end{subfigure}
+    \caption{Impostazioni}
+    \label{fig:settings-mockup}
+\end{figure}
+\clearpage
+\subsection{Design Architetturale}
+Il progetto è stato realizzato seguendo la filosofia di design \textbf{Domain-Driven Design (DDD)}. Come pattern architetturale, è stata adottata un'architettura esagonale (ports and adapters) per ogni bounded context identificato. In particolare, sono stati identificati i seguenti bounded contexts:
+\begin{itemize}
+    \item \textbf{Home context}: è il contesto principale dell'applicazione, che si occupa della gestione delle case, dei dispositivi smart e della chat
+    \item \textbf{User context}: si occupa della gestione degli utenti e dell'autenticazione
+    \item \textbf{Notification context}: si occupa della gestione delle notifiche
+    \item \textbf{Rule context}: si occupa della gestione delle regole di automazione
+    \item \textbf{Weather context}: si occupa di ottenere dati relativi al meteo e alla qualità dell'aria da servizi esterni
+\end{itemize}
+L'architettura utilizza lo stack MEVN, con i primi 4 contesti implementati nel backend in Node.js, mentre il Weather context è implementato in un servizio esterno in Go.
+
+L'applicazione HiHome è quindi divisa in diversi componenti. 
+\begin{itemize}
+    \item I \textbf{client}, che accedono all'applicazione tramite interfaccia web
+    \item Il \textbf{backend}, che espone API RESTful per la comunicazione con i client e gestisce la business logic
+    \item Il \textbf{servizio esterno per il meteo}, che è interrogato periodicamente dal backend per ottenere dati aggiornati relativi alle condizioni nelle zone in cui le varie case si trovano
+    \item Il \textbf{Modello AI}, ovvero \texttt{Deepseek-V4}, al quale l'accesso avviene tramite API key
+\end{itemize}
+
+Il server backend, inoltre, accetta connessioni WebSocket dai client per l'invio di notifiche, l'invio aggiornamenti in tempo reale e per lo streaming delle risposte del modello AI. Il backend accede ai dati tramite un database MongoDB.
+
+Per quanto riguarda i concetti di dominio, si definiscono di seguito i principali, già brevemente descritti in precedenza:
+\begin{itemize}
+    \item \textbf{Casa}: rappresenta una casa intelligente, con i suoi dispositivi smart, le sue automazioni e i suoi utenti
+    \item \textbf{Dispositivo Smart}: rappresenta un dispositivo intelligente all'interno di una casa, come una luce, una finestra o un termostato
+    \item \textbf{Automazione}: rappresenta una regola di automazione, composta da una condizione di attivazione e da una o più azioni da eseguire quando la condizione è verificata
+    \item \textbf{Utente}: rappresenta un utente dell'applicazione, con i suoi permessi e le sue preferenze
+\end{itemize}
+\subsection{Progettazione API}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{graphs/backend.png}
+    \caption{API Backend Node.js}
+    \label{ref:backend-apis}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{graphs/ext-api-service.png}
+    \caption{API Servizio Esterno Go (Meteo e Qualità dell'Aria)}
+    \label{ref:weather-apis}
+\end{figure}
+
+
+In Figura \ref{ref:backend-apis} sono riportati i principali endpoint esposti dal backend Node.js, mentre in Figura \ref{ref:weather-apis} sono riportati i principali endpoint esposti dal servizio esterno Go per il meteo. Di seguito è riportata una breve descrizione di ogni endpoint:
+\begin{itemize}
+    \item \textbf{Backend Node.js}:
+    \begin{itemize}
+        \item \texttt{POST /api/v1/login}: Autenticazione dell'utente e generazione del token di sessione.
+        \item \texttt{GET /api/v1/health}: Endpoint di health check per verificare lo stato di salute del backend.
+        \item \texttt{POST /api/v1/home/:id/sensors/indoor-temperature}: Aggiornamento della rilevazione della temperatura interna della casa.
+        \item \texttt{GET /api/v1/home/:id/rooms}: Recupero della lista delle stanze presenti nella casa.
+        \item \texttt{GET /api/v1/home/:id/devices/types/:type}: Ottenimento dei dispositivi smart filtrati per tipologia.
+        \item \texttt{GET/POST /api/v1/home/:id/devices}: Ottenimento della lista dei dispositivi smart della casa o aggiunta di un nuovo dispositivo.
+        \item \texttt{GET /api/v1/home/:id/devices/:deviceId}: Ottenimento dei dettagli di un dispositivo specifico.
+        \item \texttt{POST /api/v1/home/:id/devices/:deviceId/:action}: Esecuzione di un'azione (es. accensione/spegnimento) su uno specifico dispositivo smart.
+        \item \texttt{GET /api/v1/home/:id/devices/events}: Ottenimento del log degli eventi relativi ai dispositivi smart.
+        \item \texttt{GET /api/v1/home/:id/location-name}: Recupero del nome della località in cui si trova la casa.
+        \item \texttt{GET/PUT /api/v1/home/:id/hourly-temperatures}: Visualizzazione o modifica del piano giornaliero delle temperature.
+        \item \texttt{GET /api/v1/home/:id/usage}: Recupero delle statistiche di utilizzo dei dispositivi.
+        \item \texttt{GET/POST /api/v1/home/:id/rules}: Ottenimento della lista delle regole di automazione o creazione di una nuova regola.
+        \item \texttt{PUT /api/v1/home/:id/rules/order}: Aggiornamento dell'ordine di valutazione delle automazioni.
+        \item \texttt{DELETE /api/v1/home/:id/rules/:ruleId}: Eliminazione di una regola di automazione.
+        \item \texttt{GET /api/v1/home/:id/notifications}: Ottenimento delle notifiche relative alla casa.
+        \item \texttt{GET/PUT /api/v1/home/:homeId/users/me/preferences}: Visualizzazione o aggiornamento delle preferenze (es. ricezione notifiche) dell'utente corrente.
+        \item \texttt{GET /api/v1/home/:id/users}: Ottenimento della lista degli utenti associati alla casa.
+        \item \texttt{PUT /api/v1/home/:id/users/:userId/role}: Modifica dei privilegi (ruolo) di un utente specifico.
+    \end{itemize}
+    \item \textbf{Servizio Esterno Go (Meteo e Qualità dell'Aria)}:
+    \begin{itemize}
+        \item \texttt{GET /health}: Endpoint di health check per verificare lo stato del servizio.
+        \item \texttt{GET /api/v1/environment/current}: Ottenimento delle condizioni meteorologiche e della qualità dell'aria attuali.
+        \item \texttt{GET /api/v1/environment/forecast}: Ottenimento delle previsioni meteorologiche e della qualità dell'aria.
+        \item \texttt{GET /api/v1/environment/historical}: Ottenimento dei dati storici su meteo e qualità dell'aria per i grafici.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Analisi degli Utenti Target}
+La fase di progettazione è stata preceduta da un'analisi del target di riferimento, volta a identificare le diverse tipologie di attori che interagiscono con l'applicazione e i loro requisiti.
+
+Per prima cosa, è stata fatta la definizione di specifiche Personas. Ogni profilo rappresenta un utente caratterizzato da obiettivi e competenze tecnologiche peculiari, nonché dal ruolo che ricoprono all'interno dell'abitazione (Admin o Utente Standard).
+
+Ogni Persona è associata a use case che descrivono la loro interazione con il sistema. Questi use case sono stati poi utilizzati come riferimento durante la fase di progettazione dell'interfaccia utente e delle funzionalità dell'applicazione, al fine di garantire che l'esperienza utente fosse adeguata alle esigenze specifiche di ogni tipologia di utente.
+
+\subsection{Definizione delle Personas e Scenari d'Uso}
+Di seguito vengono presentati i profili utente identificati e le situazioni tipiche in cui si trovano a interagire con il sistema.
+
+\subsubsection{Persona 1: Marco, il padre di famiglia}
+
+\textbf{Profilo:} 45 anni, impiegato. Ricopre il ruolo di amministratore della smart home.
+
+\noindent\textbf{Obiettivo:} Gestire la casa in modo efficiente, ottimizzando i consumi energetici e garantendo il benessere della famiglia.
+
+\noindent\textbf{Scenario 1: Configurazione e automazioni.} In vista dell'estate, Marco decide di ottimizzare la gestione della temperatura all'interno della casa. Accede alla sezione delle automazioni e crea una nuova regola: se la temperatura esterna sale sopra i 30 gradi, le finestre devono essere aperte. 
+
+\subsubsection{Persona 2: Giulia, la ragazza tecnologica}
+
+\textbf{Profilo:} 21 anni, studentessa universitaria, esperta di tecnologia. Si è da poco trasferita.
+
+\noindent\textbf{Obiettivo:} Aggiungere dispositivi alla smart home.
+
+\noindent\textbf{Scenario 2: Controllo dei dispositivi.} Giulia ha acquistato diversi dispositivi smart e vuole aggiungerli alla sua casa. Accede alla sezione di gestione dei dispositivi, seleziona "Aggiungi dispositivo" e segue la procedura guidata per configurare ogni nuovo dispositivo, assegnandolo alla stanza corretta. Una volta aggiunti, interagisce con essi tramite app, accendendo le luci, regolando il termostato e chiudendo le finestre direttamente dal suo smartphone.
+
+\subsubsection{Persona 3: Elena, la madre attenta al benessere}
+
+\textbf{Profilo:} 42 anni, insegnante, utilizza lo smartphone ma non è un'esperta di domotica.
+
+\noindent\textbf{Obiettivo:} Monitorare il benessere abitativo e tenere sotto controllo l'utilizzo della casa.
+
+\noindent\textbf{Scenario 3: Monitoraggio ambientale e notifiche.} Elena soffre di allergie ed è particolarmente attenta alla qualità dell'aria. Ha configurato l'app per ricevere notifiche push nel caso in cui i livelli di inquinanti esterni superino la soglia di guardia. Ricevuta una notifica di allerta inquinamento, decide di chiudere le finestre di casa tramite l'app per evitare che l'aria esterna comprometta l'ambiente domestico. Consulta inoltre i grafici della qualità dell'aria per capire l'andamento della settimana.
+\newpage
+\section{Tecnologie}
+Il sistema è stato sviluppato utilizzando lo stack MEVN (MongoDB, Express.js, Vue.js, Node.js), con l'aggiunta di un servizio esterno in Go per ottenere dati meteo e sulla qualità dell'aria. Sono di seguito descritte le principali tecnologie e librerie principali utilizzate. 
+
+\subsection{Backend}
+\begin{itemize}
+    \item \textbf{Typescript}: utilizzato in altenativa a JavaScript per lo sviluppo del backend, in quanto offre tipizzazione statica e una migliore manutenibilità del codice.
+    \item \textbf{Express.js}: framework per Node.js utilizzato per la realizzazione del server backend, che espone API RESTful per la comunicazione con i client.
+    \item \textbf{Socket.io}: libreria per la comunicazione in tempo reale tra client e server, utilizzata per l'invio di notifiche, aggiornamenti in tempo reale e streaming delle risposte del modello AI.
+    \item \textbf{express-validator}: libreria per la convalida degli input degli utenti all'interno di Middleware, utilizzata per garantire la qualità e la sicurezza dei dati inseriti.
+    \item \textbf{Vitest}: framework per i test unitari, utilizzato per assicurare il corretto funzionamento delle funzionalità principali.
+    \item \textbf{Prettier}: strumento di formattazione del codice, utilizzato per mantenere uno stile di codice coerente e leggibile.
+\end{itemize}
+
+\subsection{Frontend}
+\begin{itemize}
+    \item \textbf{Vue 3}: framework JavaScript utilizzato per la realizzazione dell'interfaccia utente, con un'architettura basata su componenti.
+    \item \textbf{Tailwind CSS}: framework CSS utilizzato per lo styling dell'applicazione, che consente di creare interfacce responsive e moderne in modo efficiente.
+\end{itemize}
+
+\subsection{Database}
+\begin{itemize}
+    \item \textbf{MongoDB}: database NoSQL utilizzato per la memorizzazione dei dati dell'applicazione, come informazioni sulle case, dispositivi smart, automazioni e utenti.
+    \item \textbf{Mongoose}: libreria per Node.js che fornisce un'interfaccia di modellazione degli oggetti per MongoDB, semplificando l'interazione con il database e la definizione degli schemi dei dati.
+\end{itemize}
+
+\subsection{Infrastruttura}
+\begin{itemize}
+    \item \textbf{Nginx}: utilizzato come server web per servire l'applicazione frontend e come reverse proxy per il backend.
+    \item \textbf{Docker}: utilizzato per la containerizzazione dell'applicazione (backend, frontend, servizio API meteo), facilitando lo sviluppo e la distribuzione su diversi ambienti.
+    \item \textbf{Docker Compose}: utilizzato per orchestrare i container Docker, semplificando la gestione dei servizi e delle dipendenze tra di essi.
+    \begin{itemize}
+        \item Utilizzo di due compose file distinti, uno per l'ambiente di produzione ed uno per lo sviluppo, quest'ultimo provvisto di live reloading per facilitare lo sviluppo.
+        \item Implementazione di healthcheck per ogni servizio, in modo da verificare lo stato di ogni servizio e gestire al meglio la dipendenza tra i servizi (es. il backend dipende dal servizio meteo, quindi è stato configurato in modo che venga avviato solo dopo che il servizio meteo è risultato healthy).
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\section{Codice}
+
+\subsection{Logica di Autorizzazione}
+Questo middleware rappresenta un componente fondamentale per la sicurezza delle API esposte. Tramite questo codice, il backend si assicura che solo gli utenti con privilegi di "Admin" possano eseguire determinate operazioni, come la manipolazione di regole e l'aggiunta di dispositivi. L'autenticazione viene gestita attraverso token JWT. Questo token viene qui estratto dall'header della richiesta HTTP, decodificato e verificato, permettendo al controller di procedere solo se l'utente risulta avere il ruolo di amministratore.
+\begin{lstlisting}
+export const adminMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const token = getTokenFromHeader(req);
+  if (!token) {
+    res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
+    return;
+  }
+
+  try {
+    const decoded = verifyAuthToken(token) as JwtPayload;
+    (req as any).user = decoded;
+    if (decoded.role !== "Admin") {
+      res.status(403).json({ error: "Forbidden: Admin access required" });
+      return;
+    }
+    next();
+  } catch (error) {
+    res.status(401).json({ error: "Unauthorized: Invalid token" });
+  }
+};
+\end{lstlisting}
+
+\subsection{Validazione Input tramite Middleware}
+Questo blocco di codice illustra l'utilizzo della libreria \texttt{express-validator} per convalidare i parametri in ingresso alle API prima che vengano elaborati dai controller. Attraverso una catena di controlli dichiarativi, il middleware garantisce l'integrità dei dati: ad esempio, verifica che il parametro \texttt{temperature} sia un numero compreso tra 5 e 40 e che venga fornito solo se l'azione richiesta è effettivamente \texttt{setTemperature}. Questo approccio previene errori logici, iniezioni di dati malformati e disaccoppia la validazione sintattica dalla business logic.
+\begin{lstlisting}
+export const temperatureValidator = [
+  body("temperature")
+    .if((_value, { req }) => req.params?.action === "setTemperature")
+    .notEmpty()
+    .withMessage("temperature is required when action is setTemperature")
+    .isNumeric()
+    .withMessage("temperature must be a number")
+    .isFloat({ min: 5, max: 40 })
+    .withMessage("temperature must be between 5 and 40"),
+
+  body("temperature")
+    .if((_value, { req }) => req.params?.action !== "setTemperature")
+    .isEmpty()
+    .withMessage(
+      'temperature should only be provided when action is "setTemperature"',
+    ),
+
+  validate,
+];
+\end{lstlisting}
+
+\subsection{Notifiche Real-Time con Socket.io}
+Il codice qui presente viene utilizzato per inviare aggiornamenti di stato dei dispositivi in tempo reale ai client connessi. Quando lo stato di un sensore viene aggiornato nel backend, questo adapter utilizza Socket.io per emettere un evento specifico a tutti i client connessi della casa interessata, garantendo così che le interfacce utente riflettano immediatamente i cambiamenti senza necessità di refresh manuali. Il metodo \texttt{broadcast} centralizza la logica di invio dei messaggi, semplificando l'implementazione di notifiche per i vari tipi di eventi.
+\begin{lstlisting}
+export class SocketIOSensorUpdateAdapter implements SensorUpdatePort {
+  constructor(
+    private io: Server,
+    private notificationPort?: HomeNotificationOutboundPort,
+  ) {}
+
+  private broadcast(homeId: string, event: string, payload: object): void {
+    console.log(
+      `SocketIOSensorUpdateAdapter: Broadcasting ${event} to home-${homeId}`,
+    );
+    this.io.to(`home-${homeId}`).emit(event, payload);
+  }
+
+  sendInternalTemperatureUpdate(home: Home, update: TemperatureState): void {
+    this.broadcast(home.id, "sensor:internal-temperature", {
+      temperature: update.temperature,
+    });
+  }
+}
+\end{lstlisting}
+
+\subsection{Integrazione con Modello AI (Streaming)}
+Questo snippet mostra come viene gestita la comunicazione con il modello AI in tempo reale. Invece di attendere la generazione completa della risposta, il metodo inoltra progressivamente i frammenti di testo generati al client tramite una porta dedicata (\texttt{ChatStreamPort}, che utilizza Socket.io). Prima di interrogare il modello, il contesto viene costruito dinamicamente generando un system prompt che include le direttive specifiche per il modello AI.
+\begin{lstlisting}
+async streamChat(
+  homeId: string,
+  username: string,
+  userMessage: string,
+  history: ChatMessage[],
+  streamPort: ChatStreamPort,
+  isAdmin: boolean,
+): Promise<string> {
+  if (!userMessage.trim()) {
+    throw new Error("Message is required");
+  }
+
+  const messages = await this.buildMessages(homeId, userMessage, history);
+
+  return this.chatCompletionPort.streamChat(
+    messages,
+    this.options.model,
+    homeId,
+    streamPort,
+    isAdmin,
+  );
+}
+\end{lstlisting}
+
+\newpage
+\section{Test}
+\subsection{Euristiche di Nielsen}
+Per quanto riguarda la produzione di mockup e l'implementazione del frontend, è stato prestata particolare attenzione alle \textbf{Euristiche di Nielsen} per l'usabilità, al fine di garantire un'esperienza utente ottimale. Di seguito sono riportati alcuni esempi di come queste euristiche sono state applicate durante la progettazione dell'interfaccia utente:
+\begin{itemize}
+    \item \textbf{Visibilità dello stato del sistema}: sono state implementate notifiche in tempo reale per informare gli utenti su eventi importanti. Sono stati inseriti feedback visivi immediati quando lo stato di un dispositivo smart viene modificato, ad esempio, un riscontro visuale sul toogle corrispondente.
+    \item \textbf{Corrispondenza tra il sistema e il mondo reale}: sono stati utilizzati termini e icone familiari agli utenti per rappresentare i dispositivi smart e le azioni disponibili, ad esempio un'icona di una lampadina per rappresentare una lampadina smart.
+    \item \textbf{Controllo e libertà dell'utente}: è stata implementata la possibilità di annullare azioni semplicemente, come il cambio istantaneo del toggle di dispositivi smart o la possibilità di eliminare facilmente regole di automazione. Inoltre, la navbar permette una navigazione semplice e veloce tra le diverse sezioni dell'applicazione.
+    \item \textbf{Coerenza e standard}: è stata mantenuta una coerenza visiva e funzionale in tutte le pagine dell'applicazione, utilizzando la stessa palette colori, lo stesso stile dei pulsanti e lo stesso layout per elementi simili.
+    \item \textbf{Prevenzione dell'errore}: abbiamo implementato meccanismi di prevenzione di errori, ad esempio, nel momento in cui l'utente agisce sul termostato: la temperatura viene modificata attraverso pulsanti di incremento/decremento che vengono disabilitati quando viene raggiunta la temperatura massima o minima consentita, evitando così l'inserimento di valori non validi.
+    \item \textbf{Riconoscimento piuttosto che ricordo}: sono stati utilizzati menu a tendina, icone e pulsanti chiaramente etichettati per facilitare la navigazione e l'interazione, riducendo la necessità per gli utenti di ricordare comandi o percorsi specifici. Ad esempio, nella creazione di una regola di automazione i campi per la condizione e l'azione sono presentati come menu a tendina con opzioni predefinite, facilitando la selezione e riducendo la possibilità di errori, come l'inserimento di device non esistenti o azioni non valide.
+    \item \textbf{Flessibilità e efficienza d'uso}: l'applicazione è stata progettata per essere utilizzata sia da utenti esperti che da utenti meno esperti. Ad esempio, una regola di automazione può essere creata tramite un'interfaccia guidata per utenti meno esperti, ma anche attraverso linguaggio naturale via chat, offrendo così un trade-off tra flessibilità e intuitività.
+    \item \textbf{Estetica e design minimalista}: seguendo una filosofia "less is more", l'interfaccia è stata progettata per essere pulita, preferendo icone intuitive e layout semplici rispetto a elementi pesanti e ricchi di testo.
+    \item \textbf{Aiutare gli utenti a riconoscere, diagnosticare e recuperare gli errori}: sono stati implementati messaggi di errore chiari e specifici, ad esempio, se un utente tenta di eseguire un'azione non consentita viene visualizzato un messaggio che spiega il motivo del blocco e suggerisce come risolvere il problema.
+    \item \textbf{Aiuto e documentazione}: dando la priorità a un design intuitivo ed a un'interfaccia auto-esplicativa abbiamo ritenuto che l'applicazione non necessitasse di una sezione di aiuto dedicata.
+\end{itemize}
+\subsection{Unit Testing e Strumenti di sviluppo}
+Per garantire il corretto funzionamento delle funzionalità principali, sono stati utilizzati test unitari per il backend. Questo permette di verificare frequentemente lo stato dell'applicazione e di avere sempre a disposizione test regressivi da effettuare ad ogni cambiamento o estensione delle funzionalità. Per i test unitari, sono stati utilizzati \textbf{Supertest} e \textbf{Vitest}. I test sono stati inseriti nella pipeline di Continuous Integration e nei Git Hook; perciò sono eseguiti automaticamente ad ogni push, ad ogni pull request e ad ogni commit sul branch principale, garantendo così che il codice presente in questi branch sia sempre coperto da test e che eventuali errori vengano individuati tempestivamente. Inoltre, i test ci hanno anche permesso di tenere sotto controllo la copertura del codice.
+Per assicurarsi la compatibilità cross-browser, l'applicazione è stata testata regolarmente su Google Chrome e Mozilla Firefox. Grazie alla possibilità di cambiare il tipo di device simulato all'interno degli strumenti di sviluppo, è stato possibile testare l'applicazione su una vasta gamma di dispositivi, dando la priorità ai dispositivi mobile, in ottica mobile-first.
+
+\subsection{Test di usabilità}
+Per validare il nostro design e la nostra progettazione, abbiamo svolto dei test di usabilità con utenti reali. Sono stati individuati cinque task e tre metriche principali per valutare l'esperienza utente.
+\subsubsection{Metriche}
+\begin{itemize}
+    \item \textbf{Reattività}: giudizio assegnato dagli utenti al termine di ogni task (da 1 a 5), in base alla reattività del sistema.
+    \item \textbf{Facilità percepita}: giudizio che va da 1 (molto difficile da usare) a 5 (molto facile da usare), assegnato dagli utenti per valutare la facilità d'uso dell'applicazione.
+    \item \textbf{Estetica}: giudizio che va da 1 (poco piacevole) a 5 (molto piacevole), assegnato dagli utenti per valutare l'estetica dell'interfaccia.
+\end{itemize}
+
+\subsubsection{Elenco dei task}
+\begin{itemize}
+    \item \textbf{Aggiunta dispositivo}: l'utente (Admin) deve aggiungere una nuova lampadina smart in salotto. Successivamente, deve accenderla e spegnerla tramite l'app.
+    \item \textbf{Verifica previsioni meteo}: l'utente deve chiedere al chatbot le previsioni meteo per la settimana successiva.
+    \item \textbf{Creazione automazione}: l'utente (Admin) deve creare una regola di automazione che preveda l'apertura della finestra in soggiorno quando la temperatura interna supera i 25 gradi.
+    \item \textbf{Verifica interazioni su dispositivo}: l'utente (Admin) deve verificare chi ha spento per ultimo la luce in cucina.
+    \item \textbf{Programmazione giornaliera}: l'utente deve modificare la programmazione giornaliera, impostando a 17 gradi la temperatura tra le 11 e le 12.
+    \item \textbf{Storico qualità dell'aria}: l'utente deve visualizzare l'andamento della qualità dell'aria durante la settimana precedente.
+\end{itemize}
+\subsubsection{Dati rilevati}
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\multicolumn{6}{|c|}{\textbf{Reattività}} \\ \hline
+\textbf{Task} & \textbf{Riccardo} & \textbf{Nicolas} & \textbf{Matteo} & \textbf{Agostino} & \textbf{Livia} \\ \hline
+Aggiunta dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Verifica previsioni meteo & 3 & 4 & 4 & 4 & 5 \\ \hline
+Creazione automazione & 4 & 5 & 4 & 5 & 4 \\ \hline
+Verifica interazioni su dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Programmazione giornaliera & 5 & 5 & 4 & 5 & 5 \\ \hline
+Storico qualità dell'aria & 5 & 5 & 5 & 5 & 5 \\ \hline
+\end{tabular}
+\caption{Valutazione degli utenti sulla Reattività}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\multicolumn{6}{|c|}{\textbf{Facilità percepita}} \\ \hline
+\textbf{Task} & \textbf{Riccardo} & \textbf{Nicolas} & \textbf{Matteo} & \textbf{Agostino} & \textbf{Livia} \\ \hline
+Aggiunta dispositivo & 5 & 4 & 5 & 4 & 5 \\ \hline
+Verifica previsioni meteo & 4 & 5 & 4 & 5 & 5 \\ \hline
+Creazione automazione & 4 & 5 & 5 & 5 & 4 \\ \hline
+Verifica interazioni su dispositivo & 5 & 5 & 4 & 5 & 5 \\ \hline
+Programmazione giornaliera & 4 & 5 & 5 & 4 & 5 \\ \hline
+Storico qualità dell'aria & 5 & 5 & 5 & 5 & 5 \\ \hline
+\end{tabular}
+\caption{Valutazione degli utenti sulla Facilità percepita}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\multicolumn{6}{|c|}{\textbf{Estetica}} \\ \hline
+\textbf{Task} & \textbf{Riccardo} & \textbf{Nicolas} & \textbf{Matteo} & \textbf{Agostino} & \textbf{Livia} \\ \hline
+Aggiunta dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Verifica previsioni meteo & 4 & 4 & 5 & 5 & 4 \\ \hline
+Creazione automazione & 5 & 5 & 4 & 5 & 5 \\ \hline
+Verifica interazioni su dispositivo & 5 & 5 & 5 & 5 & 5 \\ \hline
+Programmazione giornaliera & 5 & 4 & 5 & 5 & 5 \\ \hline
+Storico qualità dell'aria & 5 & 5 & 5 & 5 & 5 \\ \hline
+\end{tabular}
+\caption{Valutazione degli utenti sull'Estetica}
+\end{table}
+
+Come si può vedere dalle tabelle, l'applicazione è risultata molto apprezzata dagli utenti, con giudizi molto positivi su tutte le metriche. I test hanno sollevato qualche piccolo problema di usabilità, principalmente riguardante l'implementazione della chat, che ci sono serviti come spunto di discussione e che sono stati poi risolti.
+
+In particolare:
+\begin{itemize}
+    \item Alcuni utenti hanno segnalato che, nel momento in cui viene inviato un messaggio, il tempo di attesa è troppo lungo prima di vedere un feedback dal modello AI.
+    \item E' stata segnalata la mancanza di un messaggio di benvenuto nella chat che fosse in grado di guidare l'utente su come interagire con il modello AI e su quali tipi di domande fosse possibile fare.
+    \item Alcuni utenti hanno evidenziato come l'interazione del chatbot con il sistema di HiHome potesse essere resa più trasparente, ad esempio mostrando le azioni che il modello AI sta eseguendo in tempo reale, in modo da rendere più chiaro il collegamento tra le risposte del modello e le azioni che vengono eseguite sui dispositivi smart.
+\end{itemize}
+
+Per fare fronte a questi problemi abbiamo implementato le seguenti modifiche:
+\begin{itemize}
+    \item E' stato introdotto lo streaming delle risposte del modello AI, utilizzando la connessione websocket, in modo da restituire all'utente un feedback continuo. Inoltre, nel momento in cui la risposta viene processata, è stato inserito un placeholder di caricamento ("Thinking...").
+    \item E' stato aggiunto un messaggio di benvenuto nella chat che guida l'utente su come interagire con il modello AI e su quali tipi di domande sia possibile fare.
+    \item Ogni volta che un tool viene chiamato appare sulla chat (attraverso la connessione websocket) il nome del tool stesso, per dare trasparenza all'interazione del modello AI con il sistema di HiHome.
+\end{itemize}
+
+\newpage
+\section{Deployment}
+Il sistema \texttt{HiHome} può essere facilmente distribuito ed eseguito localmente sia in modalità di "produzione" che di sviluppo (con hot-reloading abilitato per consentire lo sviluppo attivo) grazie all'utilizzo di Docker Compose.
+
+\subsection{Comandi per il Deployment}
+Di seguito sono descritti i comandi principali per gestire il ciclo di vita dell'applicazione localmente.
+
+\subsubsection{Esecuzione Container (Produzione)}
+Per compilare ed avviare l'intero stack in modalità di produzione:
+\begin{lstlisting}[language=bash]
+# Avvio di tutti i container
+docker compose up
+
+# Arresto dei container con rimozione dei volumi associati (es. database)
+docker compose down -v
+\end{lstlisting}
+
+Inoltre, è possibile scaricare direttamente le immagini dei container dalla sezione "Releases" del repository GitHub, poiché la pipeline di CI è configurata per effettuare il push delle immagini Docker ad ogni commit sul main.
+
+\subsubsection{Esecuzione con Hot Reloading}
+Per lo sviluppo, è presente una configurazione dedicata che monta i file locali come volumi all'interno dei container, consentendo il live reloading del codice ad ogni modifica effettuata.
+\begin{lstlisting}[language=bash]
+# Avvio dei container in dev mode
+docker compose -f docker-compose.dev.yml up
+
+# Arresto dei container in dev mode
+docker compose -f docker-compose.dev.yml down -v
+\end{lstlisting}
+
+\subsubsection{Esecuzione dei Test}
+Per verificare la correttezza del codice ed eseguire gli unit test:
+\begin{lstlisting}[language=bash]
+# Esecuzione unit test per il backend Node.js
+pnpm run test
+
+# coverage per il backend Node.js
+pnpm run test:coverage
+
+# Esecuzione dei test per il servizio Go
+go test -C ext-api-service -v ./...
+
+# Coverage per il servizio Go
+go test -C ext-api-service -coverprofile=coverage.out -v ./...
+\end{lstlisting}
+
+\subsection{Endpoint e Indirizzi Locali}
+Una volta che l'applicazione è in esecuzione localmente, i vari moduli ed endpoint esposti possono essere interrogati localmente tramite i seguenti indirizzi web:
+\begin{itemize}
+    \item \textbf{Frontend Application (Vue 3)}: Raggiungibile all'indirizzo \href{http://localhost:8080}{http://localhost:8080}. Costituisce l'interfaccia utente principale per l'interazione con la smart home.
+    \item \textbf{Backend REST API (Node.js/Express)}: Raggiungibile all'indirizzo \href{http://localhost:3000}{http://localhost:3000}. Ad esempio, è possibile testare lo stato di salute del backend effettuando una richiesta GET su \href{http://localhost:3000/api/health}{http://localhost:3000/api/health}.
+    \item \textbf{External API Service (Go)}: Raggiungibile esternamente all'indirizzo \href{http://localhost:8081}{http://localhost:8081}. L'endpoint di health check per verificare lo stato di questo modulo è accessibile a \href{http://localhost:8081/health}{http://localhost:8081/health}.
+\end{itemize}
+\newpage
+\section{Conclusioni}
+Il gruppo di lavoro ritiene di aver raggiunto con successo tutti i traguardi prefissati in fase di analisi. I test di usabilità condotti sul campo hanno confermato che l'interfaccia utente, sviluppata seguendo pattern moderni e con un approccio mobile-first, risulta fin da subito chiara ed estremamente accessibile anche per utenti non tecnici. I test unitari hanno supportato la stabilità del sistema, garantendo che le funzionalità principali funzionassero correttamente e che eventuali regressioni venissero individuate tempestivamente.
+
+Seppur le interazioni con i dispositivi siano simulate, in quanto abbiamo ritenuto che la parte IoT non fosse il focus del progetto, l'applicazione è stata progettata per gestire in maniera efficace i casi d'uso proposti e per essere facilmente estendibile. Durante lo svolgimento del progetto abbiamo avuto la possibilità di diventare più pratici con lo stack MEVN e lo sviluppo di applicazioni web. Particolarmente interessante è stata l'integrazione con servizi esterni, come il modello AI ed il servizio per il meteo, oltre che l'implementazione della comunicazione tra i vari servizi del sistema, caratterizzata da interazioni ed aggiornamenti real-time.
+
+Il gruppo ha lavorato in modo coeso e collaborativo, suddividendo equamente i compiti. La complessità del dominio ha fornito più volte spunti di riflessione, che sono stati affrontati in maniera costruttiva portando a soluzioni condivise e discussioni interessanti.
+
+Gli sviluppi futuri includono l'estensione dei dispositivi supportati e l'integrazione con dispositivi reali, ad esempio utilizzando servizi di terze parti o API fornite dai produttori.
+
+
+\newpage
+\section{Screenshots}
+Sono di seguito allegati gli screenshot finali dell'applicazione, sia in versione mobile che in versione desktop.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:dashboard-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/dashboard-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:dashboard-desktop-screenshot}
+    \end{subfigure}
+    \caption{Dashboard}
+    \label{fig:dashboard-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:devices-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/devices-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:devices-desktop-screenshot}
+    \end{subfigure}
+    \caption{Lista device}
+    \label{fig:devices-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:add-device-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/add-device-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:add-device-desktop-screenshot}
+    \end{subfigure}
+    \caption{Aggiunta di un nuovo device}
+    \label{fig:add-device-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:chatbot-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/chatbot-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:chatbot-desktop-screenshot}
+    \end{subfigure}
+    \caption{Chatbot}
+    \label{fig:chatbot-screenshot}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:rules-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/rules-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:rules-desktop-screenshot}
+    \end{subfigure}
+    \caption{Regole di automazione}
+    \label{fig:rules-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:new-rule-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/new-rule-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:new-rule-desktop-screenshot}
+    \end{subfigure}
+    \caption{Creazione nuova regola di automazione}
+    \label{fig:new-rule-screenshot}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:activity-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/activity-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:activity-desktop-screenshot}
+    \end{subfigure}
+    \caption{Notifiche}
+    \label{fig:activity-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:insights-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/insights-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:insights-desktop-screenshot}
+    \end{subfigure}
+    \caption{Report settimanale}
+    \label{fig:insights-screenshot}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/plan-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:plan-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/plan-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:plan-desktop-screenshot}
+    \end{subfigure}
+    \caption{Programmazione settimanale del termostato}
+    \label{fig:plan-screenshot}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:event-log-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/event-log-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:event-log-desktop-screenshot}
+    \end{subfigure}
+    \caption{Log di eventi}
+    \label{fig:event-log-screenshot}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-mobile-screenshot.png}
+        \caption{Mobile}
+        \label{fig:settings-mobile-screenshot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.65\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/settings-desktop-screenshot.png}
+        \caption{Desktop}
+        \label{fig:settings-desktop-screenshot}
+    \end{subfigure}
+    \caption{Impostazioni}
+    \label{fig:settings-screenshot}
+\end{figure}
+\end{document}
