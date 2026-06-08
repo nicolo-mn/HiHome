@@ -4,27 +4,11 @@ import {
   AddRuleDto,
 } from "../../application/services/RuleService";
 import { ObservableCondition } from "../../domain/Observables";
-import {
-  DeviceAction,
-  FanMode,
-  FanSetModeAction,
-  LightTurnOnAction,
-  LightTurnOffAction,
-  LockLockAction,
-  LockUnlockAction,
-  WindowOpenAction,
-  WindowCloseAction,
-  ThermostatSetTemperatureAction,
-} from "../../domain/Actions";
+import { DeviceAction } from "../../domain/Actions";
 import { Rule } from "../../domain/Rule";
 import { ConditionDto, ConditionDtoVisitor } from "./ConditionDtoVisitor";
+import { ActionDto, ActionDtoVisitor } from "./ActionDtoVisitor";
 
-type ActionDto = {
-  type: string;
-  deviceId: string;
-  targetTemperature?: number;
-  mode?: FanMode;
-};
 type TimeWindowDto = { days?: number[]; start?: string; end?: string };
 type RuleDto = {
   id: string;
@@ -40,33 +24,7 @@ function conditionToDto(condition: ObservableCondition): ConditionDto {
 }
 
 function actionToDto(action: DeviceAction): ActionDto {
-  if (action instanceof LightTurnOnAction)
-    return { type: "light-turn-on", deviceId: action.getDeviceId() };
-  if (action instanceof LightTurnOffAction)
-    return { type: "light-turn-off", deviceId: action.getDeviceId() };
-  if (action instanceof WindowOpenAction)
-    return { type: "window-open", deviceId: action.getDeviceId() };
-  if (action instanceof WindowCloseAction)
-    return { type: "window-close", deviceId: action.getDeviceId() };
-  if (action instanceof ThermostatSetTemperatureAction) {
-    return {
-      type: "thermostat-set-temperature",
-      deviceId: action.getDeviceId(),
-      targetTemperature: action.targetTemperature,
-    };
-  }
-  if (action instanceof LockLockAction)
-    return { type: "lock-lock", deviceId: action.getDeviceId() };
-  if (action instanceof LockUnlockAction)
-    return { type: "lock-unlock", deviceId: action.getDeviceId() };
-  if (action instanceof FanSetModeAction) {
-    return {
-      type: "fan-set-mode",
-      deviceId: action.getDeviceId(),
-      mode: action.mode,
-    };
-  }
-  throw new Error("Unsupported action type");
+  return action.accept(new ActionDtoVisitor());
 }
 
 function ruleToDto(rule: Rule): RuleDto {

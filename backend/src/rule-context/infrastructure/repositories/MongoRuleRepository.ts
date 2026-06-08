@@ -13,7 +13,6 @@ import {
 } from "../../domain/Observables";
 import {
   DeviceAction,
-  FanMode,
   FanSetModeAction,
   LightTurnOnAction,
   LightTurnOffAction,
@@ -40,14 +39,7 @@ import {
   OP_LT,
   OP_EQ,
 } from "./ConditionRecordVisitor";
-
-type ActionRecord = {
-  type: string;
-  homeId: string;
-  deviceId: string;
-  targetTemperature?: number;
-  mode?: FanMode;
-};
+import { ActionRecord, ActionRecordVisitor } from "./ActionRecordVisitor";
 
 type RuleRecord = {
   _id: string | { toString(): string };
@@ -97,7 +89,9 @@ export class MongoRuleRepository implements RuleRepository {
       name,
       order,
       condition: condition.accept(new ConditionRecordVisitor()),
-      actions: actions.map((action) => this.toActionRecord(action)),
+      actions: actions.map((action) =>
+        action.accept(new ActionRecordVisitor()),
+      ),
       timeWindow: timeWindow?.value,
     };
 
@@ -184,76 +178,6 @@ export class MongoRuleRepository implements RuleRepository {
       throw new Error(`Unsupported weather forecast: ${target}`);
     }
     return forecast;
-  }
-
-  private toActionRecord(action: DeviceAction): ActionRecord {
-    if (action instanceof LightTurnOnAction) {
-      return {
-        type: "light-turn-on",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof LightTurnOffAction) {
-      return {
-        type: "light-turn-off",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof WindowOpenAction) {
-      return {
-        type: "window-open",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof WindowCloseAction) {
-      return {
-        type: "window-close",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof ThermostatSetTemperatureAction) {
-      return {
-        type: "thermostat-set-temperature",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-        targetTemperature: action.targetTemperature,
-      };
-    }
-
-    if (action instanceof LockLockAction) {
-      return {
-        type: "lock-lock",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof LockUnlockAction) {
-      return {
-        type: "lock-unlock",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof FanSetModeAction) {
-      return {
-        type: "fan-set-mode",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-        mode: action.mode,
-      };
-    }
-
-    throw new Error("Unsupported action type");
   }
 
   private toAction(record: ActionRecord): DeviceAction {

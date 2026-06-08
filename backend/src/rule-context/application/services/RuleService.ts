@@ -162,18 +162,25 @@ export class RuleService {
     const actionPerDevice = new Map<string, DeviceAction>();
     const ruleNameByAction = new Map<DeviceAction, string>();
     for (const rule of rulesByPriority) {
-      const inWindow = rule.timeWindow ? rule.timeWindow.contains(now) : true;
-      const currentMatch = rule.condition.verify(update) && inWindow;
-      const prevMatch = this.lastMatchByRuleId.get(rule.id) ?? false;
-      const shouldFire = currentMatch && !prevMatch;
-      this.lastMatchByRuleId.set(rule.id, currentMatch);
+      try {
+        const inWindow = rule.timeWindow ? rule.timeWindow.contains(now) : true;
+        const currentMatch = rule.condition.verify(update) && inWindow;
+        const prevMatch = this.lastMatchByRuleId.get(rule.id) ?? false;
+        const shouldFire = currentMatch && !prevMatch;
+        this.lastMatchByRuleId.set(rule.id, currentMatch);
 
-      if (shouldFire) {
-        for (const action of rule.actions) {
-          if (actionPerDevice.has(action.getDeviceId())) continue;
-          actionPerDevice.set(action.getDeviceId(), action);
-          ruleNameByAction.set(action, rule.name);
+        if (shouldFire) {
+          for (const action of rule.actions) {
+            if (actionPerDevice.has(action.getDeviceId())) continue;
+            actionPerDevice.set(action.getDeviceId(), action);
+            ruleNameByAction.set(action, rule.name);
+          }
         }
+      } catch (error) {
+        console.error(
+          `Error evaluating rule ${rule.id} (${rule.name}):`,
+          error,
+        );
       }
     }
 
