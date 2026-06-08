@@ -84,11 +84,7 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col gap-6 md:gap-8">
-    <AppHeader
-      title="Daily plan"
-      :right-actions="[{ icon: 'check', label: 'Save plan' }]"
-      @action="save"
-    />
+    <AppHeader title="Daily plan" />
 
     <ErrorBanner
       v-if="loadError"
