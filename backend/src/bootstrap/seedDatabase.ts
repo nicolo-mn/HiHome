@@ -72,25 +72,24 @@ async function seedHome(homeRepo: HomeRepository): Promise<void> {
       ]),
       new Room("room-2", "Bedroom", [
         new Light("light-2", "Main Light", "room-2", false),
-        new Light("light-3", "Bedside Light", "room-2", false),
         new Window("window-3", "Window", "room-2", true),
         new SmartLock("lock-2", "Balcony Lock", "room-2", true),
         new Fan("fan-2", "Ceiling Fan", "room-2", "off"),
       ]),
       new Room("room-3", "Kitchen", [
-        new Light("light-4", "Main Light", "room-3", true),
+        new Light("light-3", "Main Light", "room-3", true),
         new Window("window-4", "Window", "room-3", false),
         new SmartLock("lock-3", "Backdoor Lock", "room-3", false),
         new Fan("fan-3", "Hood Fan", "room-3", "high"),
       ]),
       new Room("room-4", "Bathroom", [
-        new Light("light-5", "Main Light", "room-4", false),
+        new Light("light-4", "Main Light", "room-4", false),
         new Window("window-5", "Window", "room-4", false),
         new SmartLock("lock-4", "Door Lock", "room-4", false),
         new Fan("fan-4", "Extractor Fan", "room-4", "low"),
       ]),
       new Room("room-5", "Garage", [
-        new Light("light-6", "Main Light", "room-5", false),
+        new Light("light-5", "Main Light", "room-5", false),
         new Window("window-6", "Skylight", "room-5", false),
         new SmartLock("lock-5", "Garage Lock", "room-5", true),
         new Fan("fan-5", "Exhaust Fan", "room-5", "off"),
