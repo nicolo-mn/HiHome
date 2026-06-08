@@ -318,7 +318,7 @@ const scheduleHourlyPlanUpdates = () => {
 export async function bootstrap() {
   try {
     await mongoose.connect(MONGO_URI);
-    await seedDatabase(homeRepo);
+    await seedDatabase(homeRepo, ruleRepo);
 
     await homeService.pollAllHomesOutdoorSensorsData();
     await pollHistoricalWeatherData();
