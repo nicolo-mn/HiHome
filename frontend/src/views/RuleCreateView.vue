@@ -115,7 +115,7 @@ const sensorOptions: SensorOption[] = [
     max: 60,
     step: 0.5,
     unit: "m/s",
-    icon: "airwave",
+    icon: "wind_speed",
     accent: "blue",
     defaultTarget: 5,
   },

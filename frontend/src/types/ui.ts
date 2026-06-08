@@ -30,6 +30,7 @@ export type IconName =
   | "lamp"
   | "air"
   | "window"
+  | "wind_speed"
   | "device_thermostat"
   | "vacuum"
   | "speaker"
@@ -51,6 +52,5 @@ export type IconName =
   | "wifi"
   | "bluetooth"
   | "qr"
-  | "airwave"
   | "swap"
   | "fan";
