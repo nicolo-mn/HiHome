@@ -102,7 +102,7 @@ describe("ActionService", () => {
   describe("thermostatSetTemperature", () => {
     beforeEach(() => {
       vi.useFakeTimers();
-      vi.setSystemTime(new Date("2026-01-01T08:30:00")); // local hour 8
+      vi.setSystemTime(new Date("2026-01-01T08:30:00+01:00")); // local hour 8
     });
     afterEach(() => vi.useRealTimers());
 
