@@ -975,7 +975,7 @@ function bgFor(accent: Accent) {
                 class="w-11 h-11 rounded-2xl bg-white/[0.08] flex items-center justify-center shrink-0 text-gray-200"
                 @click="stepTarget(-(sensor.step ?? 1))"
               >
-                <BaseIcon name="close" :size="20" />
+                <BaseIcon name="remove" :size="20" />
               </button>
               <input
                 type="range"
@@ -1159,7 +1159,7 @@ function bgFor(accent: Accent) {
                 )
               "
             >
-              <BaseIcon name="close" :size="20" />
+              <BaseIcon name="remove" :size="20" />
             </button>
             <input
               type="range"
