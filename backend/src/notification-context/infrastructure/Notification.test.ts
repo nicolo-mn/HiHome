@@ -5,6 +5,7 @@ import { default as app, server, io } from "../../index";
 
 describe("Notification Context Integration Tests", () => {
   let token: string;
+  let adminToken: string;
   let port: number;
   beforeAll(async () => {
     const loginRes = await request(app).post("/api/v1/login").send({
@@ -13,6 +14,13 @@ describe("Notification Context Integration Tests", () => {
       password: "mockpassword",
     });
     token = loginRes.body.token;
+
+    const adminLoginRes = await request(app).post("/api/v1/login").send({
+      username: "adminuser",
+      homeId: "1",
+      password: "mockpassword",
+    });
+    adminToken = adminLoginRes.body.token;
 
     await new Promise<void>((resolve) => {
       server.listen(() => {
@@ -29,7 +37,7 @@ describe("Notification Context Integration Tests", () => {
   it("should receive an action notification when an action is triggered", async () => {
     return new Promise<void>((resolve, reject) => {
       const socket: Socket = ioClient(`http://localhost:${port}`, {
-        auth: { token: `Bearer ${token}` },
+        auth: { token: `Bearer ${adminToken}` },
         query: { homeId: "1" },
       });
 
