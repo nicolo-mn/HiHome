@@ -1,10 +1,3 @@
-interface ConditionVisitor<T> {
-  visitWeatherCondition<T>(cond: ObservableCondition): T;
-  visitTemperatureCondition<T>(cond: ObservableCondition): T;
-  visitAirQualityCondition<T>(cond: ObservableCondition): T;
-  visitWindSpeedCondition<T>(cond: ObservableCondition): T;
-}
-
 export enum WeatherForecast {
   Clear = "Clear",
   Drizzle = "Drizzle",
@@ -29,7 +22,7 @@ interface Operator<T> {
   getBoundaryValue(): T;
 }
 
-abstract class NumericOperator implements Operator<number> {
+export abstract class NumericOperator implements Operator<number> {
   protected constructor(
     private readonly operation: (value: number) => boolean,
     private readonly boundaryValue: number,
@@ -151,7 +144,7 @@ export class OutdoorTemperatureCondition extends BoundedNumericCondition {
   }
 
   accept<R>(visitor: ConditionVisitor<R>): R {
-    return visitor.visitTemperatureCondition(this);
+    return visitor.visitOutdoorTemperatureCondition(this);
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
@@ -173,7 +166,7 @@ export class IndoorTemperatureCondition extends BoundedNumericCondition {
   }
 
   accept<R>(visitor: ConditionVisitor<R>): R {
-    return visitor.visitTemperatureCondition(this);
+    return visitor.visitIndoorTemperatureCondition(this);
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
@@ -223,4 +216,12 @@ export class WindSpeedCondition extends BoundedNumericCondition {
   verify(update: ObservablesUpdatedDomainEvent): boolean {
     return this.assertInRangeAndEvaluate(update.windSpeed);
   }
+}
+
+export interface ConditionVisitor<T> {
+  visitWeatherCondition(cond: WeatherCondition): T;
+  visitOutdoorTemperatureCondition(cond: OutdoorTemperatureCondition): T;
+  visitIndoorTemperatureCondition(cond: IndoorTemperatureCondition): T;
+  visitAirQualityCondition(cond: AirQualityCondition): T;
+  visitWindSpeedCondition(cond: WindSpeedCondition): T;
 }

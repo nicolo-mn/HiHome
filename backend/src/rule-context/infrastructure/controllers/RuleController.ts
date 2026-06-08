@@ -3,16 +3,7 @@ import {
   RuleService,
   AddRuleDto,
 } from "../../application/services/RuleService";
-import {
-  NumericGreaterOperator,
-  NumericLowerOperator,
-  OutdoorTemperatureCondition,
-  IndoorTemperatureCondition,
-  WindSpeedCondition,
-  AirQualityCondition,
-  WeatherCondition,
-  ObservableCondition,
-} from "../../domain/Observables";
+import { ObservableCondition } from "../../domain/Observables";
 import {
   DeviceAction,
   FanMode,
@@ -26,8 +17,8 @@ import {
   ThermostatSetTemperatureAction,
 } from "../../domain/Actions";
 import { Rule } from "../../domain/Rule";
+import { ConditionDto, ConditionDtoVisitor } from "./ConditionDtoVisitor";
 
-type ConditionDto = { type: string; operator: string; target: string | number };
 type ActionDto = {
   type: string;
   deviceId: string;
@@ -45,35 +36,7 @@ type RuleDto = {
 };
 
 function conditionToDto(condition: ObservableCondition): ConditionDto {
-  if (condition instanceof WeatherCondition) {
-    return {
-      type: "weather",
-      operator: "is",
-      target: condition.operator.getBoundaryValue(),
-    };
-  }
-
-  const bounded = condition as
-    | OutdoorTemperatureCondition
-    | IndoorTemperatureCondition
-    | AirQualityCondition
-    | WindSpeedCondition;
-  const op = bounded.operator;
-  let operatorStr: string;
-  if (op instanceof NumericGreaterOperator) operatorStr = "gt";
-  else if (op instanceof NumericLowerOperator) operatorStr = "lt";
-  else operatorStr = "eq";
-
-  let type: string;
-  if (condition instanceof OutdoorTemperatureCondition)
-    type = "outdoor-thermometer";
-  else if (condition instanceof IndoorTemperatureCondition)
-    type = "indoor-thermometer";
-  else if (condition instanceof AirQualityCondition) type = "air-quality";
-  else if (condition instanceof WindSpeedCondition) type = "wind-speed";
-  else throw new Error("Unsupported condition type");
-
-  return { type, operator: operatorStr, target: op.getBoundaryValue() };
+  return condition.accept(new ConditionDtoVisitor());
 }
 
 function actionToDto(action: DeviceAction): ActionDto {
