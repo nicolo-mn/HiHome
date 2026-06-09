@@ -117,6 +117,28 @@ export async function createDevice(
   return normalizeDevice(raw);
 }
 
+export async function updateDevice(
+  homeId: string,
+  deviceId: string,
+  name: string,
+): Promise<HomeDevice> {
+  const raw = await apiFetch<RawDevice>(
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices/${encodeURIComponent(deviceId)}`,
+    { method: "PUT", body: { name } },
+  );
+  return normalizeDevice(raw);
+}
+
+export async function deleteDevice(
+  homeId: string,
+  deviceId: string,
+): Promise<void> {
+  await apiFetch<void>(
+    `/api/v1/home/${encodeURIComponent(homeId)}/devices/${encodeURIComponent(deviceId)}`,
+    { method: "DELETE" },
+  );
+}
+
 export async function executeAction(
   homeId: string,
   deviceId: string,

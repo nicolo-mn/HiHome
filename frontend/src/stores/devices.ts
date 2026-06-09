@@ -135,6 +135,10 @@ export const useDevicesStore = defineStore("devices", () => {
     socket.on("device:updated", (payload: RawDevice) => {
       applyRemoteUpdate(payload);
     });
+
+    socket.on("device:removed", (payload: { id: string }) => {
+      if (payload?.id) removeDevice(payload.id);
+    });
   }
 
   function disconnect() {
@@ -204,6 +208,35 @@ export const useDevicesStore = defineStore("devices", () => {
     }
   }
 
+  function removeDevice(deviceId: string) {
+    devices.value = devices.value.filter((c) => c.id !== deviceId);
+  }
+
+  async function renameDevice(deviceId: string, name: string) {
+    if (!homeId.value) return;
+    busy.add(deviceId);
+    try {
+      const updated = enrichRoomName(
+        await devicesApi.updateDevice(homeId.value, deviceId, name),
+      );
+      upsertDevice(updated);
+      return updated;
+    } finally {
+      busy.remove(deviceId);
+    }
+  }
+
+  async function deleteDevice(deviceId: string) {
+    if (!homeId.value) return;
+    busy.add(deviceId);
+    try {
+      await devicesApi.deleteDevice(homeId.value, deviceId);
+      removeDevice(deviceId);
+    } finally {
+      busy.remove(deviceId);
+    }
+  }
+
   function isBusy(deviceId: string) {
     return busy.has(deviceId);
   }
@@ -221,6 +254,8 @@ export const useDevicesStore = defineStore("devices", () => {
     step,
     setFanMode,
     addDevice,
+    renameDevice,
+    deleteDevice,
     connect,
     disconnect,
   };
