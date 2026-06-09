@@ -24,6 +24,7 @@ import { OutdoorSensorsDataPort } from "../ports/OutdoorSensorsDataPort";
 import { RuleServicePort } from "../ports/RuleServicePort";
 import { CreateDeviceInput } from "../dtos/DeviceDTO";
 import { ensureHomeExists, persistAndBroadcast } from "./ServiceHelpers";
+import { getHourInRome } from "./dateUtils";
 
 export class HomeService {
   constructor(
@@ -116,7 +117,7 @@ export class HomeService {
     }
 
     if (action === "setTemperature" && typeof param === "number") {
-      const hour = new Date().getHours();
+      const hour = getHourInRome();
       home.hourlyTemperatures ??= new Array(24).fill(20);
       home.hourlyTemperatures[hour] = param;
     }
@@ -169,7 +170,7 @@ export class HomeService {
     }
     home.hourlyTemperatures = temperatures;
 
-    const hour = new Date().getHours();
+    const hour = getHourInRome();
     const currentTemp = temperatures[hour];
     const thermostat = home
       .getAllDevices()
@@ -182,7 +183,7 @@ export class HomeService {
   }
 
   async applyHourlyTemperaturePlan(date = new Date()): Promise<void> {
-    const hour = date.getHours();
+    const hour = getHourInRome(date);
     const homes = await this.homeRepo.getAllHomes();
 
     await Promise.all(

@@ -118,6 +118,26 @@ describe("NotificationService.notifyDeviceAction", () => {
     expect(deliveryPort.send).toHaveBeenCalledWith(stored[0], ["alice"]);
   });
 
+  it("excludes the actor from the list of recipients", async () => {
+    const { service, repository, deliveryPort } = makeService(["alice", "bob"]);
+
+    await service.notifyDeviceAction(
+      "home-1",
+      event({ actor: { username: "bob", role: "Standard" } }),
+    );
+
+    const storedBob = await repository.listByUser("home-1", "bob");
+    expect(storedBob).toHaveLength(0);
+
+    const storedAlice = await repository.listByUser("home-1", "alice");
+    expect(storedAlice).toHaveLength(1);
+    expect(storedAlice[0].message).toBe("bob performed turnOn on Lamp.");
+    expect(deliveryPort.send).toHaveBeenCalledWith(storedAlice[0], ["alice"]);
+    expect(deliveryPort.send).not.toHaveBeenCalledWith(expect.any(Object), [
+      "bob",
+    ]);
+  });
+
   it("falls back to the device id when no device name is present", async () => {
     const { service, repository } = makeService();
 

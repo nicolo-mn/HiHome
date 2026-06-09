@@ -1,3 +1,4 @@
+import { getHourInRome } from "./dateUtils";
 import {
   DeviceEventActor,
   DeviceTypes,
@@ -133,7 +134,7 @@ export class ActionService {
     const event = thermostat.setTemperature(temperature);
     home.addDeviceEvent(event);
 
-    const hour = new Date().getHours();
+    const hour = getHourInRome();
     home.hourlyTemperatures ??= new Array(24).fill(20);
     home.hourlyTemperatures[hour] = temperature;
 

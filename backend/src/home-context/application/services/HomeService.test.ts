@@ -223,7 +223,7 @@ describe("HomeService", () => {
 
     it("records setTemperature into the hourly plan", async () => {
       vi.useFakeTimers();
-      vi.setSystemTime(new Date("2026-01-01T08:30:00")); // local hour 8
+      vi.setSystemTime(new Date("2026-01-01T08:30:00+01:00")); // local hour 8
       try {
         await service.executeAction("1", "therm-1", "setTemperature", 26);
         expect(home.hourlyTemperatures[8]).toBe(26);
@@ -254,7 +254,7 @@ describe("HomeService", () => {
 
     it("stores the plan, aligns the thermostat to the current hour and broadcasts", async () => {
       vi.useFakeTimers();
-      vi.setSystemTime(new Date("2026-01-01T08:30:00")); // local hour 8
+      vi.setSystemTime(new Date("2026-01-01T08:30:00+01:00")); // local hour 8
       try {
         const plan = new Array(24).fill(20);
         plan[8] = 27;
@@ -275,7 +275,7 @@ describe("HomeService", () => {
   });
 
   describe("applyHourlyTemperaturePlan", () => {
-    const date = new Date("2026-01-01T08:00:00"); // local hour 8
+    const date = new Date("2026-01-01T08:00:00+01:00"); // local hour 8
 
     it("applies the planned temperature for the current hour", async () => {
       home.hourlyTemperatures[8] = 21;

@@ -83,6 +83,8 @@ export class NotificationService implements NotificationInboundPort {
       homeId,
       "DeviceAction",
       `${event.actor.username} performed ${event.action} on ${deviceLabel}.`,
+      undefined,
+      event.actor.username,
     );
   }
 
@@ -91,10 +93,12 @@ export class NotificationService implements NotificationInboundPort {
     type: Notification["type"],
     message: string,
     details?: NotificationDetails,
+    excludeUsername?: string,
   ): Promise<void> {
     const recipients =
       await this.userPreferencesPort.getEnabledUsernamesForType(homeId, type);
     for (const username of recipients) {
+      if (username === excludeUsername) continue;
       const notification = new Notification(
         randomUUID(),
         homeId,

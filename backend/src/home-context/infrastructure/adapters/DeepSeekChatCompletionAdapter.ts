@@ -239,7 +239,8 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           "Fields: ruleName (short label), observableId (weather|outdoor-thermometer|indoor-thermometer|wind-speed|air-quality). " +
           "For weather: operatorTarget must be one of Clear, Drizzle, Fog, Overcast, Cloudy, Rain, Snow, Thunderstorm and operator is omitted. " +
           "For numeric observables: operator is gt|lt|eq and operatorTarget is a number or numeric string. " +
-          "Actions is a non-empty array; each action has deviceType (light|window|thermostat|lock|fan), command, deviceId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature, lock -> lock|unlock, fan -> setOff|setLow|setMedium|setHigh.",
+          "Actions is a non-empty array; each action has deviceType (light|window|thermostat|lock|fan), command, deviceId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature, lock -> lock|unlock, fan -> setOff|setLow|setMedium|setHigh. " +
+          "Optionally, provide a timeWindow to restrict when the rule applies. Its fields: days (array of 0-6 where 0=Sun 6=Sat; omit for every day), start (HH:MM string; omit for start of day), end (HH:MM string; omit for end of day).",
         parameters: {
           type: "object",
           properties: {
@@ -296,6 +297,28 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
                   targetTemp: { type: ["string", "number"] },
                 },
                 required: ["deviceType", "command", "deviceId"],
+              },
+            },
+            timeWindow: {
+              type: "object",
+              properties: {
+                days: {
+                  type: "array",
+                  items: {
+                    type: "number",
+                    enum: [0, 1, 2, 3, 4, 5, 6],
+                  },
+                  description:
+                    "Subset of 0..6 (0=Sun, 6=Sat). Omit or empty means every day.",
+                },
+                start: {
+                  type: "string",
+                  description: "HH:MM start time (24h). Omit for start of day.",
+                },
+                end: {
+                  type: "string",
+                  description: "HH:MM end time (24h). Omit for end of day.",
+                },
               },
             },
           },
@@ -515,6 +538,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
             operator: args.operator,
             operatorTarget: args.operatorTarget,
             actions: args.actions,
+            timeWindow: args.timeWindow,
           };
           const newRule = await this.ruleService.addRule(dto);
           responses.push({
@@ -619,6 +643,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     operator?: AddRuleDto["operator"];
     operatorTarget: AddRuleDto["operatorTarget"];
     actions: AddRuleDto["actions"];
+    timeWindow?: AddRuleDto["timeWindow"];
   } {
     try {
       return JSON.parse(raw) as {
@@ -627,6 +652,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         operator?: AddRuleDto["operator"];
         operatorTarget: AddRuleDto["operatorTarget"];
         actions: AddRuleDto["actions"];
+        timeWindow?: AddRuleDto["timeWindow"];
       };
     } catch {
       throw new Error("Invalid tool arguments.");

@@ -250,7 +250,7 @@ const initial = computed(() =>
         <div class="font-bold text-xl md:text-2xl text-gray-200 mb-2">
           Log out of HiHome?
         </div>
-        <div class="text-[15px] md:text-base text-white mb-6">
+        <div class="text-[15px] md:text-base !text-gray-200 mb-6">
           Active rules and connected devices will keep working in the
           background.
         </div>

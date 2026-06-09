@@ -80,6 +80,9 @@ const peakCount = computed(() => Math.max(0, ...hours.value));
 const totalDay = computed(() => hours.value.reduce((sum, n) => sum + n, 0));
 
 const hoveredBar = ref<number | null>(null);
+const hoveredTempDayIndex = ref<number | null>(null);
+const hoveredPrecipIndex = ref<number | null>(null);
+const hoveredAqiIndex = ref<number | null>(null);
 
 const tooltipPos = computed(() => {
   if (hoveredBar.value === null) return { x: 0, y: 0 };
@@ -124,6 +127,18 @@ const tempMaxPath = computed(() =>
   buildLinePath(tempMaxSeries.value, tempBounds.value),
 );
 
+const tempTooltipStyle = computed(() => {
+  if (hoveredTempDayIndex.value === null) return {};
+  const i = hoveredTempDayIndex.value;
+  const len = historicalDays.value.length;
+  const pct = len <= 1 ? 0 : (i / (len - 1)) * 100;
+  return {
+    left: `${pct}%`,
+    top: "-36px",
+    transform: `translateX(-${pct}%)`,
+  };
+});
+
 const precipitationSeries = computed(() =>
   historicalDays.value.map((day) => day.precipitationSum),
 );
@@ -131,6 +146,18 @@ const precipitationSeries = computed(() =>
 const precipitationMax = computed(() =>
   Math.max(1, ...precipitationSeries.value),
 );
+
+const precipTooltipStyle = computed(() => {
+  if (hoveredPrecipIndex.value === null) return {};
+  const i = hoveredPrecipIndex.value;
+  const len = precipitationSeries.value.length;
+  const pct = len === 0 ? 0 : ((i + 0.5) / len) * 100;
+  return {
+    left: `${pct}%`,
+    top: "-36px",
+    transform: `translateX(-${pct}%)`,
+  };
+});
 
 const hourlyAqiSeries = computed(() => {
   const values: number[] = [];
@@ -140,6 +167,20 @@ const hourlyAqiSeries = computed(() => {
     }
   }
   return values;
+});
+
+const hourlyAqiData = computed(() => {
+  const list: { time: string; date: string; value: number }[] = [];
+  for (const day of historicalDays.value) {
+    for (const hour of day.hourlyAirQuality) {
+      list.push({
+        time: hour.time,
+        date: day.date,
+        value: hour.europeanAqi,
+      });
+    }
+  }
+  return list;
 });
 
 const aqiBounds = computed(() => {
@@ -153,6 +194,18 @@ const aqiPath = computed(() =>
   buildLinePath(hourlyAqiSeries.value, aqiBounds.value),
 );
 
+const aqiTooltipStyle = computed(() => {
+  if (hoveredAqiIndex.value === null) return {};
+  const i = hoveredAqiIndex.value;
+  const len = hourlyAqiSeries.value.length;
+  const pct = len <= 1 ? 0 : (i / (len - 1)) * 100;
+  return {
+    left: `${pct}%`,
+    top: "-36px",
+    transform: `translateX(-${pct}%)`,
+  };
+});
+
 function fmt(value: number, decimals = 1): string {
   return value.toFixed(decimals);
 }
@@ -161,6 +214,23 @@ function formatDayLabel(date: string): string {
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return date;
   return new Intl.DateTimeFormat("en", { weekday: "short" }).format(parsed);
+}
+
+function formatHourLabel(timeStr: string): string {
+  const parsed = new Date(timeStr);
+  if (Number.isNaN(parsed.getTime())) {
+    const match = timeStr.match(/T(\d{2}:\d{2})/);
+    return match && match[1] ? match[1] : timeStr;
+  }
+  const weekday = new Intl.DateTimeFormat("en", { weekday: "short" }).format(
+    parsed,
+  );
+  const time = new Intl.DateTimeFormat("en", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(parsed);
+  return `${weekday} ${time}`;
 }
 
 function buildLinePath(
@@ -445,30 +515,84 @@ onMounted(() => store.load());
             <span class="-mb-1">{{ fmt(tempBounds.min, 1) }}°</span>
           </div>
           <div class="flex-1 flex flex-col gap-2">
-            <svg
-              viewBox="0 0 100 40"
-              class="w-full h-32"
-              preserveAspectRatio="none"
-            >
-              <path
-                v-if="tempMaxPath"
-                :d="tempMaxPath"
-                fill="none"
-                stroke="#0EA5E9"
-                stroke-width="1"
-                stroke-linejoin="round"
-                vector-effect="non-scaling-stroke"
+            <div class="relative w-full h-32">
+              <svg
+                viewBox="0 0 100 40"
+                class="w-full h-full"
+                preserveAspectRatio="none"
+              >
+                <path
+                  v-if="tempMaxPath"
+                  :d="tempMaxPath"
+                  fill="none"
+                  stroke="#0EA5E9"
+                  stroke-width="1"
+                  stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke"
+                />
+                <path
+                  v-if="tempMinPath"
+                  :d="tempMinPath"
+                  fill="none"
+                  stroke="#10B981"
+                  stroke-width="1"
+                  stroke-linejoin="round"
+                  vector-effect="non-scaling-stroke"
+                />
+              </svg>
+              <!-- Hover indicator line -->
+              <div
+                v-if="hoveredTempDayIndex !== null"
+                class="absolute top-0 bottom-0 pointer-events-none border-l border-dashed border-gray-400/40"
+                :style="{
+                  left: `${historicalDays.length <= 1 ? 0 : (hoveredTempDayIndex / (historicalDays.length - 1)) * 100}%`,
+                }"
               />
-              <path
-                v-if="tempMinPath"
-                :d="tempMinPath"
-                fill="none"
-                stroke="#10B981"
-                stroke-width="1"
-                stroke-linejoin="round"
-                vector-effect="non-scaling-stroke"
+              <!-- Hover Dots -->
+              <div
+                v-if="hoveredTempDayIndex !== null"
+                class="absolute pointer-events-none w-2 h-2 rounded-full bg-sky-500 border border-white -translate-x-1/2 -translate-y-1/2 shadow"
+                :style="{
+                  left: `${historicalDays.length <= 1 ? 0 : (hoveredTempDayIndex / (historicalDays.length - 1)) * 100}%`,
+                  top: `${5 + 90 * (1 - ((tempMaxSeries[hoveredTempDayIndex] ?? 0) - tempBounds.min) / (tempBounds.max - tempBounds.min))}%`,
+                }"
               />
-            </svg>
+              <div
+                v-if="hoveredTempDayIndex !== null"
+                class="absolute pointer-events-none w-2 h-2 rounded-full bg-emerald-500 border border-white -translate-x-1/2 -translate-y-1/2 shadow"
+                :style="{
+                  left: `${historicalDays.length <= 1 ? 0 : (hoveredTempDayIndex / (historicalDays.length - 1)) * 100}%`,
+                  top: `${5 + 90 * (1 - ((tempMinSeries[hoveredTempDayIndex] ?? 0) - tempBounds.min) / (tempBounds.max - tempBounds.min))}%`,
+                }"
+              />
+              <!-- Hover overlay -->
+              <div class="absolute inset-0 flex">
+                <div
+                  v-for="(_, idx) in historicalDays"
+                  :key="`temp-hover-${idx}`"
+                  class="flex-1 h-full cursor-pointer"
+                  @mouseenter="hoveredTempDayIndex = idx"
+                  @mouseleave="hoveredTempDayIndex = null"
+                />
+              </div>
+              <!-- Tooltip -->
+              <div
+                v-if="hoveredTempDayIndex !== null"
+                class="absolute pointer-events-none bg-gray-900/95 border border-gray-800 text-[11px] text-white px-2 py-1 rounded shadow-lg flex gap-2 items-center whitespace-nowrap transition-all duration-100 z-10"
+                :style="tempTooltipStyle"
+              >
+                <span class="font-bold text-gray-300">{{
+                  dayLabels[hoveredTempDayIndex]
+                }}</span>
+                <span class="text-emerald-400 font-semibold"
+                  >{{ fmt(tempMinSeries[hoveredTempDayIndex] ?? 0, 1) }}°</span
+                >
+                <span class="text-gray-500">–</span>
+                <span class="text-sky-400 font-semibold"
+                  >{{ fmt(tempMaxSeries[hoveredTempDayIndex] ?? 0, 1) }}°</span
+                >
+              </div>
+            </div>
             <div class="flex justify-between text-[11px] text-white">
               <span v-for="(label, idx) in dayLabels" :key="`temp-${idx}`">
                 {{ label }}
@@ -493,20 +617,41 @@ onMounted(() => store.load());
             <span class="-mb-1">0</span>
           </div>
           <div class="flex-1 flex flex-col gap-2">
-            <div class="flex items-end gap-2 h-28">
+            <div class="flex items-end gap-2 h-28 relative">
               <div
                 v-for="(value, idx) in precipitationSeries"
                 :key="`precip-${idx}`"
-                class="flex-1 flex flex-col items-center justify-end"
-                :title="`${fmt(value, 1)} mm`"
+                class="flex-1 h-full flex flex-col items-center justify-end cursor-pointer"
+                @mouseenter="hoveredPrecipIndex = idx"
+                @mouseleave="hoveredPrecipIndex = null"
               >
                 <div
-                  class="w-full rounded-t bg-sky-500/40"
+                  class="w-full rounded-t transition-colors duration-150"
+                  :class="
+                    hoveredPrecipIndex === idx ? 'bg-sky-500' : 'bg-sky-500/40'
+                  "
                   :style="{
                     height: `${(value / precipitationMax) * 100}%`,
                     minHeight: value > 0 ? '4px' : '2px',
                   }"
                 />
+              </div>
+
+              <!-- Tooltip -->
+              <div
+                v-if="hoveredPrecipIndex !== null"
+                class="absolute pointer-events-none bg-gray-900/95 border border-gray-800 text-[11px] text-white px-2 py-1 rounded shadow-lg whitespace-nowrap transition-all duration-100 z-10"
+                :style="precipTooltipStyle"
+              >
+                <span class="font-bold text-gray-300">{{
+                  dayLabels[hoveredPrecipIndex]
+                }}</span>
+                <span class="ml-1.5 text-sky-400 font-semibold"
+                  >{{
+                    fmt(precipitationSeries[hoveredPrecipIndex] ?? 0, 1)
+                  }}
+                  mm</span
+                >
               </div>
             </div>
             <div class="flex gap-2 text-[11px] text-white">
@@ -537,20 +682,64 @@ onMounted(() => store.load());
             <span class="-mb-1">{{ Math.round(aqiBounds.min) }}</span>
           </div>
           <div class="flex-1 flex flex-col gap-2">
-            <svg
-              viewBox="0 0 100 40"
-              class="w-full h-32"
-              preserveAspectRatio="none"
-            >
-              <path
-                v-if="aqiPath"
-                :d="aqiPath"
-                fill="none"
-                stroke="#F59E0B"
-                stroke-width="1"
-                vector-effect="non-scaling-stroke"
+            <div class="relative w-full h-32">
+              <svg
+                viewBox="0 0 100 40"
+                class="w-full h-full"
+                preserveAspectRatio="none"
+              >
+                <path
+                  v-if="aqiPath"
+                  :d="aqiPath"
+                  fill="none"
+                  stroke="#F59E0B"
+                  stroke-width="1"
+                  vector-effect="non-scaling-stroke"
+                />
+              </svg>
+              <!-- Hover indicator line -->
+              <div
+                v-if="hoveredAqiIndex !== null"
+                class="absolute top-0 bottom-0 pointer-events-none border-l border-dashed border-gray-400/40"
+                :style="{
+                  left: `${hourlyAqiSeries.length <= 1 ? 0 : (hoveredAqiIndex / (hourlyAqiSeries.length - 1)) * 100}%`,
+                }"
               />
-            </svg>
+              <!-- Hover Dot -->
+              <div
+                v-if="hoveredAqiIndex !== null"
+                class="absolute pointer-events-none w-2 h-2 rounded-full bg-amber-500 border border-white -translate-x-1/2 -translate-y-1/2 shadow"
+                :style="{
+                  left: `${hourlyAqiSeries.length <= 1 ? 0 : (hoveredAqiIndex / (hourlyAqiSeries.length - 1)) * 100}%`,
+                  top: `${5 + 90 * (1 - ((hourlyAqiSeries[hoveredAqiIndex] ?? 0) - aqiBounds.min) / (aqiBounds.max - aqiBounds.min))}%`,
+                }"
+              />
+              <!-- Hover overlay -->
+              <div class="absolute inset-0 flex">
+                <div
+                  v-for="(_, idx) in hourlyAqiSeries"
+                  :key="`aqi-hover-${idx}`"
+                  class="flex-1 h-full cursor-pointer"
+                  @mouseenter="hoveredAqiIndex = idx"
+                  @mouseleave="hoveredAqiIndex = null"
+                />
+              </div>
+              <!-- Tooltip -->
+              <div
+                v-if="
+                  hoveredAqiIndex !== null && hourlyAqiData[hoveredAqiIndex]
+                "
+                class="absolute pointer-events-none bg-gray-900/95 border border-gray-800 text-[11px] text-white px-2 py-1 rounded shadow-lg whitespace-nowrap transition-all duration-100 z-10"
+                :style="aqiTooltipStyle"
+              >
+                <span class="font-bold text-gray-300">{{
+                  formatHourLabel(hourlyAqiData[hoveredAqiIndex]?.time || "")
+                }}</span>
+                <span class="ml-1.5 text-amber-500 font-semibold"
+                  >AQI: {{ hourlyAqiData[hoveredAqiIndex]?.value ?? 0 }}</span
+                >
+              </div>
+            </div>
             <div class="flex justify-between text-[11px] text-white">
               <span v-for="(label, idx) in dayLabels" :key="`aqi-${idx}`">
                 {{ label }}
