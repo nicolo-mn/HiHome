@@ -253,6 +253,65 @@ describe("HomeController", () => {
     });
   });
 
+  describe("updateDevice", () => {
+    const updateReq = (body: unknown, deviceId = "light-1") =>
+      ({ params: { id: "1", deviceId }, body }) as unknown as Request;
+
+    it("renames the device and returns it with its room name", async () => {
+      const res = createResponse();
+      await controller.updateDevice(updateReq({ name: "Reading Lamp" }), res);
+      expect(jsonArg(res)).toMatchObject({
+        id: "light-1",
+        type: "light",
+        name: "Reading Lamp",
+        roomName: "Living Room",
+      });
+    });
+
+    it("returns 400 when the name is empty", async () => {
+      const res = createResponse();
+      await controller.updateDevice(updateReq({ name: "   " }), res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "name must be a non-empty string",
+      });
+    });
+
+    it("returns 404 when the device is unknown", async () => {
+      const res = createResponse();
+      await controller.updateDevice(updateReq({ name: "X" }, "zzz"), res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Device not found" });
+    });
+  });
+
+  describe("deleteDevice", () => {
+    const deleteReq = (deviceId = "light-1") =>
+      ({ params: { id: "1", deviceId } }) as unknown as Request;
+
+    it("deletes the device and confirms it is gone", async () => {
+      const res = createResponse();
+      await controller.deleteDevice(deleteReq(), res);
+      expect(res.json).toHaveBeenCalledWith({ message: "Device deleted" });
+
+      const after = createResponse();
+      await controller.getDevices(
+        { params: { id: "1" } } as unknown as Request,
+        after,
+      );
+      expect(
+        jsonArg(after).find((d: any) => d.id === "light-1"),
+      ).toBeUndefined();
+    });
+
+    it("returns 404 when the device is unknown", async () => {
+      const res = createResponse();
+      await controller.deleteDevice(deleteReq("zzz"), res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Device not found" });
+    });
+  });
+
   describe("executeAction", () => {
     const actionReq = (overrides: Record<string, unknown>) =>
       ({

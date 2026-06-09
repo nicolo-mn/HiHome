@@ -108,6 +108,35 @@ export class HomeController {
     }
   }
 
+  async updateDevice(req: Request, res: Response) {
+    const { name } = req.body ?? {};
+    if (typeof name !== "string" || name.trim().length === 0) {
+      return res.status(400).json({ error: "name must be a non-empty string" });
+    }
+    try {
+      const { device, roomName } = await this.homeService.updateDeviceName(
+        req.params.id as string,
+        req.params.deviceId as string,
+        name,
+      );
+      res.json({ ...device.accept(this.stateSerializer), roomName });
+    } catch (e: any) {
+      res.status(404).json({ error: e.message });
+    }
+  }
+
+  async deleteDevice(req: Request, res: Response) {
+    try {
+      await this.homeService.deleteDevice(
+        req.params.id as string,
+        req.params.deviceId as string,
+      );
+      res.json({ message: "Device deleted" });
+    } catch (e: any) {
+      res.status(404).json({ error: e.message });
+    }
+  }
+
   async executeAction(req: Request, res: Response) {
     try {
       const action = req.params.action as string;
