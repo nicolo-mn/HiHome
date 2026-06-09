@@ -32,4 +32,23 @@ export class Home {
   addDeviceEvent(event: DeviceEvent) {
     this.eventLog.push(event);
   }
+
+  renameDevice(deviceId: string, name: string): Device {
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      throw new Error("name must be a non-empty string");
+    }
+    const device = this.getDeviceById(deviceId);
+    if (!device) throw new Error("Device not found");
+    device.name = trimmed;
+    return device;
+  }
+
+  removeDevice(deviceId: string): void {
+    const room = this.rooms.find((r) =>
+      r.devices.some((d) => d.id === deviceId),
+    );
+    if (!room) throw new Error("Device not found");
+    room.devices = room.devices.filter((d) => d.id !== deviceId);
+  }
 }

@@ -84,6 +84,31 @@ export class HomeService {
     return device;
   }
 
+  async updateDeviceName(
+    homeId: string,
+    deviceId: string,
+    name: string,
+  ): Promise<{ device: Device; roomName: string }> {
+    const home = await ensureHomeExists(this.homeRepo, homeId);
+    const device = home.renameDevice(deviceId, name);
+    await persistAndBroadcast(
+      this.homeRepo,
+      home,
+      device,
+      this.deviceUpdatePort,
+    );
+
+    const room = home.rooms.find((r) => r.id === device.roomId);
+    return { device, roomName: room?.name ?? "" };
+  }
+
+  async deleteDevice(homeId: string, deviceId: string): Promise<void> {
+    const home = await ensureHomeExists(this.homeRepo, homeId);
+    home.removeDevice(deviceId);
+    await this.homeRepo.saveHome(home);
+    this.deviceUpdatePort?.sendDeviceRemoved(home, deviceId);
+  }
+
   async executeAction(
     homeId: string,
     deviceId: string,

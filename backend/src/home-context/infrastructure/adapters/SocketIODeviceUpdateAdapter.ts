@@ -17,4 +17,8 @@ export class SocketIODeviceUpdateAdapter implements DeviceUpdatePort {
       roomName: room?.name,
     });
   }
+
+  sendDeviceRemoved(home: Home, deviceId: string): void {
+    this.io.to(`home-${home.id}`).emit("device:removed", { id: deviceId });
+  }
 }
