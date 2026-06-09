@@ -15,7 +15,7 @@ import {
 } from "../../domain";
 import { InMemoryHomeRepository } from "../../infrastructure/repositories/InMemoryHomeRepository";
 import { InMemorySensorRegistry } from "../../infrastructure/InMemorySensorRegistry";
-import { HomeService } from "./HomeService";
+import { DeviceInUseError, HomeService } from "./HomeService";
 
 const buildHome = (id = "1"): Home =>
   new Home(id, { latitude: 0, longitude: 0 }, [
@@ -42,6 +42,7 @@ const makePorts = () => ({
   ruleServicePort: { evaluateRules: vi.fn() },
   outdoorSensorsDataPort: { getOutdoorSensorsData: vi.fn() },
   deviceUpdatePort: { sendDeviceUpdate: vi.fn(), sendDeviceRemoved: vi.fn() },
+  ruleUsagePort: { getRuleNamesUsingDevice: vi.fn().mockResolvedValue([]) },
 });
 
 const outdoorUpdate: OutdoorSensorsUpdate = {
@@ -71,6 +72,7 @@ describe("HomeService", () => {
       ports.ruleServicePort,
       ports.outdoorSensorsDataPort,
       ports.deviceUpdatePort,
+      ports.ruleUsagePort,
     );
   });
 
@@ -249,6 +251,21 @@ describe("HomeService", () => {
         home,
         "light-1",
       );
+    });
+
+    it("blocks deletion when the device is used by a rule", async () => {
+      ports.ruleUsagePort.getRuleNamesUsingDevice.mockResolvedValue([
+        "Night lights",
+      ]);
+      const saveSpy = vi.spyOn(repo, "saveHome");
+
+      await expect(service.deleteDevice("1", "light-1")).rejects.toBeInstanceOf(
+        DeviceInUseError,
+      );
+
+      expect(home.getDeviceById("light-1")).toBeDefined();
+      expect(saveSpy).not.toHaveBeenCalled();
+      expect(ports.deviceUpdatePort.sendDeviceRemoved).not.toHaveBeenCalled();
     });
 
     it("throws when the device is missing", async () => {

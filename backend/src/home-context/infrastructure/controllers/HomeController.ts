@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { HomeService } from "../../application/services/HomeService";
+import {
+  DeviceInUseError,
+  HomeService,
+} from "../../application/services/HomeService";
 import { DeviceStateSerializer } from "../DeviceStateSerializer";
 import { HomeNotificationOutboundPort } from "../../application/ports/HomeNotificationPort";
 import { CreateDeviceInput } from "../../application/dtos/DeviceDTO";
@@ -133,6 +136,11 @@ export class HomeController {
       );
       res.json({ message: "Device deleted" });
     } catch (e: any) {
+      if (e instanceof DeviceInUseError) {
+        return res
+          .status(409)
+          .json({ error: e.message, ruleNames: e.ruleNames });
+      }
       res.status(404).json({ error: e.message });
     }
   }

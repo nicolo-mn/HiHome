@@ -19,6 +19,7 @@ const jsonArg = (res: Response) =>
 describe("HomeController", () => {
   let controller: HomeController;
   let sensorRegistry: InMemorySensorRegistry;
+  let ruleUsagePort: { getRuleNamesUsingDevice: Mock };
   let notificationPort: HomeNotificationOutboundPort & {
     notifyDeviceAction: Mock<
       HomeNotificationOutboundPort["notifyDeviceAction"]
@@ -42,12 +43,15 @@ describe("HomeController", () => {
       getOutdoorSensorsData: vi.fn(),
     };
 
+    ruleUsagePort = { getRuleNamesUsingDevice: vi.fn().mockResolvedValue([]) };
     const homeService = new HomeService(
       homeRepo,
       sensorRegistry,
       sensorUpdatePort,
       ruleServicePort,
       outdoorSensorsDataPort,
+      undefined,
+      ruleUsagePort,
     );
 
     notificationPort = {
@@ -309,6 +313,18 @@ describe("HomeController", () => {
       await controller.deleteDevice(deleteReq("zzz"), res);
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: "Device not found" });
+    });
+
+    it("returns 409 with the rule names when the device is used by a rule", async () => {
+      ruleUsagePort.getRuleNamesUsingDevice.mockResolvedValue(["Night lights"]);
+      const res = createResponse();
+
+      await controller.deleteDevice(deleteReq(), res);
+
+      expect(res.status).toHaveBeenCalledWith(409);
+      const payload = jsonArg(res);
+      expect(payload.ruleNames).toEqual(["Night lights"]);
+      expect(typeof payload.error).toBe("string");
     });
   });
 
