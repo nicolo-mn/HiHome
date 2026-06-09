@@ -4,6 +4,7 @@ defineProps<{
   modelValue: string;
   placeholder?: string;
   type?: string;
+  accentBorder?: boolean;
 }>();
 
 defineEmits<{
@@ -25,7 +26,12 @@ defineEmits<{
       @input="
         $emit('update:modelValue', ($event.target as HTMLInputElement).value)
       "
-      class="bg-gray-800/50 rounded-2xl px-5 py-3.5 text-gray-200 text-[16px] md:text-[17px] placeholder:text-gray-600 outline-none border-2 border-gray-800 focus:border-yellow-500 transition-colors min-w-0"
+      :class="[
+        'bg-gray-800/50 rounded-2xl px-5 py-3.5 text-gray-200 text-[16px] md:text-[17px] placeholder:text-gray-600 outline-none border-2 transition-colors min-w-0',
+        accentBorder
+          ? 'border-primary'
+          : 'border-gray-800 focus:border-yellow-500',
+      ]"
     />
   </div>
 </template>

@@ -6,7 +6,7 @@ import { useDevicesStore } from "@/stores/devices";
 import { useRoomGroups } from "@/composables/useRoomGroups";
 import { useAsyncAction } from "@/composables/useAsyncAction";
 import { ApiError } from "@/api/errors";
-import type { CreatableType } from "@/api/devices";
+import type { CreatableType, HomeDevice } from "@/api/devices";
 import AppHeader from "@/components/AppHeader.vue";
 import BaseIcon from "@/components/BaseIcon.vue";
 import DeviceCard from "@/components/cards/DeviceCard.vue";
@@ -14,6 +14,7 @@ import AddDeviceCard from "@/components/cards/AddDeviceCard.vue";
 import BaseButton from "@/components/BaseButton.vue";
 import BaseInput from "@/components/BaseInput.vue";
 import ErrorBanner from "@/components/ErrorBanner.vue";
+import DeviceManageModal from "@/components/DeviceManageModal.vue";
 
 const auth = useAuthStore();
 const store = useDevicesStore();
@@ -21,6 +22,8 @@ const { devices, isLoading, error } = storeToRefs(store);
 const { load, toggle, step, setFanMode, isBusy, addDevice } = store;
 
 const roomGroups = useRoomGroups(devices);
+
+const selected = ref<HomeDevice | null>(null);
 
 const fieldClass =
   "bg-gray-800/50 rounded-2xl px-5 py-3.5 text-gray-200 placeholder:text-gray-600 outline-none border-2 border-gray-800 focus:border-yellow-500 transition-colors";
@@ -246,9 +249,11 @@ onMounted(() => {
           :key="item.id"
           :device="item"
           :busy="isBusy(item.id)"
+          :manageable="auth.isAdmin"
           @toggle="toggle"
           @step="step"
           @fan-mode="setFanMode"
+          @select="selected = $event"
         />
         <AddDeviceCard
           v-if="auth.isAdmin"
@@ -259,5 +264,11 @@ onMounted(() => {
     </section>
 
     <div class="h-8" />
+
+    <DeviceManageModal
+      v-if="selected"
+      :device="selected"
+      @close="selected = null"
+    />
   </div>
 </template>
