@@ -20,14 +20,13 @@ This module handles system security, access control, and user profiles. The core
 
 The **`AuthService`** is the component that validates credentials and outputs a stateless token, which will be used by the users to authenticate messages in the session. Role modifications are orchestrated by the **`UserManagementService`**.
 
-The User context acts as a **supplier** of identity and authentication verification. The Home context communicates with it to handle login operations and build the JWT that the frontend passes along the requests for authentication purposes. The role information is stored in the JWT and read upon specific requests, for example, when a chat with the AI assistant is started the JWT's role field is used to allow or disallow specific subsets of tools. Moreover, the user context is contacted by the home context when an admin user wants to change the privileges of other users of the same home.
+The User context acts as a **supplier** of identity and authentication verification. The Home context communicates with it to handle login operations and build the JWT that the frontend passes along the requests for authentication purposes. The role information is stored in the JWT and read upon specific requests, for example, when a chat with the AI assistant is started the JWT's role field is used to allow or disallow specific subsets of tools. Moreover, the user context is contacted by the home context when an admin user wants to change the privileges of other users of the same home, and by the notification context to retrieve the members of a home and their roles when selecting notification recipients.
 
 ```mermaid
 classDiagram
     class User {
         <<Aggregate Root>>
         changeRole(newRole, actor)
-        updatePreferences(types)
     }
     class Role {
         <<Value Object>>
@@ -157,11 +156,11 @@ classDiagram
 ```
 
 #### Notification context
-Designed to handle system-to-user alerts, this context informs users about triggered automations, manual device overrides, or critical environmental shifts. It revolves around the **`Notification` entity**.
+Designed to handle system-to-user alerts, this context informs users about triggered automations, manual device overrides, or critical environmental shifts. It revolves around the **`Notification` entity**. The context also owns the per-user **notification preferences**: the opt-in selection of notification types each user wants to receive, stored and managed within this context through its own repository.
 
-The **`NotificationService`** listens to domain events generated across the backend. When an event occurs, it evaluates the policy, checks user opt-in preferences via a query to the User context, and dispatches the alert. `NotificationDeliveryPort` is an outbound port that is used to abstract from the communication logic towards the client, which is handled by an adapter, which uses Socket.io for the purpose.
+The **`NotificationService`** listens to domain events generated across the backend. When an event occurs, it evaluates the policy, checks user opt-in preferences through the **`PreferencesService`**, and dispatches the alert. The `PreferencesService` manages the stored preferences and selects the recipients of a notification: it retrieves the members of a home and their roles from the User context through the `HomeUsersPort` outbound port, then filters them against their stored preferences. `NotificationDeliveryPort` is an outbound port that is used to abstract from the communication logic towards the client, which is handled by an adapter, which uses Socket.io for the purpose.
 
-This context adopts a **Conformist** pattern towards the other contexts it receives data from. It blindly consumes events produced by the Home and Rule contexts without demanding any structural or data format changes from them.
+This context adopts a **Conformist** pattern towards the other contexts it receives data from. It blindly consumes events produced by the Home and Rule contexts without demanding any structural or data format changes from them, and it queries the User context for home membership information through an adapter that translates the User context's model into its own.
 
 #### Environment Context
 This context is responsible for retrieving data about external weather and air quality conditions. It communicates with third-party meteorological APIs to retrieve raw data, and translates it into the system's internal domain models.

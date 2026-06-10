@@ -73,7 +73,7 @@ graph TD
     HC -- "device action / sensor events" --> NC
     RC -- "rule execution results" --> NC
     RC -- "trigger evaluation / resolve device names" --> HC
-    NC -- "user notification preferences" --> UC
+    NC -- "list home members and roles" --> UC
     HC -- "fetch weather and air quality" --> EC
 ```
 

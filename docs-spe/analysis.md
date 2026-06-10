@@ -80,9 +80,10 @@ The codebase has been handled with a set of terms which definitions are clearly 
 | Rule | Rule | An automation linking a condition to a list of actions, belonging to a home and carrying an evaluation order (priority). |
 | Condition | Rule | A predicate over an observed value (temperature, air quality, wind speed or weather) that decides whether a rule fires. |
 | Action | Rule | An operation a rule applies automatically to a component (eg. turn light on/off, open/close window, set thermostat temperature). |
-| User | User | A person belonging to a home, with a username, a role and notification preferences. |
+| User | User | A person belonging to a home, with a username and a role. |
 | Role | User | A user's privilege level: Admin or Standard User. |
 | Notification | Notification | A message delivered to a user, with a type (air-quality breach, rule executed, component action), content and read/unread state. |
+| Notification Preference | Notification | The per-home, per-user selection of notification types the user has opted in to receive. |
 | Forecast | External API service | Weather and air-quality data retrieved from the external service for a home's coordinates. |
 
 ## Bounded contexts
@@ -90,6 +91,6 @@ The codebase has been handled with a set of terms which definitions are clearly 
 The domain is divided in five bounded contexts:
 - **Home**: handles the homes, the devices and the sensors in it, keeps the event log and usage statistics and the home's daily temperature plan, provides the actions for other contexts to interact with the devices, and handles the chatbot functionality.
 - **Rule**: represents the automations engine, allows for the creation of rules and their execution. It interacts with the Home by means of an event bus to get the necessary inputs for the rules evaluation, and by means of ports to execute the automatic actions on components.
-- **User**: handles the users, providing login functionalities and roles validation, alongside per-user settings management.
-- **Notification**: takes care of notification delivery to users, based on the settings provided by the user context. It receives updates from other contexts and makes decisions over which notifications should be delivered to who.
+- **User**: handles the users, providing login functionalities and roles validation.
+- **Notification**: takes care of notification delivery to users, managing and storing the per-user notification preferences. It receives updates from other contexts, queries the user context for the members of a home and their roles, and makes decisions over which notifications should be delivered to who.
 - **Environment**: acts as an interface to handle the external service from which the application gets outdoor sensors updates. It queries the external service through a set of APIs and returns the sensors values to the home context.
