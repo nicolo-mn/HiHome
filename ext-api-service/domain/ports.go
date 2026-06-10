@@ -2,8 +2,7 @@ package domain
 
 // EnvironmentInfoProvider is the port for fetching environment information from an external source.
 type EnvironmentInfoProvider interface {
-	FetchCurrentWeather(lat, lon float64) (*WeatherInfo, error)
-	FetchCurrentAirQuality(lat, lon float64) (*AirQualityInfo, error)
+	FetchCurrentEnvironment(lat, lon float64) (*EnvironmentInfo, error)
 	FetchWeeklyForecast(lat, lon float64) (*WeeklyForecast, error)
 	FetchHistoricalForecast(lat, lon float64) (*WeeklyForecast, error)
 }

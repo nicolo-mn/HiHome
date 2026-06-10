@@ -21,21 +21,14 @@ func NewEnvironmentService(wp domain.EnvironmentInfoProvider) *EnvironmentServic
 // GetEnvironmentInfo fetches weather and air quality data for the given coordinates.
 func (s *EnvironmentService) GetEnvironmentInfo(lat, lon float64) (*domain.EnvironmentInfo, error) {
 	log.Printf("fetching environment info for lat=%.4f lon=%.4f", lat, lon)
-	weatherInfo, err := s.environmentProvider.FetchCurrentWeather(lat, lon)
+	envInfo, err := s.environmentProvider.FetchCurrentEnvironment(lat, lon)
 	if err != nil {
-		log.Printf("failed to fetch weather info: %v", err)
+		log.Printf("failed to fetch environment info: %v", err)
 		return nil, err
 	}
 
-	airQualityInfo, err := s.environmentProvider.FetchCurrentAirQuality(lat, lon)
-	if err != nil {
-		log.Printf("failed to fetch air quality info: %v", err)
-		return nil, err
-	}
-
-	newEnvInfo := domain.NewEnvironmentInfo(*weatherInfo, *airQualityInfo)
-	log.Printf("successfully fetched weather and air quality for lat=%.4f lon=%.4f", lat, lon)
-	return &newEnvInfo, nil
+	log.Printf("successfully fetched environment info for lat=%.4f lon=%.4f", lat, lon)
+	return envInfo, nil
 }
 
 func (s *EnvironmentService) GetWeeklyForecast(lat, lon float64) (*domain.WeeklyForecast, error) {

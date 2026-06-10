@@ -1,22 +1,17 @@
 package domain
 
-type WeatherInfo struct {
+// Represents the current environmental conditions
+type EnvironmentInfo struct {
 	temperature   float64
 	weatherType   WeatherType
 	windSpeed     float64
 	windDirection float64
 	precipitation float64
+	europeanAQI   int
 }
 
-type AirQualityInfo struct {
-	europeanAQI int
-}
-
-type EnvironmentInfo struct {
-	weatherInfo    WeatherInfo
-	airQualityInfo AirQualityInfo
-}
-
+// Represents the environment information for a single day
+// Used for both future and past daily forecasts
 type DailyForecast struct {
 	date                  string
 	weatherType           WeatherType
@@ -39,26 +34,14 @@ type WeeklyForecast struct {
 	days []DailyForecast
 }
 
-func NewWeatherInfo(temp float64, code int, windSpeed float64, windDir float64, precip float64) WeatherInfo {
-	return WeatherInfo{
+func NewEnvironmentInfo(temp float64, weatherCode int, windSpeed float64, windDir float64, precip float64, aqi int) EnvironmentInfo {
+	return EnvironmentInfo{
 		temperature:   temp,
-		weatherType:   FromWMOCode(code),
+		weatherType:   FromWMOCode(weatherCode),
 		windSpeed:     windSpeed,
 		windDirection: windDir,
 		precipitation: precip,
-	}
-}
-
-func NewAirQualityInfo(aqi int) AirQualityInfo {
-	return AirQualityInfo{
-		europeanAQI: aqi,
-	}
-}
-
-func NewEnvironmentInfo(weather WeatherInfo, airQuality AirQualityInfo) EnvironmentInfo {
-	return EnvironmentInfo{
-		weatherInfo:    weather,
-		airQualityInfo: airQuality,
+		europeanAQI:   aqi,
 	}
 }
 
@@ -88,28 +71,28 @@ func NewWeeklyForecast(days []DailyForecast) WeeklyForecast {
 	return WeeklyForecast{days: days}
 }
 
-func (w EnvironmentInfo) Temperature() float64 {
-	return w.weatherInfo.temperature
+func (e EnvironmentInfo) Temperature() float64 {
+	return e.temperature
 }
 
-func (w EnvironmentInfo) WeatherType() WeatherType {
-	return w.weatherInfo.weatherType
+func (e EnvironmentInfo) WeatherType() WeatherType {
+	return e.weatherType
 }
 
-func (w EnvironmentInfo) WindSpeed() float64 {
-	return w.weatherInfo.windSpeed
+func (e EnvironmentInfo) WindSpeed() float64 {
+	return e.windSpeed
 }
 
-func (w EnvironmentInfo) WindDirection() float64 {
-	return w.weatherInfo.windDirection
+func (e EnvironmentInfo) WindDirection() float64 {
+	return e.windDirection
 }
 
-func (w EnvironmentInfo) Precipitation() float64 {
-	return w.weatherInfo.precipitation
+func (e EnvironmentInfo) Precipitation() float64 {
+	return e.precipitation
 }
 
-func (w EnvironmentInfo) EuropeanAQI() int {
-	return w.airQualityInfo.europeanAQI
+func (e EnvironmentInfo) EuropeanAQI() int {
+	return e.europeanAQI
 }
 
 func (d DailyForecast) Date() string {

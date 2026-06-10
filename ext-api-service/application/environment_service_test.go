@@ -8,25 +8,17 @@ import (
 )
 
 type stubProvider struct {
-	weatherInfo    *domain.WeatherInfo
-	airQualityInfo *domain.AirQualityInfo
-	weeklyForecast *domain.WeeklyForecast
-	weatherErr     error
-	airQualityErr  error
-	forecastErr    error
-	weatherCalls   int
-	airCalls       int
-	forecastCalls  int
+	environmentInfo *domain.EnvironmentInfo
+	weeklyForecast  *domain.WeeklyForecast
+	environmentErr  error
+	forecastErr     error
+	envCalls        int
+	forecastCalls   int
 }
 
-func (s *stubProvider) FetchCurrentWeather(lat, lon float64) (*domain.WeatherInfo, error) {
-	s.weatherCalls++
-	return s.weatherInfo, s.weatherErr
-}
-
-func (s *stubProvider) FetchCurrentAirQuality(lat, lon float64) (*domain.AirQualityInfo, error) {
-	s.airCalls++
-	return s.airQualityInfo, s.airQualityErr
+func (s *stubProvider) FetchCurrentEnvironment(lat, lon float64) (*domain.EnvironmentInfo, error) {
+	s.envCalls++
+	return s.environmentInfo, s.environmentErr
 }
 
 func (s *stubProvider) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
@@ -39,9 +31,9 @@ func (s *stubProvider) FetchHistoricalForecast(lat, lon float64) (*domain.Weekly
 	return s.weeklyForecast, s.forecastErr
 }
 
-// Test that if the weather provider returns an error, the service returns that error and does not call the air quality provider
-func TestEnvironmentServiceGetEnvironmentInfoWeatherError(t *testing.T) {
-	provider := &stubProvider{weatherErr: errors.New("weather failure")}
+// Test that if the environment provider returns an error, the service returns that error
+func TestEnvironmentServiceGetEnvironmentInfoError(t *testing.T) {
+	provider := &stubProvider{environmentErr: errors.New("fetch failure")}
 	service := NewEnvironmentService(provider)
 
 	info, err := service.GetEnvironmentInfo(10.5, 20.5)
@@ -51,18 +43,16 @@ func TestEnvironmentServiceGetEnvironmentInfoWeatherError(t *testing.T) {
 	if info != nil {
 		t.Fatalf("expected nil info, got %#v", info)
 	}
-	if provider.airCalls != 0 {
-		t.Fatalf("expected air quality not to be called, got %d", provider.airCalls)
+	if provider.envCalls != 1 {
+		t.Fatalf("expected 1 env call, got %d", provider.envCalls)
 	}
 }
 
 // test lack of errors on happy path
 func TestEnvironmentServiceGetEnvironmentInfoSuccess(t *testing.T) {
-	weather := domain.NewWeatherInfo(12.3, 2, 4.5, 180, 0.1)
-	air := domain.NewAirQualityInfo(42)
+	env := domain.NewEnvironmentInfo(12.3, 2, 4.5, 180, 0.1, 42)
 	provider := &stubProvider{
-		weatherInfo:    &weather,
-		airQualityInfo: &air,
+		environmentInfo: &env,
 	}
 	service := NewEnvironmentService(provider)
 
