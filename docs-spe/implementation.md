@@ -35,10 +35,9 @@ Similarly to other services, it also exposes a `/health` endpoint to allow inspe
 The Weather service obtains the requested information through the Weather and Air Quality APIs from OpenMeteo. From a DDD perspective, an outbound port was built to hide implementation details regarding the specific API providers used. This port returns Domain value objects, as follows:
 ```go
 type EnvironmentInfoProvider interface {
-  FetchCurrentWeather(lat, lon float64) (*WeatherInfo, error)
-  FetchCurrentAirQuality(lat, lon float64) (*AirQualityInfo, error)
-  FetchWeeklyForecast(lat, lon float64) (*WeeklyForecast, error)
-  FetchHistoricalForecast(lat, lon float64) (*WeeklyForecast, error)
+	FetchCurrentEnvironment(lat, lon float64) (*EnvironmentInfo, error)
+	FetchWeeklyForecast(lat, lon float64) (*WeeklyForecast, error)
+	FetchHistoricalForecast(lat, lon float64) (*WeeklyForecast, error)
 }
 ```
 
