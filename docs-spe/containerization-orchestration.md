@@ -14,7 +14,7 @@ The application is containerized using *Docker*. There are four containers that 
 - *Weather API Service*: this container runs the Go Service, which interacts with the MEVN backend, providing information taken from Open Meteo public APIs.
 
 # Orchestration
-To orchestrate the aforementioned Docker containers, Docker Compose was used. We added a volume that contains data for the MongoDB container, and handled launching taking into consideration the dependencies of the containers. To handle startup correctly, we implemented an ad-hoc route in all the containers to perform an healthcheck. Dependencies are listed below:
+To orchestrate the aforementioned Docker containers, Docker Compose was used. We added a volume that contains data for the MongoDB container, and handled launching taking into consideration the dependencies of the containers. To handle startup correctly, we implemented an ad-hoc route in backend containers to perform an healthcheck. Dependencies are listed below:
 - The MEVN Frontend depends on the MEVN Backend
 - The MEVN Backend depends on the database and the Weather service
 
@@ -22,4 +22,4 @@ Moreover, we also implemented a second version of both the Docker Compose file a
 
 As explained in the repo README, the containers can be started with either `docker compose up` or `docker compose -f docker-compose.dev.yml up`.
 
-Since containers are released on GHCR, we also included a third compose file that uses (`docker-compose.ghcr.yml`), which requires to set a JWT secret for authentication and a DeepSeek API key to run the chatbot.
+Since containers are released on GHCR, we also included a third compose file that uses them (`docker-compose.ghcr.yml`), which requires to set a JWT secret for authentication and a DeepSeek API key to run the chatbot.
