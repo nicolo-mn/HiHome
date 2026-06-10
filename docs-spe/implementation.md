@@ -165,7 +165,7 @@ interface Operator<T> {
 
 This keeps two concerns apart: the condition decides which observable to read, the operator decides how to compare it against a stored target. Any condition can then reuse any compatible operator, instead of writing one class for every observable and comparison. The generic parameter lets the same interface serve both the numeric readings and the weather enum.
 
-The numeric conditions implement the `Operator` interface, accepting the operation lambda as a constructor parameter.
+The numeric operators implement the `Operator` interface, accepting the operation lambda as a constructor parameter.
 
 ```typescript
 abstract class NumericOperator implements Operator<number> {

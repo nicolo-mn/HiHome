@@ -10,9 +10,10 @@ The project uses *GitHub Actions* to implement the CI/CD pipeline.
 
 ## Pull Request Workflows
 Since GitHub Flow is used, code is merged into the main branch through Pull Requests. To adequately test Pull Requests, we implemented a workflow that performs several operations:
-- Builds both the MEVN application and the Go service (in both ARM and AMD architectures)
-- Checks if proper formatting is applied to the code
-- Executes a security audit through pnpm, to check for vulnerabilities that may have arisen after the installation on pnpm packages
+- Builds both the MEVN application and the Go service (in both ARM and AMD architectures).
+- Checks if proper formatting is applied to the code.
+- Executes a security audit through pnpm, to check for vulnerabilities that may have arisen after the installation on pnpm packages.
+- Runs the whole test suite to ensure the code behaves as intended.
 
 Moreover, we added a success job to this workflow which always runs unless jobs were cancelled that depends on all the previous ones. This allows us to check this job to understand if the PR can be merged in the main branch.
 

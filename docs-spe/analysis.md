@@ -84,7 +84,7 @@ The codebase has been handled with a set of terms which definitions are clearly 
 | Role | User | A user's privilege level: Admin or Standard User. |
 | Notification | Notification | A message delivered to a user, with a type (air-quality breach, rule executed, device action), content and read/unread state. |
 | Notification Preference | Notification | The per-home, per-user selection of notification types the user has opted in to receive. |
-| Forecast | External API service | Weather and air-quality data retrieved from the external service for a home's coordinates. |
+| Forecast | Environment | Weather and air-quality data retrieved from the external service for a home's coordinates. |
 
 ## Bounded contexts
 

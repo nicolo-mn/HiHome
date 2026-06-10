@@ -26,7 +26,7 @@ The User context acts as a **supplier** of identity and authentication verificat
 classDiagram
     class User {
         <<Aggregate Root>>
-        changeRole(newRole, actor)
+        changeRole(newRole, actor, otherAdminsInHome)
     }
     class Role {
         <<Value Object>>
@@ -57,6 +57,8 @@ This context represent the physical house, and it holds the authoritative state 
 Two main services drive this context:
 * **`HomeService`**: it handles the informations regarding the home, handles user actions, sensors readings and devices' state changes.
 * **`ChatService`**: it powers the AI assistant. It receives natural language conversations from the frontend, appends the system prompt to the messages and handles the communication with an external Large Language Model through a port.
+
+Additionally, two more services handle the usage metrics and the incoming actions from other contexts (`UsageService` and `ActionService` respectively).
 
 The Home context is in a **conformist** relationship with both the Notification and Rule context, since it pushes to them domain events to evaluate rules and publish notifications, respectively. It is in a **customer-supplier** relationship with the User context, since it collaborates to correctly manage authentication and authorization.
 
@@ -140,8 +142,8 @@ classDiagram
     class TimeWindow {
         <<Value Object>>
         days
-        startTime
-        endTime
+        start
+        end
     }
 
     HomeRuleSet "1" *-- "*" Rule : ordered by priority
