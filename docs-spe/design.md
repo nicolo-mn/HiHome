@@ -128,7 +128,7 @@ classDiagram
         order
     }
     class ObservableCondition {
-        <<abstract>>
+        <<Interface>>
         verify(observables)
     }
     class OutdoorTemperatureCondition
