@@ -1,20 +1,19 @@
 import { Request, Response } from "express";
-import {
-  PreferencesRepository,
-  ALL_NOTIFICATION_TYPES,
-} from "../../domain/PreferencesRepository";
+import { ALL_NOTIFICATION_TYPES } from "../../domain/Notification";
+import { PreferencesService } from "../../application/services/PreferencesService";
 
 export class PreferencesController {
-  constructor(private prefsRepo: PreferencesRepository) {}
+  constructor(private preferencesService: PreferencesService) {}
 
   async getPreferences(req: Request, res: Response): Promise<void> {
     try {
       const homeId = req.params.homeId as string;
       const username = (req as any).user?.username as string;
-      const prefs = await this.prefsRepo.findPreferences(homeId, username);
-      res.json({
-        notificationPreferences: prefs ?? [...ALL_NOTIFICATION_TYPES],
-      });
+      const prefs = await this.preferencesService.getPreferences(
+        homeId,
+        username,
+      );
+      res.json({ notificationPreferences: prefs });
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
@@ -38,7 +37,7 @@ export class PreferencesController {
         return;
       }
 
-      await this.prefsRepo.updatePreferences(
+      await this.preferencesService.updatePreferences(
         homeId,
         username,
         notificationPreferences,

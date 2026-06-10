@@ -100,7 +100,8 @@ describe("Conditions", () => {
       const cond = new WeatherCondition(op);
       const mockVisitor = {
         visitWeatherCondition: vi.fn().mockReturnValue("weather"),
-        visitTemperatureCondition: vi.fn(),
+        visitOutdoorTemperatureCondition: vi.fn(),
+        visitIndoorTemperatureCondition: vi.fn(),
         visitAirQualityCondition: vi.fn(),
         visitWindSpeedCondition: vi.fn(),
       };
@@ -151,15 +152,16 @@ describe("Conditions", () => {
         const cond = new OutdoorTemperatureCondition(op);
         const mockVisitor = {
           visitWeatherCondition: vi.fn(),
-          visitTemperatureCondition: vi.fn().mockReturnValue("temp"),
+          visitOutdoorTemperatureCondition: vi.fn().mockReturnValue("outdoor"),
+          visitIndoorTemperatureCondition: vi.fn(),
           visitAirQualityCondition: vi.fn(),
           visitWindSpeedCondition: vi.fn(),
         };
 
-        expect(cond.accept(mockVisitor)).toBe("temp");
-        expect(mockVisitor.visitTemperatureCondition).toHaveBeenCalledWith(
-          cond,
-        );
+        expect(cond.accept(mockVisitor)).toBe("outdoor");
+        expect(
+          mockVisitor.visitOutdoorTemperatureCondition,
+        ).toHaveBeenCalledWith(cond);
       });
     });
 
@@ -181,6 +183,23 @@ describe("Conditions", () => {
         expect(() => new IndoorTemperatureCondition(op)).toThrow(
           BoundaryViolationError,
         );
+      });
+
+      it("should accept visitor", () => {
+        const op = new NumericLowerOperator(20);
+        const cond = new IndoorTemperatureCondition(op);
+        const mockVisitor = {
+          visitWeatherCondition: vi.fn(),
+          visitOutdoorTemperatureCondition: vi.fn(),
+          visitIndoorTemperatureCondition: vi.fn().mockReturnValue("indoor"),
+          visitAirQualityCondition: vi.fn(),
+          visitWindSpeedCondition: vi.fn(),
+        };
+
+        expect(cond.accept(mockVisitor)).toBe("indoor");
+        expect(
+          mockVisitor.visitIndoorTemperatureCondition,
+        ).toHaveBeenCalledWith(cond);
       });
     });
 
@@ -205,7 +224,8 @@ describe("Conditions", () => {
         const cond = new AirQualityCondition(op);
         const mockVisitor = {
           visitWeatherCondition: vi.fn(),
-          visitTemperatureCondition: vi.fn(),
+          visitOutdoorTemperatureCondition: vi.fn(),
+          visitIndoorTemperatureCondition: vi.fn(),
           visitAirQualityCondition: vi.fn().mockReturnValue("aqi"),
           visitWindSpeedCondition: vi.fn(),
         };
@@ -238,7 +258,8 @@ describe("Conditions", () => {
         const cond = new WindSpeedCondition(op);
         const mockVisitor = {
           visitWeatherCondition: vi.fn(),
-          visitTemperatureCondition: vi.fn(),
+          visitOutdoorTemperatureCondition: vi.fn(),
+          visitIndoorTemperatureCondition: vi.fn(),
           visitAirQualityCondition: vi.fn(),
           visitWindSpeedCondition: vi.fn().mockReturnValue("wind"),
         };

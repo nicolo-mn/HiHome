@@ -13,7 +13,6 @@ import {
 } from "../../domain/Observables";
 import {
   DeviceAction,
-  FanMode,
   FanSetModeAction,
   LightTurnOnAction,
   LightTurnOffAction,
@@ -28,30 +27,19 @@ import { Rule } from "../../domain/Rule";
 import { HomeRuleSet } from "../../domain/HomeRuleSet";
 import { TimeWindow, TimeWindowSpec } from "../../domain/TimeWindow";
 import { RuleModel } from "../models/RuleModel";
-
-const WEATHER_TYPE = "weather";
-const OUTDOOR_TEMP_TYPE = "outdoor-thermometer";
-const INDOOR_TEMP_TYPE = "indoor-thermometer";
-const AIR_QUALITY_TYPE = "air-quality";
-const WIND_SPEED_TYPE = "wind-speed";
-
-const OP_EQ = "eq";
-const OP_GT = "gt";
-const OP_LT = "lt";
-
-type ConditionRecord = {
-  type: string;
-  operator: string;
-  target: string | number;
-};
-
-type ActionRecord = {
-  type: string;
-  homeId: string;
-  deviceId: string;
-  targetTemperature?: number;
-  mode?: FanMode;
-};
+import {
+  ConditionRecord,
+  ConditionRecordVisitor,
+  WEATHER_TYPE,
+  OUTDOOR_TEMP_TYPE,
+  INDOOR_TEMP_TYPE,
+  AIR_QUALITY_TYPE,
+  WIND_SPEED_TYPE,
+  OP_GT,
+  OP_LT,
+  OP_EQ,
+} from "./ConditionRecordVisitor";
+import { ActionRecord, ActionRecordVisitor } from "./ActionRecordVisitor";
 
 type RuleRecord = {
   _id: string | { toString(): string };
@@ -100,8 +88,10 @@ export class MongoRuleRepository implements RuleRepository {
       homeId,
       name,
       order,
-      condition: this.toConditionRecord(condition),
-      actions: actions.map((action) => this.toActionRecord(action)),
+      condition: condition.accept(new ConditionRecordVisitor()),
+      actions: actions.map((action) =>
+        action.accept(new ActionRecordVisitor()),
+      ),
       timeWindow: timeWindow?.value,
     };
 
@@ -188,128 +178,6 @@ export class MongoRuleRepository implements RuleRepository {
       throw new Error(`Unsupported weather forecast: ${target}`);
     }
     return forecast;
-  }
-
-  private toConditionRecord(condition: ObservableCondition): ConditionRecord {
-    if (condition instanceof WeatherCondition) {
-      return {
-        type: WEATHER_TYPE,
-        operator: OP_EQ,
-        target: condition.operator.getBoundaryValue(),
-      };
-    }
-
-    if (condition instanceof OutdoorTemperatureCondition) {
-      return this.toNumericConditionRecord(condition, OUTDOOR_TEMP_TYPE);
-    }
-
-    if (condition instanceof IndoorTemperatureCondition) {
-      return this.toNumericConditionRecord(condition, INDOOR_TEMP_TYPE);
-    }
-
-    if (condition instanceof AirQualityCondition) {
-      return this.toNumericConditionRecord(condition, AIR_QUALITY_TYPE);
-    }
-
-    if (condition instanceof WindSpeedCondition) {
-      return this.toNumericConditionRecord(condition, WIND_SPEED_TYPE);
-    }
-
-    throw new Error("Unsupported condition type");
-  }
-
-  private toNumericConditionRecord(
-    condition:
-      | OutdoorTemperatureCondition
-      | IndoorTemperatureCondition
-      | AirQualityCondition
-      | WindSpeedCondition,
-    type: string,
-  ): ConditionRecord {
-    const operator = condition.operator;
-    const target = operator.getBoundaryValue();
-
-    if (operator instanceof NumericGreaterOperator) {
-      return { type, operator: OP_GT, target };
-    }
-    if (operator instanceof NumericLowerOperator) {
-      return { type, operator: OP_LT, target };
-    }
-    if (operator instanceof NumericEqualityOperator) {
-      return { type, operator: OP_EQ, target };
-    }
-
-    throw new Error("Unsupported numeric operator");
-  }
-
-  private toActionRecord(action: DeviceAction): ActionRecord {
-    if (action instanceof LightTurnOnAction) {
-      return {
-        type: "light-turn-on",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof LightTurnOffAction) {
-      return {
-        type: "light-turn-off",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof WindowOpenAction) {
-      return {
-        type: "window-open",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof WindowCloseAction) {
-      return {
-        type: "window-close",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof ThermostatSetTemperatureAction) {
-      return {
-        type: "thermostat-set-temperature",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-        targetTemperature: action.targetTemperature,
-      };
-    }
-
-    if (action instanceof LockLockAction) {
-      return {
-        type: "lock-lock",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof LockUnlockAction) {
-      return {
-        type: "lock-unlock",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-      };
-    }
-
-    if (action instanceof FanSetModeAction) {
-      return {
-        type: "fan-set-mode",
-        homeId: action.getHomeId(),
-        deviceId: action.getDeviceId(),
-        mode: action.mode,
-      };
-    }
-
-    throw new Error("Unsupported action type");
   }
 
   private toAction(record: ActionRecord): DeviceAction {

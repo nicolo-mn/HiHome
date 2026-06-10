@@ -17,9 +17,9 @@ import { UsageService } from "./home-context/application/services/UsageService";
 import { HomeController } from "./home-context/infrastructure/controllers/HomeController";
 import { UsageController } from "./home-context/infrastructure/controllers/UsageController";
 import { NotificationContextFactory } from "./notification-context/NotificationContextFactory";
-import { UserPreferencesAdapter } from "./user-context/infrastructure/repositories/adapters/UserPreferencesAdapter";
-import { PreferencesController } from "./user-context/infrastructure/controllers/PreferencesController";
-import { PreferencesRouter } from "./user-context/infrastructure/routes/PreferencesRouter";
+import { UserContextAdapter } from "./notification-context/infrastructure/adapters/UserContextAdapter";
+import { PreferencesController } from "./notification-context/infrastructure/controllers/PreferencesController";
+import { PreferencesRouter } from "./notification-context/infrastructure/routes/PreferencesRouter";
 import { UserManagementController } from "./user-context/infrastructure/controllers/UserManagementController";
 import { UserRouter } from "./user-context/infrastructure/routes/UserRouter";
 import { ChatService } from "./home-context/application/services/ChatService";
@@ -60,22 +60,22 @@ const io = new SocketIOServer(server, { cors: { origin: "*" } });
 // --- User context setup (must happen before notification context) ---
 const authContext = UserContextFactory.create();
 const authController = new UserController(authContext.authPort);
-const userPreferencesAdapter = new UserPreferencesAdapter(
-  authContext.preferencesRepository,
-);
-const preferencesController = new PreferencesController(
-  authContext.preferencesRepository,
-);
-const preferencesRouter = new PreferencesRouter(preferencesController);
 const userManagementController = new UserManagementController(
   authContext.userManagementService,
 );
 const userRouter = new UserRouter(userManagementController);
 
+const userContextAdapter = new UserContextAdapter(
+  authContext.userManagementService,
+);
 const notificationContext = NotificationContextFactory.create(
   io,
-  userPreferencesAdapter,
+  userContextAdapter,
 );
+const preferencesController = new PreferencesController(
+  notificationContext.preferencesService,
+);
+const preferencesRouter = new PreferencesRouter(preferencesController);
 const homeNotificationPort = new NotificationContextAdapter(
   notificationContext.notificationPort,
 );

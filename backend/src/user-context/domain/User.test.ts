@@ -72,20 +72,4 @@ describe("User", () => {
       );
     });
   });
-
-  describe("updateNotificationPreferences", () => {
-    it("replaces the stored preferences", () => {
-      const user = userOf("u1", Role.standard());
-      user.updateNotificationPreferences(["DeviceAction"]);
-      expect(user.notificationPreferences).toEqual(["DeviceAction"]);
-    });
-
-    it("isolates the stored array from external mutation", () => {
-      const user = userOf("u1", Role.standard());
-      const input = ["DeviceAction"];
-      user.updateNotificationPreferences(input);
-      input.push("Hacked");
-      expect(user.notificationPreferences).toEqual(["DeviceAction"]);
-    });
-  });
 });

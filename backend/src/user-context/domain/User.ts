@@ -1,18 +1,13 @@
 import { Role } from "./Role";
 
 export class User {
-  private _notificationPreferences: string[];
-
   constructor(
     public readonly id: string,
     public readonly homeId: string,
     public readonly username: string,
     private _password: string,
     private _role: Role,
-    notificationPreferences: readonly string[] = [],
-  ) {
-    this._notificationPreferences = [...notificationPreferences];
-  }
+  ) {}
 
   get role(): Role {
     return this._role;
@@ -20,10 +15,6 @@ export class User {
 
   get password(): string {
     return this._password;
-  }
-
-  get notificationPreferences(): readonly string[] {
-    return this._notificationPreferences;
   }
 
   changeRoleTo(
@@ -37,10 +28,6 @@ export class User {
       throw new Error("At least one Admin must remain in the home");
     }
     this._role = newRole;
-  }
-
-  updateNotificationPreferences(types: readonly string[]): void {
-    this._notificationPreferences = [...types];
   }
 
   private assertActorCanManage(actor: User): void {

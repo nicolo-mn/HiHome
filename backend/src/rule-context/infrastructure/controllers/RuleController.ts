@@ -3,37 +3,12 @@ import {
   RuleService,
   AddRuleDto,
 } from "../../application/services/RuleService";
-import {
-  NumericGreaterOperator,
-  NumericLowerOperator,
-  OutdoorTemperatureCondition,
-  IndoorTemperatureCondition,
-  WindSpeedCondition,
-  AirQualityCondition,
-  WeatherCondition,
-  ObservableCondition,
-} from "../../domain/Observables";
-import {
-  DeviceAction,
-  FanMode,
-  FanSetModeAction,
-  LightTurnOnAction,
-  LightTurnOffAction,
-  LockLockAction,
-  LockUnlockAction,
-  WindowOpenAction,
-  WindowCloseAction,
-  ThermostatSetTemperatureAction,
-} from "../../domain/Actions";
+import { ObservableCondition } from "../../domain/Observables";
+import { DeviceAction } from "../../domain/Actions";
 import { Rule } from "../../domain/Rule";
+import { ConditionDto, ConditionDtoVisitor } from "./ConditionDtoVisitor";
+import { ActionDto, ActionDtoVisitor } from "./ActionDtoVisitor";
 
-type ConditionDto = { type: string; operator: string; target: string | number };
-type ActionDto = {
-  type: string;
-  deviceId: string;
-  targetTemperature?: number;
-  mode?: FanMode;
-};
 type TimeWindowDto = { days?: number[]; start?: string; end?: string };
 type RuleDto = {
   id: string;
@@ -45,65 +20,11 @@ type RuleDto = {
 };
 
 function conditionToDto(condition: ObservableCondition): ConditionDto {
-  if (condition instanceof WeatherCondition) {
-    return {
-      type: "weather",
-      operator: "is",
-      target: condition.operator.getBoundaryValue(),
-    };
-  }
-
-  const bounded = condition as
-    | OutdoorTemperatureCondition
-    | IndoorTemperatureCondition
-    | AirQualityCondition
-    | WindSpeedCondition;
-  const op = bounded.operator;
-  let operatorStr: string;
-  if (op instanceof NumericGreaterOperator) operatorStr = "gt";
-  else if (op instanceof NumericLowerOperator) operatorStr = "lt";
-  else operatorStr = "eq";
-
-  let type: string;
-  if (condition instanceof OutdoorTemperatureCondition)
-    type = "outdoor-thermometer";
-  else if (condition instanceof IndoorTemperatureCondition)
-    type = "indoor-thermometer";
-  else if (condition instanceof AirQualityCondition) type = "air-quality";
-  else if (condition instanceof WindSpeedCondition) type = "wind-speed";
-  else throw new Error("Unsupported condition type");
-
-  return { type, operator: operatorStr, target: op.getBoundaryValue() };
+  return condition.accept(new ConditionDtoVisitor());
 }
 
 function actionToDto(action: DeviceAction): ActionDto {
-  if (action instanceof LightTurnOnAction)
-    return { type: "light-turn-on", deviceId: action.getDeviceId() };
-  if (action instanceof LightTurnOffAction)
-    return { type: "light-turn-off", deviceId: action.getDeviceId() };
-  if (action instanceof WindowOpenAction)
-    return { type: "window-open", deviceId: action.getDeviceId() };
-  if (action instanceof WindowCloseAction)
-    return { type: "window-close", deviceId: action.getDeviceId() };
-  if (action instanceof ThermostatSetTemperatureAction) {
-    return {
-      type: "thermostat-set-temperature",
-      deviceId: action.getDeviceId(),
-      targetTemperature: action.targetTemperature,
-    };
-  }
-  if (action instanceof LockLockAction)
-    return { type: "lock-lock", deviceId: action.getDeviceId() };
-  if (action instanceof LockUnlockAction)
-    return { type: "lock-unlock", deviceId: action.getDeviceId() };
-  if (action instanceof FanSetModeAction) {
-    return {
-      type: "fan-set-mode",
-      deviceId: action.getDeviceId(),
-      mode: action.mode,
-    };
-  }
-  throw new Error("Unsupported action type");
+  return action.accept(new ActionDtoVisitor());
 }
 
 function ruleToDto(rule: Rule): RuleDto {
