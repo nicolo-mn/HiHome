@@ -20,11 +20,11 @@ export class User {
   changeRoleTo(
     newRole: Role,
     actor: User,
-    otherAdminsInHome: readonly User[],
+    hasOtherAdminsInHome: boolean,
   ): void {
     this.assertActorCanManage(actor);
     const isDemotionFromAdmin = this._role.isAdmin() && !newRole.isAdmin();
-    if (isDemotionFromAdmin && otherAdminsInHome.length === 0) {
+    if (isDemotionFromAdmin && !hasOtherAdminsInHome) {
       throw new Error("At least one Admin must remain in the home");
     }
     this._role = newRole;
