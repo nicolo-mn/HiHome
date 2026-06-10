@@ -102,7 +102,7 @@ export type DeviceEvent =
   | ...;
 ```
 
-When deserialising from MongoDB a `switch` on `eventType` reconstructs the correct shape, ensuring completeness as the compiler will flag the switch as non-exhaustive if some events are not covered.
+When deserialising from MongoDB a `switch` on `eventType` reconstructs the correct shape: each branch must return a valid member of the `DeviceEvent` union, so the compiler rejects malformed reconstructions, while records carrying an unrecognised event type are rejected with a runtime error.
 
 Each event also carries an optional `actor` field (the username and role of the user who triggered the action). A `null` actor means the event was fired by an automation rule rather than a human. This distinction is used both in usage analytics and in notification filtering.
 

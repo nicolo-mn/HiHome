@@ -72,7 +72,7 @@ graph TD
     HC -- "sensor update events<br/>(async, via event bus)" --> RC
     HC -- "device action / sensor events" --> NC
     RC -- "rule execution results" --> NC
-    RC -- "trigger evaluation / resolve device names" --> HC
+    RC -- "execute device actions /<br/>trigger evaluation / resolve device names" --> HC
     NC -- "list home members and roles" --> UC
     HC -- "fetch weather and air quality" --> EC
 ```

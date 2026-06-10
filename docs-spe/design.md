@@ -164,13 +164,6 @@ The **`NotificationService`** listens to domain events generated across the back
 
 This context adopts a **Conformist** pattern towards the other contexts it receives data from. It blindly consumes events produced by the Home and Rule contexts without demanding any structural or data format changes from them, and it queries the User context for home membership information through an adapter that translates the User context's model into its own.
 
-#### Environment Context
-This context is responsible for retrieving data about external weather and air quality conditions. It communicates with third-party meteorological APIs to retrieve raw data, and translates it into the system's internal domain models.
-
-The service exposes REST endpoints that serve real-time environmental data, historical records, and weather forecasts.
-
-It acts as an **upstream supplier** to the Home context. It abstracts the core backend from external weather providers, ensuring the Home context only interacts with interfaces independent of the specific weather providers used.
-
 ```mermaid
 classDiagram
     class Notification {
@@ -199,6 +192,13 @@ classDiagram
     Notification o-- "0..1" RuleExecutionDetails : details
     NotificationPolicy ..> Notification : governs creation
 ```
+
+#### Environment Context
+This context is responsible for retrieving data about external weather and air quality conditions. It communicates with third-party meteorological APIs to retrieve raw data, and translates it into the system's internal domain models.
+
+The service exposes REST endpoints that serve real-time environmental data, historical records, and weather forecasts.
+
+It acts as an **upstream supplier** to the Home context. It abstracts the core backend from external weather providers, ensuring the Home context only interacts with interfaces independent of the specific weather providers used.
 
 ### External integration
 
