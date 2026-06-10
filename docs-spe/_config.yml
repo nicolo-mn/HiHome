@@ -1,0 +1,31 @@
+title: HiHome
+description: Documentation for HiHome — a web application that simulates the management of home systems.
+
+# Theme
+theme: just-the-docs
+color_scheme: dark
+
+# Build settings
+markdown: kramdown
+
+# Enable in-sidebar search
+search_enabled: true
+
+# Render ```mermaid fenced code blocks as diagrams
+mermaid:
+  version: "11.4.1"
+
+# Optional link in the top-right corner of the sidebar
+aux_links:
+  "HiHome on GitHub":
+    - "https://github.com/nicolo-mn/HiHome"
+
+# Plugins (just-the-docs requires jekyll-include-cache)
+plugins:
+  - jekyll-include-cache
+
+# Exclude tooling files from the generated site
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
