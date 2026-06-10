@@ -3,6 +3,12 @@ export type NotificationType =
   | "AutomationRuleExecuted"
   | "DeviceAction";
 
+export const ALL_NOTIFICATION_TYPES: readonly NotificationType[] = [
+  "AirQualityThresholdBreach",
+  "AutomationRuleExecuted",
+  "DeviceAction",
+];
+
 export interface RuleExecutionDetails {
   executions: { ruleName: string; actions: string[] }[];
 }
