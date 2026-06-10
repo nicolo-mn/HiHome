@@ -5,7 +5,7 @@ export class User {
     public readonly id: string,
     public readonly homeId: string,
     public readonly username: string,
-    private _password: string,
+    private _passwordHash: string,
     private _role: Role,
   ) {}
 
@@ -13,8 +13,8 @@ export class User {
     return this._role;
   }
 
-  get password(): string {
-    return this._password;
+  get passwordHash(): string {
+    return this._passwordHash;
   }
 
   changeRoleTo(

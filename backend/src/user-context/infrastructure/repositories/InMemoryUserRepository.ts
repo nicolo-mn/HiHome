@@ -1,11 +1,14 @@
 import { Role } from "../../domain/Role";
 import { User } from "../../domain/User";
 import { UserRepository } from "../../domain/UserRepository";
+import { BcryptPasswordHasher } from "../adapters/BcryptPasswordHasher";
+
+const mockPasswordHash = BcryptPasswordHasher.hashSync("mockpassword");
 
 export class InMemoryUserRepository implements UserRepository {
   private users: User[] = [
-    new User("1", "1", "mockuser", "mockpassword", Role.standard()),
-    new User("2", "1", "adminuser", "mockpassword", Role.admin()),
+    new User("1", "1", "mockuser", mockPasswordHash, Role.standard()),
+    new User("2", "1", "adminuser", mockPasswordHash, Role.admin()),
   ];
 
   async findByUsernameAndHomeId(

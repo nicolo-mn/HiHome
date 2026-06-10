@@ -19,6 +19,9 @@ import {
 } from "../rule-context/domain/Observables";
 import { WindowCloseAction } from "../rule-context/domain/Actions";
 import { UserModel } from "../user-context/infrastructure/models/UserModel";
+import { BcryptPasswordHasher } from "../user-context/infrastructure/adapters/BcryptPasswordHasher";
+
+const passwordHasher = new BcryptPasswordHasher();
 
 type SeedUser = {
   id: string;
@@ -130,7 +133,10 @@ async function seedUsersIfMissing(): Promise<void> {
         username: user.username,
       }).exec();
       if (!existingUser) {
-        await UserModel.create(user);
+        await UserModel.create({
+          ...user,
+          password: await passwordHasher.hash(user.password),
+        });
         console.log(`Seeded user ${user.username}`);
       }
     }),

@@ -15,7 +15,7 @@ describe("User", () => {
     expect(user.id).toBe("u1");
     expect(user.homeId).toBe("h1");
     expect(user.username).toBe("alice");
-    expect(user.password).toBe("secret");
+    expect(user.passwordHash).toBe("secret");
     expect(user.role.isAdmin()).toBe(false);
   });
 
