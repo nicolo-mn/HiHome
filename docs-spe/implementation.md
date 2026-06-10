@@ -58,7 +58,7 @@ export class Light implements Device {
 }
 ```
 
-The generic type parameter lets the same interface serve different behaviours. Three concrete visitors exist: `DeviceStateSerializer` (maps devices to API response DTOs), `DeviceActionExecutionVisitor` (executes rule-triggered actions, returns `Promise<void>`), and `ActionDescriptionVisitor` (produces human-readable descriptions for notifications). When a new device type is added, the compiler flags every visitor that has not handled it, making the pattern exhaustive by construction.
+The generic type parameter lets the same interface serve different behaviours. The implementation,`DeviceStateSerializer`, maps devices to API response DTOs. The same pattern is applied to the actions, with a generic interface `DeviceActionVisitor<T>` with two implementations: `DeviceActionExecutionVisitor` (executes rule-triggered actions, returns `Promise<void>`), and `ActionDescriptionVisitor` (produces human-readable descriptions for notifications). When a new device type or a new action is added, the compiler flags every visitor that has not handled it, making the pattern exhaustive by construction.
 
 ### Live updates
 
