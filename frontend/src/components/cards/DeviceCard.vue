@@ -26,12 +26,14 @@ const MAX_SETPOINT = 30;
 const props = defineProps<{
   device: HomeDevice;
   busy?: boolean;
+  manageable?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "toggle", device: ToggleableDevice, nextValue: boolean): void;
   (e: "step", device: ThermostatDevice, direction: "up" | "down"): void;
   (e: "fan-mode", device: FanDevice, mode: FanMode): void;
+  (e: "select", device: HomeDevice): void;
 }>();
 
 const TYPE_META: Record<
@@ -178,6 +180,10 @@ function onSetFanMode(event: Event) {
   emit("fan-mode", props.device as FanDevice, mode);
 }
 
+function onCardClick() {
+  if (props.manageable) emit("select", props.device);
+}
+
 const FAN_MODE_OPTIONS = FAN_MODES;
 </script>
 
@@ -187,7 +193,9 @@ const FAN_MODE_OPTIONS = FAN_MODES;
       'min-h-[100px] md:min-h-[104px] rounded-[26px] md:rounded-[32px] px-5 md:px-6 py-4 flex flex-col gap-2 overflow-hidden transition-colors',
       cardClasses,
       busy ? 'opacity-75' : '',
+      manageable ? 'cursor-pointer' : '',
     ]"
+    @click="onCardClick"
   >
     <div ref="rowRef" class="flex flex-wrap items-center gap-3 w-full">
       <div
@@ -235,20 +243,22 @@ const FAN_MODE_OPTIONS = FAN_MODES;
         </span>
       </div>
 
-      <BaseToggle
-        v-if="isToggle"
-        :model-value="isOn"
-        :accent="meta.accent"
-        :disabled="busy"
-        :aria-label="`Toggle ${device.name}`"
-        @update:model-value="onToggle"
-      />
+      <span v-if="isToggle" class="contents" @click.stop>
+        <BaseToggle
+          :model-value="isOn"
+          :accent="meta.accent"
+          :disabled="busy"
+          :aria-label="`Toggle ${device.name}`"
+          @update:model-value="onToggle"
+        />
+      </span>
 
       <div
         v-else-if="device.type === 'thermostat'"
         ref="controlRef"
         :class="[wrapControls ? 'basis-full justify-end' : 'ml-auto']"
         class="flex items-center gap-1.5"
+        @click.stop
       >
         <button
           type="button"
@@ -283,6 +293,7 @@ const FAN_MODE_OPTIONS = FAN_MODES;
         :disabled="busy"
         :value="(device as FanDevice).mode"
         :aria-label="`Set fan mode for ${device.name}`"
+        @click.stop
         @change="onSetFanMode"
       >
         <option

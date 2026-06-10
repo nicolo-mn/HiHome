@@ -70,6 +70,58 @@ describe("RuleService", () => {
     expect(mockRuleRepository.getHomeRules).toHaveBeenCalledWith("home-1");
   });
 
+  describe("getRuleNamesUsingDevice", () => {
+    it("returns the names of rules whose actions target the device", async () => {
+      const rules: Rule[] = [
+        makeRule({
+          id: "r1",
+          order: 0,
+          name: "Night lights",
+          actions: [
+            new LightTurnOnAction("home-1", "light-1"),
+            new LightTurnOnAction("home-1", "light-2"),
+          ],
+        }),
+        makeRule({
+          id: "r2",
+          order: 1,
+          name: "Away mode",
+          actions: [new LightTurnOnAction("home-1", "lock-1")],
+        }),
+        makeRule({
+          id: "r3",
+          order: 2,
+          name: "Morning",
+          actions: [new LightTurnOnAction("home-1", "light-1")],
+        }),
+      ];
+      vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue(rules);
+
+      const names = await ruleService.getRuleNamesUsingDevice(
+        "home-1",
+        "light-1",
+      );
+
+      expect(names).toEqual(["Night lights", "Morning"]);
+      expect(mockRuleRepository.getHomeRules).toHaveBeenCalledWith("home-1");
+    });
+
+    it("returns [] when no rule targets the device", async () => {
+      vi.mocked(mockRuleRepository.getHomeRules).mockResolvedValue([
+        makeRule({
+          id: "r1",
+          order: 0,
+          name: "Away mode",
+          actions: [new LightTurnOnAction("home-1", "lock-1")],
+        }),
+      ]);
+
+      expect(
+        await ruleService.getRuleNamesUsingDevice("home-1", "light-9"),
+      ).toEqual([]);
+    });
+  });
+
   it("should add a rule with order equal to existing rules count", async () => {
     const existing = [
       makeRule({ id: "r1", order: 0 }),

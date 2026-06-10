@@ -90,6 +90,18 @@ export class RuleService {
     return await this.ruleRepo.getHomeRules(homeId);
   }
 
+  async getRuleNamesUsingDevice(
+    homeId: string,
+    deviceId: string,
+  ): Promise<string[]> {
+    const rules = await this.ruleRepo.getHomeRules(homeId);
+    return rules
+      .filter((rule) =>
+        rule.actions.some((action) => action.getDeviceId() === deviceId),
+      )
+      .map((rule) => rule.name);
+  }
+
   async addRule(dto: AddRuleDto): Promise<Rule> {
     const condition = this.buildCondition(dto);
     const actions = this.buildActions(dto.homeId, dto.actions);

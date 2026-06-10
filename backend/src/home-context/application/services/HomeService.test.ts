@@ -15,7 +15,7 @@ import {
 } from "../../domain";
 import { InMemoryHomeRepository } from "../../infrastructure/repositories/InMemoryHomeRepository";
 import { InMemorySensorRegistry } from "../../infrastructure/InMemorySensorRegistry";
-import { HomeService } from "./HomeService";
+import { DeviceInUseError, HomeService } from "./HomeService";
 
 const buildHome = (id = "1"): Home =>
   new Home(id, { latitude: 0, longitude: 0 }, [
@@ -41,7 +41,8 @@ const makePorts = () => ({
   },
   ruleServicePort: { evaluateRules: vi.fn() },
   outdoorSensorsDataPort: { getOutdoorSensorsData: vi.fn() },
-  deviceUpdatePort: { sendDeviceUpdate: vi.fn() },
+  deviceUpdatePort: { sendDeviceUpdate: vi.fn(), sendDeviceRemoved: vi.fn() },
+  ruleUsagePort: { getRuleNamesUsingDevice: vi.fn().mockResolvedValue([]) },
 });
 
 const outdoorUpdate: OutdoorSensorsUpdate = {
@@ -71,6 +72,7 @@ describe("HomeService", () => {
       ports.ruleServicePort,
       ports.outdoorSensorsDataPort,
       ports.deviceUpdatePort,
+      ports.ruleUsagePort,
     );
   });
 
@@ -201,6 +203,75 @@ describe("HomeService", () => {
           roomId: "nope",
         }),
       ).rejects.toThrow("Room not found");
+    });
+  });
+
+  describe("updateDeviceName", () => {
+    it("renames the device, persists and broadcasts", async () => {
+      const saveSpy = vi.spyOn(repo, "saveHome");
+
+      const { device, roomName } = await service.updateDeviceName(
+        "1",
+        "light-1",
+        "Reading Lamp",
+      );
+
+      expect(device.name).toBe("Reading Lamp");
+      expect(home.getDeviceById("light-1")?.name).toBe("Reading Lamp");
+      expect(roomName).toBe("Living Room");
+      expect(saveSpy).toHaveBeenCalledWith(home);
+      expect(ports.deviceUpdatePort.sendDeviceUpdate).toHaveBeenCalledWith(
+        home,
+        device,
+      );
+    });
+
+    it("rejects an empty name", async () => {
+      await expect(
+        service.updateDeviceName("1", "light-1", "   "),
+      ).rejects.toThrow("name must be a non-empty string");
+    });
+
+    it("throws when the device is missing", async () => {
+      await expect(service.updateDeviceName("1", "zzz", "X")).rejects.toThrow(
+        "Device not found",
+      );
+    });
+  });
+
+  describe("deleteDevice", () => {
+    it("removes the device, persists and broadcasts the removal", async () => {
+      const saveSpy = vi.spyOn(repo, "saveHome");
+
+      await service.deleteDevice("1", "light-1");
+
+      expect(home.getDeviceById("light-1")).toBeUndefined();
+      expect(saveSpy).toHaveBeenCalledWith(home);
+      expect(ports.deviceUpdatePort.sendDeviceRemoved).toHaveBeenCalledWith(
+        home,
+        "light-1",
+      );
+    });
+
+    it("blocks deletion when the device is used by a rule", async () => {
+      ports.ruleUsagePort.getRuleNamesUsingDevice.mockResolvedValue([
+        "Night lights",
+      ]);
+      const saveSpy = vi.spyOn(repo, "saveHome");
+
+      await expect(service.deleteDevice("1", "light-1")).rejects.toBeInstanceOf(
+        DeviceInUseError,
+      );
+
+      expect(home.getDeviceById("light-1")).toBeDefined();
+      expect(saveSpy).not.toHaveBeenCalled();
+      expect(ports.deviceUpdatePort.sendDeviceRemoved).not.toHaveBeenCalled();
+    });
+
+    it("throws when the device is missing", async () => {
+      await expect(service.deleteDevice("1", "zzz")).rejects.toThrow(
+        "Device not found",
+      );
     });
   });
 

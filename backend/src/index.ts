@@ -48,6 +48,7 @@ import { InMemorySensorRegistry } from "./home-context/infrastructure/InMemorySe
 import { InMemoryHistoricalWeatherRepository } from "./home-context/infrastructure/repositories/InMemoryHistoricalWeatherRepository";
 import { seedDatabase } from "./bootstrap/seedDatabase";
 import { AsyncBusRuleServiceAdapter } from "./home-context/infrastructure/adapters/AsyncBusRuleServiceAdapter";
+import { RuleServiceRuleUsageAdapter } from "./home-context/infrastructure/adapters/RuleServiceRuleUsageAdapter";
 import { NotificationContextAdapter } from "./home-context/infrastructure/adapters/NotificationPortAdapter";
 import { SocketIOChatStreamAdapter } from "./home-context/infrastructure/adapters/SocketIOChatStreamAdapter";
 import { ChatStreamEventType } from "./home-context/application/ports/ChatStreamPort";
@@ -113,6 +114,9 @@ const homeRepo =
   process.env.NODE_ENV === "test"
     ? new InMemoryHomeRepository()
     : new MongoHomeRepository();
+const ruleUsagePort = new RuleServiceRuleUsageAdapter(
+  (): RuleService => ruleService,
+);
 const homeService = new HomeService(
   homeRepo,
   sensorRegistry,
@@ -120,6 +124,7 @@ const homeService = new HomeService(
   ruleServicePort,
   outdoorSensorsDataPort,
   deviceUpdatePort,
+  ruleUsagePort,
 );
 export const homeController = new HomeController(
   homeService,

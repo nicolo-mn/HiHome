@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { HomeService } from "../../application/services/HomeService";
+import {
+  DeviceInUseError,
+  HomeService,
+} from "../../application/services/HomeService";
 import { DeviceStateSerializer } from "../DeviceStateSerializer";
 import { HomeNotificationOutboundPort } from "../../application/ports/HomeNotificationPort";
 import { CreateDeviceInput } from "../../application/dtos/DeviceDTO";
@@ -104,6 +107,40 @@ export class HomeController {
 
       res.json(device.accept(this.stateSerializer));
     } catch (e: any) {
+      res.status(404).json({ error: e.message });
+    }
+  }
+
+  async updateDevice(req: Request, res: Response) {
+    const { name } = req.body ?? {};
+    if (typeof name !== "string" || name.trim().length === 0) {
+      return res.status(400).json({ error: "name must be a non-empty string" });
+    }
+    try {
+      const { device, roomName } = await this.homeService.updateDeviceName(
+        req.params.id as string,
+        req.params.deviceId as string,
+        name,
+      );
+      res.json({ ...device.accept(this.stateSerializer), roomName });
+    } catch (e: any) {
+      res.status(404).json({ error: e.message });
+    }
+  }
+
+  async deleteDevice(req: Request, res: Response) {
+    try {
+      await this.homeService.deleteDevice(
+        req.params.id as string,
+        req.params.deviceId as string,
+      );
+      res.json({ message: "Device deleted" });
+    } catch (e: any) {
+      if (e instanceof DeviceInUseError) {
+        return res
+          .status(409)
+          .json({ error: e.message, ruleNames: e.ruleNames });
+      }
       res.status(404).json({ error: e.message });
     }
   }

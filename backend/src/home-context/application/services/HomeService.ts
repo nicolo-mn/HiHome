@@ -22,9 +22,21 @@ import {
 import { SensorRegistry } from "../SensorRegistry";
 import { OutdoorSensorsDataPort } from "../ports/OutdoorSensorsDataPort";
 import { RuleServicePort } from "../ports/RuleServicePort";
+import { RuleUsagePort } from "../ports/RuleUsagePort";
 import { CreateDeviceInput } from "../dtos/DeviceDTO";
 import { ensureHomeExists, persistAndBroadcast } from "./ServiceHelpers";
 import { getHourInRome } from "./dateUtils";
+
+export class DeviceInUseError extends Error {
+  constructor(public readonly ruleNames: string[]) {
+    super(
+      `Cannot delete device: it is used by ${ruleNames.length} rule${
+        ruleNames.length === 1 ? "" : "s"
+      } (${ruleNames.join(", ")}). Remove it from those rules first.`,
+    );
+    this.name = "DeviceInUseError";
+  }
+}
 
 export class HomeService {
   constructor(
@@ -34,6 +46,7 @@ export class HomeService {
     private ruleServicePort: RuleServicePort,
     private outdoorSensorsDataPort: OutdoorSensorsDataPort,
     private deviceUpdatePort?: DeviceUpdatePort,
+    private ruleUsagePort?: RuleUsagePort,
   ) {}
 
   async getDevices(homeId: string): Promise<Device[]> {
@@ -82,6 +95,42 @@ export class HomeService {
       this.deviceUpdatePort,
     );
     return device;
+  }
+
+  async updateDeviceName(
+    homeId: string,
+    deviceId: string,
+    name: string,
+  ): Promise<{ device: Device; roomName: string }> {
+    const home = await ensureHomeExists(this.homeRepo, homeId);
+    const device = home.renameDevice(deviceId, name);
+    await persistAndBroadcast(
+      this.homeRepo,
+      home,
+      device,
+      this.deviceUpdatePort,
+    );
+
+    const room = home.rooms.find((r) => r.id === device.roomId);
+    return { device, roomName: room?.name ?? "" };
+  }
+
+  async deleteDevice(homeId: string, deviceId: string): Promise<void> {
+    const home = await ensureHomeExists(this.homeRepo, homeId);
+    if (!home.getDeviceById(deviceId)) {
+      throw new Error("Device not found");
+    }
+
+    const ruleNames =
+      (await this.ruleUsagePort?.getRuleNamesUsingDevice(homeId, deviceId)) ??
+      [];
+    if (ruleNames.length > 0) {
+      throw new DeviceInUseError(ruleNames);
+    }
+
+    home.removeDevice(deviceId);
+    await this.homeRepo.saveHome(home);
+    this.deviceUpdatePort?.sendDeviceRemoved(home, deviceId);
   }
 
   async executeAction(

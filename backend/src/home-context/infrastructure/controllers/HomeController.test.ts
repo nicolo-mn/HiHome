@@ -19,6 +19,7 @@ const jsonArg = (res: Response) =>
 describe("HomeController", () => {
   let controller: HomeController;
   let sensorRegistry: InMemorySensorRegistry;
+  let ruleUsagePort: { getRuleNamesUsingDevice: Mock };
   let notificationPort: HomeNotificationOutboundPort & {
     notifyDeviceAction: Mock<
       HomeNotificationOutboundPort["notifyDeviceAction"]
@@ -42,12 +43,15 @@ describe("HomeController", () => {
       getOutdoorSensorsData: vi.fn(),
     };
 
+    ruleUsagePort = { getRuleNamesUsingDevice: vi.fn().mockResolvedValue([]) };
     const homeService = new HomeService(
       homeRepo,
       sensorRegistry,
       sensorUpdatePort,
       ruleServicePort,
       outdoorSensorsDataPort,
+      undefined,
+      ruleUsagePort,
     );
 
     notificationPort = {
@@ -250,6 +254,77 @@ describe("HomeController", () => {
       await controller.getHourlyTemperatures(req, res);
 
       expect(jsonArg(res)).toHaveLength(24);
+    });
+  });
+
+  describe("updateDevice", () => {
+    const updateReq = (body: unknown, deviceId = "light-1") =>
+      ({ params: { id: "1", deviceId }, body }) as unknown as Request;
+
+    it("renames the device and returns it with its room name", async () => {
+      const res = createResponse();
+      await controller.updateDevice(updateReq({ name: "Reading Lamp" }), res);
+      expect(jsonArg(res)).toMatchObject({
+        id: "light-1",
+        type: "light",
+        name: "Reading Lamp",
+        roomName: "Living Room",
+      });
+    });
+
+    it("returns 400 when the name is empty", async () => {
+      const res = createResponse();
+      await controller.updateDevice(updateReq({ name: "   " }), res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "name must be a non-empty string",
+      });
+    });
+
+    it("returns 404 when the device is unknown", async () => {
+      const res = createResponse();
+      await controller.updateDevice(updateReq({ name: "X" }, "zzz"), res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Device not found" });
+    });
+  });
+
+  describe("deleteDevice", () => {
+    const deleteReq = (deviceId = "light-1") =>
+      ({ params: { id: "1", deviceId } }) as unknown as Request;
+
+    it("deletes the device and confirms it is gone", async () => {
+      const res = createResponse();
+      await controller.deleteDevice(deleteReq(), res);
+      expect(res.json).toHaveBeenCalledWith({ message: "Device deleted" });
+
+      const after = createResponse();
+      await controller.getDevices(
+        { params: { id: "1" } } as unknown as Request,
+        after,
+      );
+      expect(
+        jsonArg(after).find((d: any) => d.id === "light-1"),
+      ).toBeUndefined();
+    });
+
+    it("returns 404 when the device is unknown", async () => {
+      const res = createResponse();
+      await controller.deleteDevice(deleteReq("zzz"), res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: "Device not found" });
+    });
+
+    it("returns 409 with the rule names when the device is used by a rule", async () => {
+      ruleUsagePort.getRuleNamesUsingDevice.mockResolvedValue(["Night lights"]);
+      const res = createResponse();
+
+      await controller.deleteDevice(deleteReq(), res);
+
+      expect(res.status).toHaveBeenCalledWith(409);
+      const payload = jsonArg(res);
+      expect(payload.ruleNames).toEqual(["Night lights"]);
+      expect(typeof payload.error).toBe("string");
     });
   });
 

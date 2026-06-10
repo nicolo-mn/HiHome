@@ -30,6 +30,7 @@ describe("ActionService", () => {
   let home: Home;
   let deviceUpdatePort: {
     sendDeviceUpdate: Mock<DeviceUpdatePort["sendDeviceUpdate"]>;
+    sendDeviceRemoved: Mock<DeviceUpdatePort["sendDeviceRemoved"]>;
   };
   let service: ActionService;
 
@@ -39,6 +40,7 @@ describe("ActionService", () => {
     await repo.saveHome(home);
     deviceUpdatePort = {
       sendDeviceUpdate: vi.fn<DeviceUpdatePort["sendDeviceUpdate"]>(),
+      sendDeviceRemoved: vi.fn<DeviceUpdatePort["sendDeviceRemoved"]>(),
     };
     service = new ActionService(repo, deviceUpdatePort);
   });

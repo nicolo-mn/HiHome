@@ -45,6 +45,20 @@ export class HomeRouter {
       deviceIdValidator,
       (req: Request, res: Response) => this.homeController.getDevice(req, res),
     );
+    this.router.put(
+      "/:id/devices/:deviceId",
+      adminMiddleware,
+      deviceIdValidator,
+      (req: Request, res: Response) =>
+        this.homeController.updateDevice(req, res),
+    );
+    this.router.delete(
+      "/:id/devices/:deviceId",
+      adminMiddleware,
+      deviceIdValidator,
+      (req: Request, res: Response) =>
+        this.homeController.deleteDevice(req, res),
+    );
     this.router.post(
       "/:id/devices/:deviceId/:action",
       deviceIdValidator,
