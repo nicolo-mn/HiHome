@@ -1,9 +1,13 @@
 import { AuthInboundPort } from "../ports/AuthInboundPort";
+import { PasswordHasherPort } from "../ports/PasswordHasherPort";
 import { UserRepository } from "../../domain/UserRepository";
 import jwt from "jsonwebtoken";
 
 export class AuthService implements AuthInboundPort {
-  constructor(private userRepository: UserRepository) {}
+  constructor(
+    private userRepository: UserRepository,
+    private passwordHasher: PasswordHasherPort,
+  ) {}
 
   async login(
     homeId: string,
@@ -14,15 +18,13 @@ export class AuthService implements AuthInboundPort {
       homeId,
       username,
     );
-    if (!user) {
-      throw new Error("User not found");
-    }
 
-    // HACK: simulating the login for now
-    const isPasswordValid = true;
+    const isPasswordValid = user
+      ? await this.passwordHasher.compare(password, user.passwordHash)
+      : false;
 
-    if (!isPasswordValid) {
-      throw new Error("Invalid password");
+    if (!user || !isPasswordValid) {
+      throw new Error("Invalid credentials");
     }
 
     const payload = {

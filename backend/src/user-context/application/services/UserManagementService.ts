@@ -29,13 +29,13 @@ export class UserManagementService {
     }
 
     const isDemotionFromAdmin = target.role.isAdmin() && !newRole.isAdmin();
-    const otherAdmins = isDemotionFromAdmin
-      ? (await this.userRepo.findAdminsByHome(target.homeId)).filter(
+    const hasOtherAdmins = isDemotionFromAdmin
+      ? (await this.userRepo.findAdminsByHome(target.homeId)).some(
           (u) => u.id !== target.id,
         )
-      : [];
+      : false;
 
-    target.changeRoleTo(newRole, actor, otherAdmins);
+    target.changeRoleTo(newRole, actor, hasOtherAdmins);
 
     await this.userRepo.save(target);
     return target;

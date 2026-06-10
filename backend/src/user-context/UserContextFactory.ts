@@ -4,6 +4,7 @@ import { AuthService } from "./application/services/AuthService";
 import { UserManagementService } from "./application/services/UserManagementService";
 import { InMemoryUserRepository } from "./infrastructure/repositories/InMemoryUserRepository";
 import { MongoUserRepository } from "./infrastructure/repositories/MongoUserRepository";
+import { BcryptPasswordHasher } from "./infrastructure/adapters/BcryptPasswordHasher";
 
 export interface UserContext {
   authPort: AuthInboundPort;
@@ -17,7 +18,8 @@ export class UserContextFactory {
       process.env.NODE_ENV === "test"
         ? new InMemoryUserRepository()
         : new MongoUserRepository();
-    const service = new AuthService(repository);
+    const passwordHasher = new BcryptPasswordHasher();
+    const service = new AuthService(repository, passwordHasher);
     const facade = new AuthFacade(service);
     const userManagementService = new UserManagementService(repository);
 
