@@ -213,7 +213,7 @@ export class OutdoorTemperatureCondition extends BoundedNumericCondition {
   }
 
   accept<R>(visitor: ConditionVisitor<R>): R {
-    return visitor.visitTemperatureCondition(this);
+    return visitor.visitOutdoorTemperatureCondition(this);
   }
 
   verify(update: ObservablesUpdatedDomainEvent): boolean {
