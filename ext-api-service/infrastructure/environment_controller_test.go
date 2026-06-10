@@ -12,20 +12,14 @@ import (
 )
 
 type stubEnvironmentProvider struct {
-	weatherInfo    *domain.WeatherInfo
-	airQualityInfo *domain.AirQualityInfo
-	weeklyForecast *domain.WeeklyForecast
-	weatherErr     error
-	airQualityErr  error
-	forecastErr    error
+	environmentInfo *domain.EnvironmentInfo
+	weeklyForecast  *domain.WeeklyForecast
+	environmentErr  error
+	forecastErr     error
 }
 
-func (s *stubEnvironmentProvider) FetchCurrentWeather(lat, lon float64) (*domain.WeatherInfo, error) {
-	return s.weatherInfo, s.weatherErr
-}
-
-func (s *stubEnvironmentProvider) FetchCurrentAirQuality(lat, lon float64) (*domain.AirQualityInfo, error) {
-	return s.airQualityInfo, s.airQualityErr
+func (s *stubEnvironmentProvider) FetchCurrentEnvironment(lat, lon float64) (*domain.EnvironmentInfo, error) {
+	return s.environmentInfo, s.environmentErr
 }
 
 func (s *stubEnvironmentProvider) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
@@ -66,9 +60,9 @@ func TestEnvironmentControllerServeHTTPBadRequest(t *testing.T) {
 	}
 }
 
-// error on weather provider failure for /api/v1/environment/current
+// error on environment provider failure for /api/v1/environment/current
 func TestEnvironmentControllerServeHTTPBadGateway(t *testing.T) {
-	provider := &stubEnvironmentProvider{weatherErr: errors.New("weather failure")}
+	provider := &stubEnvironmentProvider{environmentErr: errors.New("environment failure")}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)
 
@@ -83,11 +77,9 @@ func TestEnvironmentControllerServeHTTPBadGateway(t *testing.T) {
 
 // test successful response for /api/v1/environment/current
 func TestEnvironmentControllerServeHTTPSuccess(t *testing.T) {
-	weather := domain.NewWeatherInfo(18.5, 2, 5.1, 200, 0.0)
-	air := domain.NewAirQualityInfo(30)
+	env := domain.NewEnvironmentInfo(18.5, 2, 5.1, 200, 0.0, 30)
 	provider := &stubEnvironmentProvider{
-		weatherInfo:    &weather,
-		airQualityInfo: &air,
+		environmentInfo: &env,
 	}
 	service := application.NewEnvironmentService(provider)
 	controller := NewEnvironmentController(service)

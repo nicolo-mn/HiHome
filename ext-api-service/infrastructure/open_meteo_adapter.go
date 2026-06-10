@@ -61,12 +61,12 @@ func NewOpenMeteoClient(client *http.Client) *OpenMeteoClient {
 	return &OpenMeteoClient{httpClient: client}
 }
 
-func (c *OpenMeteoClient) FetchCurrentWeather(lat, lon float64) (*domain.WeatherInfo, error) {
-	url := fmt.Sprintf(
+func (c *OpenMeteoClient) FetchCurrentEnvironment(lat, lon float64) (*domain.EnvironmentInfo, error) {
+	weatherURL := fmt.Sprintf(
 		"%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation",
 		weatherURL, lat, lon,
 	)
-	resp, err := c.httpClient.Get(url)
+	resp, err := c.httpClient.Get(weatherURL)
 	if err != nil {
 		return nil, fmt.Errorf("weather request failed: %w", err)
 	}
@@ -76,37 +76,32 @@ func (c *OpenMeteoClient) FetchCurrentWeather(lat, lon float64) (*domain.Weather
 		return nil, fmt.Errorf("weather API returned status %d", resp.StatusCode)
 	}
 
-	var apiResp openMeteoWeatherResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+	var weatherResp openMeteoWeatherResponse
+	if err := json.NewDecoder(resp.Body).Decode(&weatherResp); err != nil {
 		return nil, fmt.Errorf("failed to decode weather response: %w", err)
 	}
 
-	cur := apiResp.Current
-	info := domain.NewWeatherInfo(cur.Temperature, cur.WeatherCode, cur.WindSpeed, cur.WindDirection, cur.Precipitation)
-	return &info, nil
-}
-
-func (c *OpenMeteoClient) FetchCurrentAirQuality(lat, lon float64) (*domain.AirQualityInfo, error) {
-	url := fmt.Sprintf(
+	aqiURL := fmt.Sprintf(
 		"%s?latitude=%.4f&longitude=%.4f&current=european_aqi",
 		airQualityURL, lat, lon,
 	)
-	resp, err := c.httpClient.Get(url)
+	aqiResp, err := c.httpClient.Get(aqiURL)
 	if err != nil {
 		return nil, fmt.Errorf("air quality request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer aqiResp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("air quality API returned status %d", resp.StatusCode)
+	if aqiResp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("air quality API returned status %d", aqiResp.StatusCode)
 	}
 
-	var apiResp openMeteoAirQualityResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+	var aqiResponse openMeteoAirQualityResponse
+	if err := json.NewDecoder(aqiResp.Body).Decode(&aqiResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode air quality response: %w", err)
 	}
 
-	info := domain.NewAirQualityInfo(apiResp.Current.EuropeanAQI)
+	cur := weatherResp.Current
+	info := domain.NewEnvironmentInfo(cur.Temperature, cur.WeatherCode, cur.WindSpeed, cur.WindDirection, cur.Precipitation, aqiResponse.Current.EuropeanAQI)
 	return &info, nil
 }
 
