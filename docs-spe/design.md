@@ -52,10 +52,10 @@ classDiagram
 ```
 
 #### Home context
-This context represent the physical house, and it holds the authoritative state of all rooms and smart devices. Its primary entity is the `Home` **aggregate root**, which contains `Room`s and a variety of `Device`s (lights, windows, thermostats, locks, fans). The system uses the **visitor pattern** to interact with the devices functionalities, keeping the logic separate from the declarations of the devices: in fact, the different types of devices have different operations that can be performed on them, making it difficult to have common methods to perform actions. State changes trigger typed **domain events** that are recorded in an internal event log for auditing.
+This context represents the physical house, and it holds the authoritative state of all rooms and smart devices. Its primary entity is the `Home` **aggregate root**, which contains `Room`s and a variety of `Device`s (lights, windows, thermostats, locks, fans). The system uses the **visitor pattern** to interact with the devices functionalities, keeping the logic separate from the declarations of the devices: in fact, the different types of devices have different operations that can be performed on them, making it difficult to have common methods to perform actions. State changes trigger typed **domain events** that are recorded in an internal event log for auditing.
 
 Two main services drive this context:
-* **`HomeService`**: it handles the informations regarding the home, handles user actions, sensors readings and devices' state changes.
+* **`HomeService`**: it handles the information regarding the home, handles user actions, sensors readings and devices' state changes.
 * **`ChatService`**: it powers the AI assistant. It receives natural language conversations from the frontend, appends the system prompt to the messages and handles the communication with an external Large Language Model through a port.
 
 Additionally, two more services handle the usage metrics and the incoming actions from other contexts (`UsageService` and `ActionService` respectively).
@@ -112,7 +112,7 @@ classDiagram
 #### Rule context
 This context handles automation logic. It allows to create, edit and delete automation rules, monitors environmental variables and triggers actions based on user-defined logic. The core model is the **`HomeRuleSet` Aggregate Root**, which maintains a queue of `Rule`s (ordered by priority) to guarantee deterministic execution. A `Rule` links an `ObservableCondition`, that represents a condition that can be evaluated, to specific `DeviceAction`s.
 
-The **`RuleService`** operates primarily as an event listener. Upon catching an `ObservablesUpdatedDomainEvent` from the Home context, it evaluates the rule queue. If conditions are met, it resolves any device conflicts, based on rules priorities,to ensure a single command per device, dispatches execution requests, and forwards an execution summary to the Notification module.
+The **`RuleService`** operates primarily as an event listener. Upon catching an `ObservablesUpdatedDomainEvent` from the Home context, it evaluates the rule queue. If conditions are met, it resolves any device conflicts, based on rules priorities, to ensure a single command per device, dispatches execution requests, and forwards an execution summary to the Notification module.
 
 As explained before, it is in a **conformist** relationship with the home context, conforming to the events published by it, and **conformist** relationship with the Notification contexts, since it pushes notification events to the notification context, which adapts to the upstream.
 ```mermaid
@@ -202,7 +202,7 @@ classDiagram
 
 ### External integration
 
-To protect the pure domain logic from third-party API changes, all external communications are shielded by an **Anti-Corruption Layer (ACL)**. Adapters for the `ForecastPort`, and `ChatCompletionPort` (in Environment and Home contexts, respectively) translate raw data from weather and air-quality APIs (from Open Meteo) and Large Language Models (from DeepSeek) into the system's ubiquitous language. This ensures that the core domain remains completely agnostic to the spsecific external vendors being used, making external dependencies easily swappable.
+To protect the pure domain logic from third-party API changes, all external communications are shielded by an **Anti-Corruption Layer (ACL)**. Adapters for the `ForecastPort`, and `ChatCompletionPort` (in Environment and Home contexts, respectively) translate raw data from weather and air-quality APIs (from Open Meteo) and Large Language Models (from DeepSeek) into the system's ubiquitous language. This ensures that the core domain remains completely agnostic to the specific external vendors being used, making external dependencies easily swappable.
 
 ### Context map
 

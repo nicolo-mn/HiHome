@@ -7,7 +7,7 @@ nav_order: 1
 # HiHome
 
 
-This website documents the design, architecture, implementation ad development process of HiHome, a web application which simulates the management of home systems. It allows to add and control smart devices from the application and to have automation rules which act on the device according to some conditions. Users can have two level of privileges, which are Admin and Standard. Moreover, it has a chatbot that can be used to get information such as the weather forecast for the following days, and execute operations from a natural language description. It also provides several other functionalities, including:
+This website documents the design, architecture, implementation and development process of HiHome, a web application which simulates the management of home systems. It allows to add and control smart devices from the application and to have automation rules which act on the device according to some conditions. Users can have two levels of privileges, which are Admin and Standard. Moreover, it has a chatbot that can be used to get information such as the weather forecast for the following days, and execute operations from a natural language description. It also provides several other functionalities, including:
 - An event log where admins can check the list of actions made on devices
 - A daily plan for the temperatures of each hour of the day
 - Graphs about levels of metrics such as the air quality conditions during the week

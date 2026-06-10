@@ -127,7 +127,7 @@ for (const [start, end] of intervals) {
 
 ### Aggregate root and rule ordering
 
-Rule evaluation work under the assumption that each rule has a priority: if multiple rules' condition are satisfied, the resulting set of actions is deterministic, and the higher priority rule will execute all its actions as a whole, while lower priority rules may have only a subset of their actions executed, depending on overrides.
+Rule evaluation works under the assumption that each rule has a priority: if multiple rules' condition are satisfied, the resulting set of actions is deterministic, and the higher priority rule will execute all its actions as a whole, while lower priority rules may have only a subset of their actions executed, depending on overrides.
 
 The ordered list of rules for a home is modelled as a DDD aggregate root, `HomeRuleSet`. It owns the invariant that every rule's `order` field is unique and contiguous from zero. Business operations such as `remove` and `reorder` are methods on the aggregate rather than ad-hoc logic in the service layer:
 
