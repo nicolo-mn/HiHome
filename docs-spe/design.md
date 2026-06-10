@@ -20,7 +20,7 @@ This module handles system security, access control, and user profiles. The core
 
 The **`AuthService`** is the component that validates credentials and outputs a stateless token, which will be used by the users to authenticate messages in the session. Role modifications are orchestrated by the **`UserManagementService`**.
 
-The User context acts as a **supplier** of identity and authentication verification. The Home context communicates with it to handle login operations and build the JWT that the frontend passes along the requests for authentication purposes. The role information is stored in the JWT and read upon specific requests, for example, when a chat with the AI assistant is started the JWT's role field is used to allow or disallow specific subsets of tools. Moreover, the user context is contacted by the home context when an admin user wants to change the privileges of other users of the same home, and by the notification context to retrieve the members of a home and their roles when selecting notification recipients.
+The User context acts as a **supplier** of identity and authentication verification. Indirectly, on login, it builds and delivers a JWT that the frontend passes along the requests for authentication purposes. The role information is stored in the JWT and read upon specific requests, for example, when a chat with the AI assistant is started the JWT's role field is used to allow or disallow specific subsets of tools. Directly, the user context is contacted by the home context when an admin user wants to change the privileges of other users of the same home, and by the notification context to retrieve the members of a home and their roles when selecting notification recipients.
 
 ```mermaid
 classDiagram
@@ -204,7 +204,7 @@ To protect the pure domain logic from third-party API changes, all external comm
 
 ### Context map
 
-The diagram below summarises the strategic relationships between the four bounded contexts:
+The diagram below summarises the strategic relationships between the five bounded contexts:
 
 ```mermaid
 graph TD
