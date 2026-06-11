@@ -344,11 +344,11 @@ for (const tc of delta.tool_calls) {
 }
 ```
 
-Because tool call arguments arrive fragmented across SSE chunks as well, they are accumulated per-index before dispatching.
+Because tool call arguments arrive fragmented across SSE chunks as well, they are accumulated per-index before dispatching (the index is used to recognize which tool call a token belongs to, while the id is used to transmit the reply back to the LLM).
 
 ### Role-gated tools
 
-The tool set exposed to the model depends on the caller's role. All users can query device states, execute device actions, and request the weather forecast. Therefore, `streamChat` method of `ChatCompletionPort` accepts a flag to signal if the user is an admin. When the adapter takes on the request, admin users additionally receive tools to add automation rules and add new devices:
+The tool set exposed to the model depends on the caller's role. All users can query device states, execute device actions, and request the weather forecast, while creating devices and rules are admin-only operations. Therefore, `streamChat` method of `ChatCompletionPort` accepts a flag to signal if the user is an admin. When the adapter takes on the request, admin users additionally receive tools to add automation rules and add new devices:
 
 ```typescript
 private buildTools(isAdmin: boolean): DeepSeekTool[] {

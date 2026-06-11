@@ -12,7 +12,7 @@ An always growing number of houses are introducing smart devices to ease the man
 
 ## Problem statement
 
-Modern households accumulate smart devices from different manufacturers, each typically shipped with its own dedicated app and its own way of being controlled. As the number of devices grows, this fragmentation makes the home harder to manage: there is no single place from which to see the state of every device or to act on it.
+Modern households accumulate smart devices, each typically manipulated separately from the others. As the number of devices grows, this fragmentation makes the home harder to manage: there is no single place from which to see the state of every device, act on it, implement guardrails and automation mechanisms.
 
 Controlling devices one by one, by hand, is also repetitive and reactive. Recurring situations still demand manual attention, because the devices have no shared notion of when an action should happen.
 
@@ -28,7 +28,7 @@ HiHome is a web application that allows users to control their smart devices fro
 
 The users in the domain are organized in two roles with distinct capabilities:
 
-- the **Admin** represents the highest privileged role. An admin can freely interact with devices, add new devices, create and manage automation rules, set the home's daily temperature plan, and change the role of other users. Role management is constrained by the domain itself: an admin cannot change their own role, cannot manage users of another home, and at least one admin must always remain in a home.
+- the **Admin** represents the highest privileged role. An admin can add new devices, create and manage automation rules, set the home's daily temperature plan, and change the role of other users. Role management is constrained by the domain itself: an admin cannot change their own role, cannot manage users of another home, and at least one admin must always remain in a home.
 - the **Standard User** role is attributed to a user which can only perform manual actions on the devices. It can see devices' state, it can receive notifications and see home statistics, but it cannot handle rules or add new devices.
 
 # Requirement analysis
@@ -84,7 +84,9 @@ The codebase has been handled with a set of terms which definitions are clearly 
 | Role | User | A user's privilege level: Admin or Standard User. |
 | Notification | Notification | A message delivered to a user, with a type (air-quality breach, rule executed, device action), content and read/unread state. |
 | Notification Preference | Notification | The per-home, per-user selection of notification types the user has opted in to receive. |
-| Forecast | Environment | Weather and air-quality data retrieved from the external service for a home's coordinates. |
+| Environmental Conditions | Environment | Weather and air-quality current data retrieved from the external service for a home's coordinates. |
+| Forecasts | Environment | Weather and air-quality forecasts for the following days. |
+| Historical Data | Environment | Weather and air-quality historical data from previous days. |
 
 ## Bounded contexts
 

@@ -13,14 +13,14 @@ We structured the backend around **Domain-Driven Design (DDD)** principles, desi
 
 ### Bounded contexts
 
-The application domain is split into five distinct boundaries. Each manages its own data integrity and interacts with the others strictly through well-defined interfaces.
+The application domain is split into five distinct boundaries. Each manages its own data integrity and interacts through use cases that are exposed by the application-level services.
 
 #### User context
 This module handles system security, access control, and user profiles. The core of this context is the `User` **aggregate root**, which manages the users, and enforces security aspects in the users role management. User roles (`Admin` or `StandardUser`) are modeled as `Role` **value objects**.
 
 The **`AuthService`** is the component that validates credentials and outputs a stateless token, which will be used by the users to authenticate messages in the session. Role modifications are orchestrated by the **`UserManagementService`**.
 
-The User context acts as a **supplier** of identity and authentication verification. Indirectly, on login, it builds and delivers a JWT that the frontend passes along the requests for authentication purposes. The role information is stored in the JWT and read upon specific requests, for example, when a chat with the AI assistant is started the JWT's role field is used to allow or disallow specific subsets of tools. Directly, the user context is contacted by the home context when an admin user wants to change the privileges of other users of the same home, and by the notification context to retrieve the members of a home and their roles when selecting notification recipients.
+The User context acts as a **supplier** of identity and authentication verification. On login, the frontend interacts with the user context, which builds and delivers a JWT that the frontend passes along the requests for authentication purposes to the home context. The role information is stored in the JWT and read upon specific requests, for example, when a chat with the AI assistant is started the JWT's role field is used to allow or disallow specific subsets of tools. The user context is contacted directly by the home context when an admin user wants to change the privileges of other users of the same home, and by the notification context to retrieve the members of a home and their roles when selecting notification recipients.
 
 ```mermaid
 classDiagram
