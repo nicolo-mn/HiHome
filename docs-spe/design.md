@@ -1,0 +1,228 @@
+---
+layout: default
+title: Design
+nav_order: 3
+---
+
+# Design
+
+This chapter outlines the design choices of the HiHome backend.
+
+We structured the backend around **Domain-Driven Design (DDD)** principles, designing five independent **Bounded Contexts** that model separate parts of the problems: User, Home, Rule, Notification and Environment. The following sections detail the client-server interaction model and the design of each specific context.
+
+
+### Bounded contexts
+
+The application domain is split into five distinct boundaries. Each manages its own data integrity and interacts through use cases that are exposed by the application-level services.
+
+#### User context
+This module handles system security, access control, and user profiles. The core of this context is the `User` **aggregate root**, which manages the users, and enforces security aspects in the users role management. User roles (`Admin` or `StandardUser`) are modeled as `Role` **value objects**.
+
+The **`AuthService`** is the component that validates credentials and outputs a stateless token, which will be used by the users to authenticate messages in the session. Role modifications are orchestrated by the **`UserManagementService`**.
+
+The User context acts as a **supplier** of identity and authentication verification. On login, the frontend interacts with the user context, which builds and delivers a JWT that the frontend passes along the requests for authentication purposes to the home context. The role information is stored in the JWT and read upon specific requests, for example, when a chat with the AI assistant is started the JWT's role field is used to allow or disallow specific subsets of tools. The user context is contacted directly by the home context when an admin user wants to change the privileges of other users of the same home, and by the notification context to retrieve the members of a home and their roles when selecting notification recipients.
+
+```mermaid
+classDiagram
+    class User {
+        <<Aggregate Root>>
+        changeRole(newRole, actor, otherAdminsInHome)
+    }
+    class Role {
+        <<Value Object>>
+        Admin
+        StandardUser
+    }
+    class AuthService {
+        login(homeId: string, username: string, password: string)
+    }
+    class UserManagementService {
+        changeUserRole(
+            homeId: string,
+            username: string,
+            targetUserId: string,
+            newRole: Role
+        )
+    }
+
+    User "1" *-- "1" Role
+    AuthService ..> User : authenticates
+    UserManagementService ..> User : changes role
+    UserManagementService ..> Role : assigns
+```
+
+#### Home context
+This context represents the physical house, and it holds the authoritative state of all rooms and smart devices. Its primary entity is the `Home` **aggregate root**, which contains `Room`s and a variety of `Device`s (lights, windows, thermostats, locks, fans). The system uses the **visitor pattern** to interact with the devices functionalities, keeping the logic separate from the declarations of the devices: in fact, the different types of devices have different operations that can be performed on them, making it difficult to have common methods to perform actions. State changes trigger typed **domain events** that are recorded in an internal event log for auditing.
+
+Two main services drive this context:
+* **`HomeService`**: it handles the information regarding the home, handles user actions, sensors readings and devices' state changes.
+* **`ChatService`**: it powers the AI assistant. It receives natural language conversations from the frontend, appends the system prompt to the messages and handles the communication with an external Large Language Model through a port.
+
+Additionally, two more services handle the usage metrics and the incoming actions from other contexts (`UsageService` and `ActionService` respectively).
+
+The Home context is in a **customer-supplier** relationship with all other contexts: it acts as a *supplier* for the Notification and Rule context, since it pushes to them domain events to evaluate rules and publish notifications, respectively; it acts as a *customer* for User context and the Environment, since it collaborates with the first to correctly manage authentication and authorization and with the second to obtain external sensors data.
+
+```mermaid
+classDiagram
+    class Home {
+        <<Aggregate Root>>
+    }
+    class Coordinates {
+        <<Value Object>>
+        latitude
+        longitude
+    }
+    class Room {
+        <<Entity>>
+        name
+    }
+    class Device {
+        <<Entity>>
+    }
+    class Light
+    class Window
+    class Thermostat
+    class SmartLock
+    class Fan
+    class DeviceEvent {
+        <<Domain Event>>
+        eventType
+        createdAt
+    }
+    class DeviceEventActor {
+        <<Value Object>>
+        username
+        role
+    }
+
+    Home "1" *-- "1" Coordinates
+    Home "1" *-- "*" Room
+    Home "1" o-- "*" DeviceEvent : event log
+    Room "1" *-- "*" Device
+    Device <|-- Light
+    Device <|-- Window
+    Device <|-- Thermostat
+    Device <|-- SmartLock
+    Device <|-- Fan
+    DeviceEvent o-- "0..1" DeviceEventActor : triggered by
+```
+
+#### Rule context
+This context handles automation logic. It allows to create, edit and delete automation rules, monitors environmental variables and triggers actions based on user-defined logic. The core model is the **`HomeRuleSet` Aggregate Root**, which maintains a queue of `Rule`s (ordered by priority) to guarantee deterministic execution. A `Rule` links an `ObservableCondition`, that represents a condition that can be evaluated, to specific `DeviceAction`s.
+
+The **`RuleService`** operates primarily as an event listener. Upon catching an `ObservablesUpdatedDomainEvent` from the Home context, it evaluates the rule queue. If conditions are met, it resolves any device conflicts, based on rules priorities, to ensure a single command per device, dispatches execution requests, and forwards an execution summary to the Notification module.
+
+As explained before, it is a **customer** of data from the Home context, processing incoming sensors data, and it is a **supplier** for the Notificaiton context, publishing actions to notify.
+
+```mermaid
+classDiagram
+    class HomeRuleSet {
+        <<Aggregate Root>>
+        remove(ruleId)
+        reorder(orderedIds)
+    }
+    class Rule {
+        <<Entity>>
+        name
+        order
+    }
+    class ObservableCondition {
+        <<Interface>>
+        verify(observables)
+    }
+    class OutdoorTemperatureCondition
+    class IndoorTemperatureCondition
+    class AirQualityCondition
+    class WindSpeedCondition
+    class WeatherCondition
+    class DeviceAction {
+        <<abstract>>
+    }
+    class TimeWindow {
+        <<Value Object>>
+        days
+        start
+        end
+    }
+
+    HomeRuleSet "1" *-- "*" Rule : ordered by priority
+    Rule "1" --> "1" ObservableCondition : condition
+    Rule "1" --> "*" DeviceAction : actions
+    Rule o-- "0..1" TimeWindow : active during
+    ObservableCondition <|-- OutdoorTemperatureCondition
+    ObservableCondition <|-- IndoorTemperatureCondition
+    ObservableCondition <|-- AirQualityCondition
+    ObservableCondition <|-- WindSpeedCondition
+    ObservableCondition <|-- WeatherCondition
+```
+
+#### Notification context
+Designed to handle system-to-user alerts, this context informs users about triggered automations, manual device overrides, or critical environmental shifts. It revolves around the **`Notification` entity**. The context also owns the per-user **notification preferences**: the opt-in selection of notification types each user wants to receive, stored and managed within this context through its own repository.
+
+The **`NotificationService`** listens to domain events generated across the backend. When an event occurs, it evaluates the policy, checks user opt-in preferences through the **`PreferencesService`**, and dispatches the alert. The `PreferencesService` manages the stored preferences and selects the recipients of a notification: it retrieves the members of a home and their roles from the User context, then filters them against their stored preferences.
+
+This context acts as a **customer** towards the other contexts it receives data from.
+
+```mermaid
+classDiagram
+    class Notification {
+        <<Entity>>
+        type
+        message
+        username
+        read
+        markRead()
+    }
+    class NotificationType {
+        <<enumeration>>
+        AirQualityThresholdBreach
+        AutomationRuleExecuted
+        DeviceAction
+    }
+    class NotificationPolicy {
+        <<Domain Policy>>
+        getAirQualityThreshold()
+    }
+    class RuleExecutionDetails {
+        <<Value Object>>
+    }
+
+    Notification --> NotificationType
+    Notification o-- "0..1" RuleExecutionDetails : details
+    NotificationPolicy ..> Notification : governs creation
+```
+
+#### Environment Context
+This context is responsible for retrieving data about external weather and air quality conditions. It communicates with third-party meteorological APIs to retrieve raw data, and translates it into the system's internal domain models.
+
+The service exposes REST endpoints that serve real-time environmental data, historical records, and weather forecasts.
+
+It acts as an **upstream supplier** to the Home context. It abstracts the core backend from external weather providers, ensuring the Home context only interacts with interfaces independent of the specific weather providers used.
+
+### External integration
+
+To protect the pure domain logic from third-party API changes, all external communications are shielded by an **Anti-Corruption Layer (ACL)**. Adapters for the `EnvironmentInfoProvider`, and `ChatCompletionPort` (in Environment and Home contexts, respectively) translate raw data from weather and air-quality APIs (from Open Meteo) and Large Language Models (from DeepSeek) into the system's ubiquitous language. This ensures that the core domain remains completely agnostic to the specific external vendors being used, making external dependencies easily swappable.
+
+### Context map
+
+The diagram below summarises the strategic relationships between the five bounded contexts. Arrows point from the upstream context (the supplier) to the downstream context (the customer); dashed arrows denote integrations shielded by an Anti-Corruption Layer.
+
+```mermaid
+graph TD
+    User["User<br/>Auth & role management"]
+    Home["Home<br/>Devices, rooms, AI chat"]
+    Rule["Rule<br/>Automation & conditions"]
+    Notification["Notification<br/>Alerts & delivery"]
+    Environment["Environment<br/>Weather & air quality"]
+    ExtAPIOpenMeteo["External APIs<br/>OpenMeteo"]
+    ExtAPIDeepSeek["External APIs<br/>DeepSeek"]
+
+    User -->|customer–supplier| Home
+    Home -->|customer–supplier| Rule
+    Home -->|customer–supplier| Notification
+    Rule -->|customer–supplier| Notification
+    User -->|customer–supplier| Notification
+    Environment -->|upstream supplier| Home
+    ExtAPIOpenMeteo -.->|ACL| Environment
+    ExtAPIDeepSeek -.->|ACL| Home
+```
