@@ -4,5 +4,5 @@ package domain
 type EnvironmentInfoProvider interface {
 	FetchCurrentEnvironment(lat, lon float64) (*EnvironmentInfo, error)
 	FetchWeeklyForecast(lat, lon float64) (*WeeklyForecast, error)
-	FetchHistoricalForecast(lat, lon float64) (*WeeklyForecast, error)
+	FetchHistoricalData(lat, lon float64) (*WeeklyForecast, error)
 }

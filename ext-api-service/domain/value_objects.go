@@ -11,7 +11,7 @@ type EnvironmentInfo struct {
 }
 
 // Represents the environment information for a single day
-// Used for both future and past daily forecasts
+// Used for both forecasts and historical data
 type DailyForecast struct {
 	date                  string
 	weatherType           WeatherType

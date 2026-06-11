@@ -26,7 +26,7 @@ func (s *stubProvider) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyFore
 	return s.weeklyForecast, s.forecastErr
 }
 
-func (s *stubProvider) FetchHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+func (s *stubProvider) FetchHistoricalData(lat, lon float64) (*domain.WeeklyForecast, error) {
 	s.forecastCalls++
 	return s.weeklyForecast, s.forecastErr
 }
