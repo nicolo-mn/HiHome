@@ -60,9 +60,7 @@ Two main services drive this context:
 
 Additionally, two more services handle the usage metrics and the incoming actions from other contexts (`UsageService` and `ActionService` respectively).
 
-The Home context is in a **conformist** relationship with both the Notification and Rule context, since it pushes to them domain events to evaluate rules and publish notifications, respectively. It is in a **customer-supplier** relationship with the User context, since it collaborates to correctly manage authentication and authorization.
-
-<!-- TODO: con environment è in conformist o customer supplier, dato che environmetn pubblica anche informazioni che home context non usa? -->
+The Home context is in a **customer-supplier** relationship with all other contexts: it acts as a *supplier* for the Notification and Rule context, since it pushes to them domain events to evaluate rules and publish notifications, respectively; it acts as a *customer* for User context and the Environment, since it collaborates with the first to correctly manage authentication and authorization and with the second to obtain external sensors data.
 
 ```mermaid
 classDiagram
@@ -114,7 +112,8 @@ This context handles automation logic. It allows to create, edit and delete auto
 
 The **`RuleService`** operates primarily as an event listener. Upon catching an `ObservablesUpdatedDomainEvent` from the Home context, it evaluates the rule queue. If conditions are met, it resolves any device conflicts, based on rules priorities, to ensure a single command per device, dispatches execution requests, and forwards an execution summary to the Notification module.
 
-As explained before, it is in a **conformist** relationship with the home context, conforming to the events published by it, and **conformist** relationship with the Notification contexts, since it pushes notification events to the notification context, which adapts to the upstream.
+As explained before, it is a **customer** of data from the Home context, processing incoming sensors data, and it is a **supplier** for the Notificaiton context, publishing actions to notify.
+
 ```mermaid
 classDiagram
     class HomeRuleSet {
@@ -162,7 +161,7 @@ Designed to handle system-to-user alerts, this context informs users about trigg
 
 The **`NotificationService`** listens to domain events generated across the backend. When an event occurs, it evaluates the policy, checks user opt-in preferences through the **`PreferencesService`**, and dispatches the alert. The `PreferencesService` manages the stored preferences and selects the recipients of a notification: it retrieves the members of a home and their roles from the User context, then filters them against their stored preferences.
 
-This context adopts a **Conformist** pattern towards the other contexts it receives data from. It blindly consumes events produced by the Home and Rule contexts without demanding any structural or data format changes from them, and it queries the User context for home membership information through an adapter that translates the User context's model into its own.
+This context acts as a **customer** towards the other contexts it receives data from.
 
 ```mermaid
 classDiagram
@@ -202,27 +201,28 @@ It acts as an **upstream supplier** to the Home context. It abstracts the core b
 
 ### External integration
 
-To protect the pure domain logic from third-party API changes, all external communications are shielded by an **Anti-Corruption Layer (ACL)**. Adapters for the `ForecastPort`, and `ChatCompletionPort` (in Environment and Home contexts, respectively) translate raw data from weather and air-quality APIs (from Open Meteo) and Large Language Models (from DeepSeek) into the system's ubiquitous language. This ensures that the core domain remains completely agnostic to the specific external vendors being used, making external dependencies easily swappable.
+To protect the pure domain logic from third-party API changes, all external communications are shielded by an **Anti-Corruption Layer (ACL)**. Adapters for the `EnvironmentInfoProvider`, and `ChatCompletionPort` (in Environment and Home contexts, respectively) translate raw data from weather and air-quality APIs (from Open Meteo) and Large Language Models (from DeepSeek) into the system's ubiquitous language. This ensures that the core domain remains completely agnostic to the specific external vendors being used, making external dependencies easily swappable.
 
 ### Context map
 
-The diagram below summarises the strategic relationships between the five bounded contexts:
+The diagram below summarises the strategic relationships between the five bounded contexts. Arrows point from the upstream context (the supplier) to the downstream context (the customer); dashed arrows denote integrations shielded by an Anti-Corruption Layer.
 
 ```mermaid
 graph TD
-    User["User\nAuth & role management"]
-    Home["Home\nDevices, rooms, AI chat"]
-    Rule["Rule\nAutomation & conditions"]
-    Notification["Notification\nAlerts & delivery"]
-    Environment["Environment\nWeather & air quality"]
-    ExtAPIs["External APIs\nOpenMeteo · DeepSeek (ACL)"]
+    User["User<br/>Auth & role management"]
+    Home["Home<br/>Devices, rooms, AI chat"]
+    Rule["Rule<br/>Automation & conditions"]
+    Notification["Notification<br/>Alerts & delivery"]
+    Environment["Environment<br/>Weather & air quality"]
+    ExtAPIOpenMeteo["External APIs<br/>OpenMeteo"]
+    ExtAPIDeepSeek["External APIs<br/>DeepSeek"]
 
     User -->|customer–supplier| Home
-    Home -->|conformist| Rule
-    Home -->|conformist| Notification
-    Rule -->|conformist| Notification
-    User -->|conformist| Notification
+    Home -->|customer–supplier| Rule
+    Home -->|customer–supplier| Notification
+    Rule -->|customer–supplier| Notification
+    User -->|customer–supplier| Notification
     Environment -->|upstream supplier| Home
-    ExtAPIs -.->|ACL| Environment
-    ExtAPIs -.->|ACL| Home
+    ExtAPIOpenMeteo -.->|ACL| Environment
+    ExtAPIDeepSeek -.->|ACL| Home
 ```

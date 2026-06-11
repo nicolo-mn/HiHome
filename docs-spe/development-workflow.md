@@ -20,7 +20,7 @@ The package manager chosen for the MEVN application was `pnpm`. Compared to the 
 We used `Prettier` to standardize code formatting for the MEVN part, while `go-fmt` was used to format Go code.
 
 ## Conventional Commits
-We chose to use Conventional Commits format for our commit messages. Since we're developing a MEVN project, we chose to use `commitlint` to validate our commit messages, installed through `pnpm` alongside other dev dependencies.
+We chose to use Conventional Commits format for our commit messages. To enforce the standard commit structure, we chose to use `commitlint`, installed through `pnpm` alongside other dev dependencies, to validate our messages at commit time.
 
 ## Git Hooks
 To automate actions in several steps of the git workflow and enforce several rules for commit compliance, we used git hooks. [`Husky`](https://typicode.github.io/husky/) was used to handle all the git hooks. We used three hooks: *pre-commit*, *commit-msg* and *pre-push*.
