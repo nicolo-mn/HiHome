@@ -148,12 +148,12 @@ func (h *EnvironmentController) ServeHistorical(w http.ResponseWriter, r *http.R
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Printf("historical forecast request received for lat=%.4f lon=%.4f", lat, lon)
+	log.Printf("historical data request received for lat=%.4f lon=%.4f", lat, lon)
 
-	forecast, err := h.service.GetHistoricalForecast(lat, lon)
+	forecast, err := h.service.GetHistoricalData(lat, lon)
 	if err != nil {
-		log.Printf("failed to get historical forecast: %v", err)
-		http.Error(w, "failed to fetch historical forecast", http.StatusBadGateway)
+		log.Printf("failed to get historical data: %v", err)
+		http.Error(w, "failed to fetch historical data", http.StatusBadGateway)
 		return
 	}
 

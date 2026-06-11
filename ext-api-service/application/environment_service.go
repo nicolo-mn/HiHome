@@ -48,21 +48,21 @@ func (s *EnvironmentService) GetWeeklyForecast(lat, lon float64) (*domain.Weekly
 	return weeklyForecast, nil
 }
 
-func (s *EnvironmentService) GetHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
-	log.Printf("fetching historical forecast for lat=%.4f lon=%.4f", lat, lon)
+func (s *EnvironmentService) GetHistoricalData(lat, lon float64) (*domain.WeeklyForecast, error) {
+	log.Printf("fetching historical data for lat=%.4f lon=%.4f", lat, lon)
 
-	historicalForecast, err := s.environmentProvider.FetchHistoricalForecast(lat, lon)
+	historicalData, err := s.environmentProvider.FetchHistoricalData(lat, lon)
 	if err != nil {
-		log.Printf("failed to fetch historical forecast: %v", err)
+		log.Printf("failed to fetch historical data: %v", err)
 		return nil, err
 	}
 
 	const expectedDays = 7
-	if len(historicalForecast.Days()) != expectedDays {
-		log.Printf("historical forecast has %d days, expected %d", len(historicalForecast.Days()), expectedDays)
-		return nil, fmt.Errorf("historical forecast must have %d days", expectedDays)
+	if len(historicalData.Days()) != expectedDays {
+		log.Printf("historical data has %d days, expected %d", len(historicalData.Days()), expectedDays)
+		return nil, fmt.Errorf("historical data must have %d days", expectedDays)
 	}
 
-	log.Printf("successfully fetched historical forecast for lat=%.4f lon=%.4f", lat, lon)
-	return historicalForecast, nil
+	log.Printf("successfully fetched historical data for lat=%.4f lon=%.4f", lat, lon)
+	return historicalData, nil
 }

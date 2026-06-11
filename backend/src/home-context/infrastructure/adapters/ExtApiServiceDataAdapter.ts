@@ -166,14 +166,14 @@ export class ExtApiServiceDataAdapter
       response = await fetch(url.toString());
     } catch (error) {
       console.error(
-        `Failed to reach ext-api-service for historical forecast at ${url.toString()}:`,
+        `Failed to reach ext-api-service for historical data at ${url.toString()}:`,
         error,
       );
       return null;
     }
     if (!response.ok) {
       console.error(
-        `ext-api-service responded with status ${response.status} for historical forecast at ${url.toString()}`,
+        `ext-api-service responded with status ${response.status} for historical data at ${url.toString()}`,
       );
       return null;
     }

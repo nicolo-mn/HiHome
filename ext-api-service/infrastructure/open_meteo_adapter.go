@@ -193,24 +193,24 @@ func (c *OpenMeteoClient) FetchWeeklyForecast(lat, lon float64) (*domain.WeeklyF
 	return &weekly, nil
 }
 
-func (c *OpenMeteoClient) FetchHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+func (c *OpenMeteoClient) FetchHistoricalData(lat, lon float64) (*domain.WeeklyForecast, error) {
 	url := fmt.Sprintf(
 		"%s?latitude=%.4f&longitude=%.4f&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_hours,wind_direction_10m_dominant,daylight_duration,precipitation_sum&timezone=auto&past_days=7&forecast_days=0",
 		weatherURL, lat, lon,
 	)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("historical forecast request failed: %w", err)
+		return nil, fmt.Errorf("historical data request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("historical forecast API returned status %d", resp.StatusCode)
+		return nil, fmt.Errorf("historical data API returned status %d", resp.StatusCode)
 	}
 
 	var apiResp openMeteoWeeklyResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return nil, fmt.Errorf("failed to decode historical forecast response: %w", err)
+		return nil, fmt.Errorf("failed to decode historical data response: %w", err)
 	}
 
 	daily := apiResp.Daily
@@ -224,7 +224,7 @@ func (c *OpenMeteoClient) FetchHistoricalForecast(lat, lon float64) (*domain.Wee
 		len(daily.WindDirectionDominant) != count ||
 		len(daily.DaylightDuration) != count ||
 		len(daily.PrecipitationSum) != count {
-		return nil, fmt.Errorf("historical forecast response has inconsistent daily lengths")
+		return nil, fmt.Errorf("historical data response has inconsistent daily lengths")
 	}
 
 	aqiUrl := fmt.Sprintf(

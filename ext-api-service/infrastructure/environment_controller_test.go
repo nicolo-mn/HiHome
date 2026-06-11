@@ -26,7 +26,7 @@ func (s *stubEnvironmentProvider) FetchWeeklyForecast(lat, lon float64) (*domain
 	return s.weeklyForecast, s.forecastErr
 }
 
-func (s *stubEnvironmentProvider) FetchHistoricalForecast(lat, lon float64) (*domain.WeeklyForecast, error) {
+func (s *stubEnvironmentProvider) FetchHistoricalData(lat, lon float64) (*domain.WeeklyForecast, error) {
 	return s.weeklyForecast, s.forecastErr
 }
 
