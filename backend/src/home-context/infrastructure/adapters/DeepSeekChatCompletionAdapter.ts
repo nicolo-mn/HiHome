@@ -2,54 +2,20 @@ import type { ChatCompletionPort } from "../../application/ports/ChatCompletionP
 import type { ChatMessage } from "../../application/services/ChatService";
 import type { ChatStreamPort } from "../../application/ports/ChatStreamPort";
 import { ChatStreamEventType } from "../../application/ports/ChatStreamPort";
-import type {
-  ForecastPort,
-  ForecastSummary,
-} from "../../application/ports/ForecastPort";
+import type { ForecastPort } from "../../application/ports/ForecastPort";
 import { HomeService } from "../../application/services/HomeService";
-import { DeviceStateSerializer } from "../DeviceStateSerializer";
-import type { DeviceSerialization } from "../../application/dtos/DeviceDTO";
-import { DeviceTypes } from "../../domain";
-import type { AddRuleDto } from "../../../rule-context/application/services/RuleService";
 import { RuleService } from "../../../rule-context/application/services/RuleService";
+import { buildTools } from "./DeepSeekToolDefinitions";
+import type {
+  DeepSeekTool,
+  DeepSeekToolCall,
+  DeepSeekMessage,
+} from "./DeepSeekToolDefinitions";
+import { DeepSeekToolHandler } from "./DeepSeekToolHandler";
+
 type DeepSeekOptions = {
   apiKey: string;
   apiBaseUrl: string;
-};
-
-// DTO to be sent to the model when invoking it, to let it know about the possible tools
-type DeepSeekTool = {
-  type: "function";
-  function: {
-    name: string;
-    description: string;
-    parameters: {
-      type: "object";
-      properties: Record<string, unknown>;
-      required?: string[];
-    };
-  };
-};
-
-// Represents a tool invocation request by the model
-type DeepSeekToolCall = {
-  id: string;
-  type: "function";
-  function: {
-    name: string;
-    arguments: string;
-  };
-};
-
-// DTO used for requests to DeepSeek APIs
-// if role is "tool", content contains the tool response and tool_call_id identifies which tool call this is responding to
-// if role is "assistant", content contains the model reply and reasoning_content contains the model reasoning trace
-type DeepSeekMessage = {
-  role: "system" | "user" | "assistant" | "tool";
-  content?: string | null;
-  reasoning_content?: string | null;
-  tool_call_id?: string;
-  tool_calls?: DeepSeekToolCall[];
 };
 
 // Parses payload obtained from DeepSeek APIs
@@ -72,14 +38,20 @@ type StreamChunk = {
 };
 
 export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
-  private stateSerializer = new DeviceStateSerializer();
+  private toolHandler: DeepSeekToolHandler;
 
   constructor(
     private options: DeepSeekOptions,
     private forecastPort: ForecastPort,
     private homeService: HomeService,
     private ruleService: RuleService,
-  ) {}
+  ) {
+    this.toolHandler = new DeepSeekToolHandler(
+      forecastPort,
+      homeService,
+      ruleService,
+    );
+  }
 
   async streamChat(
     messages: ChatMessage[],
@@ -92,7 +64,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
       throw new Error("DeepSeek API key is missing");
     }
 
-    const tools = this.buildTools(isAdmin);
+    const tools = buildTools(isAdmin);
     let chatMessages: DeepSeekMessage[] = messages.map((message) => ({
       role: message.role,
       content: message.content,
@@ -123,7 +95,10 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
         });
       }
 
-      const toolResponses = await this.handleToolCalls(toolCalls, homeId);
+      const toolResponses = await this.toolHandler.handleToolCalls(
+        toolCalls,
+        homeId,
+      );
       chatMessages = [
         ...chatMessages,
         {
@@ -137,226 +112,6 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     }
 
     throw new Error("DeepSeek did not return a final response");
-  }
-
-  private buildTools(isAdmin: boolean): DeepSeekTool[] {
-    const tools = [
-      this.buildForecastTool(),
-      this.buildDeviceStatesTool(),
-      this.buildDeviceActionsTool(),
-    ];
-    if (isAdmin) {
-      tools.push(this.buildAddRuleTool(), this.buildAddDeviceTool());
-    }
-    return tools;
-  }
-
-  private buildDeviceStatesTool(): DeepSeekTool {
-    return {
-      type: "function",
-      function: {
-        name: "get_device_states",
-        description:
-          "Get the current, up-to-date state of every device in the home " +
-          "(light on/off, window open/closed, thermostat target temperature, " +
-          "lock locked/unlocked, fan mode). Call this whenever the user asks " +
-          "about the current status of one or more devices, since the device " +
-          "list in the system prompt does not include live state.",
-        parameters: {
-          type: "object",
-          properties: {},
-        },
-      },
-    };
-  }
-
-  private buildDeviceActionsTool(): DeepSeekTool {
-    return {
-      type: "function",
-      function: {
-        name: "execute_device_actions",
-        description:
-          "Execute one or more actions on devices in the current home. " +
-          "Use this when the user asks to control devices (including bulk actions like 'turn off all lights'). " +
-          "Each action item must include a deviceId and action. Supported actions: " +
-          "turnOn, turnOff, open, close, setTemperature, lock, unlock, setMode. " +
-          "For setTemperature, provide param as a number. For setMode, param is one of off, low, medium, high.",
-        parameters: {
-          type: "object",
-          properties: {
-            actions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  deviceId: { type: "string" },
-                  action: {
-                    type: "string",
-                    enum: [
-                      "turnOn",
-                      "turnOff",
-                      "open",
-                      "close",
-                      "setTemperature",
-                      "lock",
-                      "unlock",
-                      "setMode",
-                    ],
-                  },
-                  param: { type: ["string", "number"] },
-                },
-                required: ["deviceId", "action"],
-              },
-            },
-          },
-          required: ["actions"],
-        },
-      },
-    };
-  }
-
-  private buildForecastTool(): DeepSeekTool {
-    return {
-      type: "function",
-      function: {
-        name: "get_forecast_summary",
-        description: "Get a concise forecast summary for the current home.",
-        parameters: {
-          type: "object",
-          properties: {},
-        },
-      },
-    };
-  }
-
-  private buildAddRuleTool(): DeepSeekTool {
-    return {
-      type: "function",
-      function: {
-        name: "add_rule",
-        description:
-          "Create an automation rule for the current home. Use this tool only after collecting all required fields. " +
-          "Fields: ruleName (short label), observableId (weather|outdoor-thermometer|indoor-thermometer|wind-speed|air-quality). " +
-          "For weather: operatorTarget must be one of Clear, Drizzle, Fog, Overcast, Cloudy, Rain, Snow, Thunderstorm and operator is omitted. " +
-          "For numeric observables: operator is gt|lt|eq and operatorTarget is a number or numeric string. " +
-          "Actions is a non-empty array; each action has deviceType (light|window|thermostat|lock|fan), command, deviceId, and targetTemp required only when command is setTemperature. Commands by type: light -> turnOn|turnOff, window -> open|close, thermostat -> setTemperature, lock -> lock|unlock, fan -> setOff|setLow|setMedium|setHigh. " +
-          "Optionally, provide a timeWindow to restrict when the rule applies. Its fields: days (array of 0-6 where 0=Sun 6=Sat; omit for every day), start (HH:MM string; omit for start of day), end (HH:MM string; omit for end of day).",
-        parameters: {
-          type: "object",
-          properties: {
-            ruleName: {
-              type: "string",
-              description: "Human-friendly rule label.",
-            },
-            observableId: {
-              type: "string",
-              enum: [
-                "weather",
-                "outdoor-thermometer",
-                "indoor-thermometer",
-                "wind-speed",
-                "air-quality",
-              ],
-            },
-            operator: {
-              type: "string",
-              enum: ["gt", "lt", "eq"],
-              description:
-                "Required for numeric observables; omit for weather.",
-            },
-            operatorTarget: {
-              type: ["string", "number"],
-              description: "Weather forecast string or numeric boundary value.",
-            },
-            actions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  deviceType: {
-                    type: "string",
-                    enum: ["light", "window", "thermostat", "lock", "fan"],
-                  },
-                  command: {
-                    type: "string",
-                    enum: [
-                      "turnOn",
-                      "turnOff",
-                      "open",
-                      "close",
-                      "setTemperature",
-                      "lock",
-                      "unlock",
-                      "setOff",
-                      "setLow",
-                      "setMedium",
-                      "setHigh",
-                    ],
-                  },
-                  deviceId: { type: ["string", "number"] },
-                  targetTemp: { type: ["string", "number"] },
-                },
-                required: ["deviceType", "command", "deviceId"],
-              },
-            },
-            timeWindow: {
-              type: "object",
-              properties: {
-                days: {
-                  type: "array",
-                  items: {
-                    type: "number",
-                    enum: [0, 1, 2, 3, 4, 5, 6],
-                  },
-                  description:
-                    "Subset of 0..6 (0=Sun, 6=Sat). Omit or empty means every day.",
-                },
-                start: {
-                  type: "string",
-                  description: "HH:MM start time (24h). Omit for start of day.",
-                },
-                end: {
-                  type: "string",
-                  description: "HH:MM end time (24h). Omit for end of day.",
-                },
-              },
-            },
-          },
-          required: ["ruleName", "observableId", "operatorTarget", "actions"],
-        },
-      },
-    };
-  }
-
-  private buildAddDeviceTool(): DeepSeekTool {
-    return {
-      type: "function",
-      function: {
-        name: "add_device",
-        description:
-          "Add a new smart device to a room in the current home. " +
-          "Fields: name (human-friendly label), type (light|window|thermostat|lock|fan), roomId (the ID of the room to place the device in).",
-        parameters: {
-          type: "object",
-          properties: {
-            name: {
-              type: "string",
-              description: "Human-friendly label for the device.",
-            },
-            type: {
-              type: "string",
-              enum: ["light", "window", "thermostat", "lock", "fan"],
-              description: "The type of smart device to add.",
-            },
-            roomId: {
-              type: "string",
-              description: "The ID of the room to place the device in.",
-            },
-          },
-          required: ["name", "type", "roomId"],
-        },
-      },
-    };
   }
 
   // Format sent by DeepSeek:
@@ -443,7 +198,7 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
           reasoningParts.push(delta.reasoning_content);
         }
 
-        // tool calls, like tokens arrive fragmented, so they need to be accumulated
+        // tool calls, as other tokens, arrive fragmented, so they need to be accumulated
         if (delta.tool_calls) {
           for (const tc of delta.tool_calls) {
             if (!toolCallAccumulators.has(tc.index)) {
@@ -483,148 +238,6 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     };
   }
 
-  private async handleToolCalls(
-    toolCalls: DeepSeekToolCall[],
-    homeId: string,
-  ): Promise<DeepSeekMessage[]> {
-    const responses: DeepSeekMessage[] = [];
-
-    for (const toolCall of toolCalls) {
-      console.log(
-        `Handling tool call: ${toolCall.function.name} with args ${toolCall.function.arguments}`,
-      );
-      try {
-        if (toolCall.function.name === "get_forecast_summary") {
-          const coords = await this.homeService.getHomeCoordinates(homeId);
-          const summary = await this.forecastPort.getForecastSummary({
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-          });
-          if (!summary) {
-            responses.push({
-              role: "tool",
-              tool_call_id: toolCall.id,
-              content: "Forecast unavailable.",
-            });
-            continue;
-          }
-
-          responses.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: this.formatForecast(summary),
-          });
-          continue;
-        }
-
-        if (toolCall.function.name === "get_device_states") {
-          const devices = await this.homeService.getDevices(homeId);
-          responses.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: this.formatDeviceStates(
-              devices.map((device) => device.accept(this.stateSerializer)),
-            ),
-          });
-          continue;
-        }
-
-        if (toolCall.function.name === "add_rule") {
-          const args = this.parseToolArguments(toolCall.function.arguments);
-          const dto: AddRuleDto = {
-            homeId,
-            ruleName: args.ruleName,
-            observableId: args.observableId,
-            operator: args.operator,
-            operatorTarget: args.operatorTarget,
-            actions: args.actions,
-            timeWindow: args.timeWindow,
-          };
-          const newRule = await this.ruleService.addRule(dto);
-          responses.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: `Rule created with id ${newRule.id}.`,
-          });
-          continue;
-        }
-
-        if (toolCall.function.name === "add_device") {
-          const args = JSON.parse(toolCall.function.arguments) as {
-            name: string;
-            type: string;
-            roomId: string;
-          };
-          const device = await this.homeService.addDevice(homeId, {
-            name: args.name,
-            type: args.type as DeviceTypes,
-            roomId: args.roomId,
-          });
-          responses.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: `Device "${device.name}" (${device.getType()}) added with id ${device.id}.`,
-          });
-          continue;
-        }
-
-        if (toolCall.function.name === "execute_device_actions") {
-          const args = JSON.parse(toolCall.function.arguments) as {
-            actions: Array<{
-              deviceId: string;
-              action: string;
-              param?: number | string;
-            }>;
-          };
-
-          if (!Array.isArray(args.actions) || args.actions.length === 0) {
-            throw new Error("No actions provided.");
-          }
-
-          const results: string[] = [];
-          for (const actionItem of args.actions) {
-            try {
-              const { device } = await this.homeService.executeAction(
-                homeId,
-                actionItem.deviceId,
-                actionItem.action,
-                actionItem.param,
-              );
-              results.push(
-                `OK: ${device.name} (${device.id}) -> ${actionItem.action}`,
-              );
-            } catch (error: any) {
-              results.push(
-                `FAILED: ${actionItem.deviceId} -> ${actionItem.action} (${error?.message ?? "error"})`,
-              );
-            }
-          }
-
-          responses.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: results.join("\n"),
-          });
-          continue;
-        }
-
-        responses.push({
-          role: "tool",
-          tool_call_id: toolCall.id,
-          content: "Unsupported tool call.",
-        });
-      } catch (error: any) {
-        responses.push({
-          role: "tool",
-          tool_call_id: toolCall.id,
-          content: error?.message ?? "Tool execution failed.",
-        });
-      }
-    }
-
-    return responses;
-  }
-
   private parseStreamChunk(data: string): StreamChunk | null {
     try {
       const raw = JSON.parse(data) as {
@@ -635,78 +248,5 @@ export class DeepSeekChatCompletionAdapter implements ChatCompletionPort {
     } catch {
       return null;
     }
-  }
-
-  private parseToolArguments(raw: string): {
-    ruleName: string;
-    observableId: AddRuleDto["observableId"];
-    operator?: AddRuleDto["operator"];
-    operatorTarget: AddRuleDto["operatorTarget"];
-    actions: AddRuleDto["actions"];
-    timeWindow?: AddRuleDto["timeWindow"];
-  } {
-    try {
-      return JSON.parse(raw) as {
-        ruleName: string;
-        observableId: AddRuleDto["observableId"];
-        operator?: AddRuleDto["operator"];
-        operatorTarget: AddRuleDto["operatorTarget"];
-        actions: AddRuleDto["actions"];
-        timeWindow?: AddRuleDto["timeWindow"];
-      };
-    } catch {
-      throw new Error("Invalid tool arguments.");
-    }
-  }
-
-  private formatDeviceStates(devices: DeviceSerialization[]): string {
-    if (devices.length === 0) {
-      return "No devices in this home.";
-    }
-
-    return devices
-      .map((device) => {
-        const head = `${device.name} (id ${device.id}, ${device.type})`;
-        if ("isOn" in device) {
-          return `${head}: ${device.isOn ? "on" : "off"}`;
-        }
-        if ("isOpen" in device) {
-          return `${head}: ${device.isOpen ? "open" : "closed"}`;
-        }
-        if ("temperature" in device) {
-          return `${head}: set to ${device.temperature}C`;
-        }
-        if ("isLocked" in device) {
-          return `${head}: ${device.isLocked ? "locked" : "unlocked"}`;
-        }
-        if ("mode" in device) {
-          return `${head}: mode ${device.mode}`;
-        }
-        return head;
-      })
-      .join("\n");
-  }
-
-  private formatForecast(summary: ForecastSummary) {
-    return summary.days
-      .map((day) => {
-        const daylightHours = day.daylightDuration / 3600;
-        const aqiStr = day.hourlyAirQuality
-          .map(
-            (h) => `${h.time.split("T")[1].substring(0, 5)}=${h.europeanAqi}`,
-          )
-          .join(" ");
-
-        return [
-          `${day.date}:`,
-          `${day.weatherForecast},`,
-          `${day.temperatureMin.toFixed(1)}-${day.temperatureMax.toFixed(1)}C,`,
-          `wind ${day.windSpeedMax.toFixed(1)} m/s ${day.windDirectionDominant.toFixed(0)} deg,`,
-          `precip ${day.precipitationSum.toFixed(1)} mm (${day.precipitationHours.toFixed(1)}h),`,
-          `daylight ${daylightHours.toFixed(1)}h.`,
-          `Hourly AQI: ${aqiStr}`,
-        ].join(" ");
-      })
-      .join("\n");
   }
 }
