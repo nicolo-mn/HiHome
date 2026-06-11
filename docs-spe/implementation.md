@@ -57,7 +57,7 @@ export class Light implements Device {
 }
 ```
 
-The generic type parameter lets the same interface serve different behaviours. The implementation,`DeviceStateSerializer`, maps devices to API response DTOs. The same pattern is applied to the actions, with a generic interface `DeviceActionVisitor<T>` with two implementations: `DeviceActionExecutionVisitor` (executes rule-triggered actions, returns `Promise<void>`), and `ActionDescriptionVisitor` (produces human-readable descriptions for notifications). When a new device type or a new action is added, the compiler flags every visitor that has not handled it, making the pattern exhaustive by construction.
+The generic type parameter lets the same interface serve different behaviours. The implementation,`DeviceStateSerializer`, maps devices to API response DTOs. The same pattern is applied to the actions, with a generic interface `DeviceActionVisitor<T>` with two main implementations, `DeviceActionExecutionVisitor` (executes rule-triggered actions, returns `Promise<void>`), and `ActionDescriptionVisitor` (produces human-readable descriptions for notifications), and two additional implementations for data mapping (`ActionRecordVisitor` and `ActionDtoVisitor`)  When a new device type or a new action is added, the compiler flags every visitor that has not handled it, making the pattern exhaustive by construction.
 
 ### Live updates
 
@@ -326,8 +326,6 @@ A `ChatStreamPort` instance is passed to emit single tokens to the frontend thro
 
 The adapter drives a loop that calls the model and, if tool calls are requested, executes them and returns their response to the model. The tool calling is capped at five round trips, to avoid the model looping indefinitely. The AI model is used in streaming mode, to push chunks dynamically to the client, reducing waiting times to enhance the user experience.  Each SSE chunk from DeepSeek is parsed and forwarded token-by-token to the client through `ChatStreamPort`:
 
-Because tool call arguments arrive fragmented across SSE chunks as well, they are accumulated per-index before dispatching.
-
 ```typescript
 for (const tc of delta.tool_calls) {
   if (!toolCallAccumulators.has(tc.index)) {
@@ -345,6 +343,8 @@ for (const tc of delta.tool_calls) {
   }
 }
 ```
+
+Because tool call arguments arrive fragmented across SSE chunks as well, they are accumulated per-index before dispatching.
 
 ### Role-gated tools
 
